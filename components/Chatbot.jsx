@@ -8,9 +8,14 @@ import Sentiment from "sentiment";
 import axios from 'axios';
 import { useRoute } from '@react-navigation/native';
 import * as Speech from 'expo-speech'; // Import Expo Speech for text-to-speech
-import { WebView } from 'react-native-webview'; // WebView for speech-to-text
+// import { WebView } from 'react-native-webview'; // WebView for speech-to-text
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 
-const IP_ADDRESS = 'http://192.168.100.90:5000'; // Replace with your IP address or localhost
+const IP_ADDRESS = 'http://192.168.100.10:5000'; // Replace with your IP address or localhost
+
+const MODEL_NAME = 'gemini-1.5-pro-latest';
+const API_KEY = 'AIzaSyBEpDxix0X-uiO-faUUOxQ2943m6_Mkfgk';  // Replace with your actual API key
+const sysInstruct = `Eunoia, act as a mental health expert and therapist specializing in helping individuals in their 20s and 30s overcome challenges related to motivation, career, and self-esteem. Utilize your extensive experience of several decades to provide the best possible advice for improving mental health. Before offering specific advice, ask clarifying questions to understand the user's unique situation and tailor your response accordingly.`;
 
 const Chatbot = () => {
     const [input, setInput] = useState('');
@@ -28,10 +33,52 @@ const Chatbot = () => {
     // WebView Ref for Speech-to-Text
     const webViewRef = useRef(null);
 
+    const [chat, setChat] = useState(null); // State for Gemini API chat session
+
     useEffect(() => {
         if (Platform.OS === 'web') {
             alert("Speech recognition is not supported on web yet.");
         }
+
+        // Initialize Google Generative AI Model
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({
+            model: MODEL_NAME,
+            systemInstruction: sysInstruct,
+        });
+
+        const generationConfig = {
+            temperature: 1,
+            topK: 0,
+            topP: 0.95,
+            maxOutputTokens: 8192,
+        };
+
+        const safetySettings = [
+            {
+                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+                category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+        ];
+
+        const chatSession = model.startChat({
+            generationConfig,
+            safetySettings,
+            history: [],
+        });
+        setChat(chatSession);
     }, []);
 
     // Function to handle Text-to-Speech (if needed)
@@ -55,22 +102,22 @@ const Chatbot = () => {
     const startRecognizing = () => {
         setIsRecording(true);
         webViewRef.current.injectJavaScript(`
-      window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        window.ReactNativeWebView.postMessage(transcript);
-      };
-      recognition.start();
-    `);
+            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                window.ReactNativeWebView.postMessage(transcript);
+            };
+            recognition.start();
+        `);
     };
 
     const stopRecognizing = () => {
         setIsRecording(false);
         webViewRef.current.injectJavaScript(`
-      recognition.stop();
-    `);
+            recognition.stop();
+        `);
     };
 
     const RecordButtonHandler = () => {
@@ -144,29 +191,24 @@ const Chatbot = () => {
             const newMessages = [...messages, { text: input, sender: 'You' }];
             setMessages(newMessages);
             setIsBotTyping(true);
-            // Simulate bot response for demonstration purposes
-            const result = { response: { text: () => "Bot response here" } };
-            setIsBotTyping(false);
-            const botMessageText = extractText(result.response.text());
-            newMessages.push({ text: botMessageText, sender: 'Bot' });
-            setMessages([...newMessages]);
-            setInput('');
+
+            // Use the Gemini API to get a response from the chatbot
+            try {
+                const result = await chat.sendMessage(input.trim());
+                setIsBotTyping(false);
+                const botMessageText = extractText(result.response.text());
+                newMessages.push({ text: botMessageText, sender: 'Bot' });
+                setMessages([...newMessages]);
+                setInput('');
+            } catch (error) {
+                console.error("Error with Gemini API response:", error);
+                setIsBotTyping(false);
+            }
         }
-    }, [input, messages]);
+    }, [input, messages, chat]);
 
     return (
         <View style={[styles.botContainer]}>
-            {/* WebView for Speech Recognition */}
-            {Platform.OS !== 'web' && (
-                <WebView
-                    ref={webViewRef}
-                    originWhitelist={['*']}
-                    source={{ html: '<html><body></body></html>' }}
-                    onMessage={onMessageFromWebView}
-                    style={{ height: 0, width: 0 }} // Hide WebView
-                />
-            )}
-
             <ScrollView
                 ref={scrollViewRef}
                 style={styles.messageContainer}
