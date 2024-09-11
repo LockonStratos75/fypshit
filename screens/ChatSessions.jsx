@@ -4,7 +4,8 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 
 // Define the base URL as a constant
-const BASE_URL = 'http://192.168.100.90:5000'; // Replace with your IP address or localhost based on your setup
+// const BASE_URL = 'http://192.168.100.90:5000'; // Replace with your IP address or localhost based on your setup
+const BASE_URL = 'http://10.113.88.141:5000'; // Replace with your IP address or localhost based on your setup
 
 const ChatSessionsScreen = () => {
     const navigation = useNavigation();

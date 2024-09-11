@@ -1,5 +1,5 @@
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
-import {ChatCenteredText, Chats, DotsThreeOutlineVertical, ListBullets, User} from 'phosphor-react-native';
+import {ChatCenteredText, Chats, DotsThreeOutlineVertical, ListBullets, Record , User} from 'phosphor-react-native';
 import {Chat} from "./screens/Chat";
 import ChatSessions from "./screens/ChatSessions";
 import {HistoryScreen} from "./screens/HistoryScreen";
@@ -55,7 +55,7 @@ export function MyTabs() {
             name="Emotion Recognition"
             component={HistoryScreen}
             options={{
-                tabBarIcon: ({color, size}) => (<ListBullets color={color} size={size} weight={'fill'}/>),
+                tabBarIcon: ({color, size}) => (<Record color={color} size={size} weight={'fill'}/>),
             }}
         />
 
