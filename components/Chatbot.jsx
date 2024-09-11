@@ -11,7 +11,7 @@ import * as Speech from 'expo-speech'; // Import Expo Speech for text-to-speech
 // import { WebView } from 'react-native-webview'; // WebView for speech-to-text
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 
-const IP_ADDRESS = '10.113.88.141:5000';
+const IP_ADDRESS = 'http://10.113.88.141:5000';
 // const IP_ADDRESS = 'http://192.168.100.10:5000';
 
 const MODEL_NAME = 'gemini-1.5-pro-latest';
