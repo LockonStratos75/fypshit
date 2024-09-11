@@ -1,27 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import axios from 'axios';
-import Sentiment from 'sentiment';  // Import Sentiment library
 
-const BASE_URL = 'http://10.113.88.141:5000'; // Replace with your IP address or localhost based on your setup
+// Define the base URL as a constant
+const BASE_URL = 'http://192.168.100.90:5000'; // Replace with your IP address or localhost based on your setup
+
+const API_URL = 'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest';
+const API_KEY = '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';  // Replace with your actual Hugging Face API key
 
 const ChatSessionScreen = ({ route }) => {
     const { sessionId } = route.params;
     const [session, setSession] = useState(null);
     const [averageSentiment, setAverageSentiment] = useState(null); // State for average sentiment score
-    const sentimentAnalyzer = new Sentiment();  // Initialize Sentiment instance
 
     useEffect(() => {
         const fetchSession = async () => {
             try {
-                const response = await axios.get(`${BASE_URL}/sessions/${sessionId}`); // Use the base URL variable
+                const response = await axios.get(`${BASE_URL}/sessions/${sessionId}`); // Fetch chat session data
                 const sessionData = response.data;
                 setSession(sessionData);
 
-                // Calculate average sentiment score for user messages
+                // Calculate average sentiment score for user messages using Hugging Face API
                 const userMessages = sessionData.messages.filter(msg => msg.sender === 'You');
-                const scores = userMessages.map(msg => sentimentAnalyzer.analyze(msg.text).score);
-                const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+                const scores = await Promise.all(userMessages.map(msg => analyzeSentiment(msg.text))); // Analyze sentiment for each message
+                const validScores = scores.filter(score => score !== null); // Filter out null values
+                const averageScore = validScores.length > 0 ? validScores.reduce((a, b) => a + b, 0) / validScores.length : 0;
                 setAverageSentiment(averageScore);
 
             } catch (error) {
@@ -32,12 +35,47 @@ const ChatSessionScreen = ({ route }) => {
         fetchSession();
     }, [sessionId]);
 
+    // Function to analyze sentiment using Hugging Face API
+    const analyzeSentiment = async (text) => {
+        try {
+            const response = await axios.post(API_URL, {
+                inputs: text,
+            }, {
+                headers: { Authorization: `Bearer ${API_KEY}` }
+            });
+
+            const data = response.data;
+
+            if (Array.isArray(data) && Array.isArray(data[0])) {
+                const sentiments = data[0];
+
+                // Extract sentiment scores safely
+                const positive = sentiments.find(s => s.label.toLowerCase() === 'positive');
+                const neutral = sentiments.find(s => s.label.toLowerCase() === 'neutral');
+                const negative = sentiments.find(s => s.label.toLowerCase() === 'negative');
+
+                if (positive && negative) {
+                    // Convert to a single score: Positive (1), Neutral (0), Negative (-1)
+                    const sentimentScore = positive.score - negative.score;
+                    return sentimentScore;
+                }
+            }
+
+            // If data format is unexpected or analysis fails, log the response and return null
+            console.error("Unexpected response format:", data);
+            return null;
+        } catch (error) {
+            console.error("Error analyzing sentiment", error);
+            return null; // Return null if an error occurs
+        }
+    };
+
     // Function to convert average sentiment score to a user-friendly label
     const getSentimentLabel = (score) => {
-        if (score > 2) return 'Very Positive 😊';
+        if (score > 0.5) return 'Very Positive 😊';
         if (score > 0) return 'Positive 🙂';
         if (score === 0) return 'Neutral 😐';
-        if (score > -2) return 'Negative 🙁';
+        if (score > -0.5) return 'Negative 🙁';
         return 'Very Negative 😞';
     };
 
