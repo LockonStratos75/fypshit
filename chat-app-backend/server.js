@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const bcrypt = require('bcrypt'); // For password hashing
+const jwt = require('jsonwebtoken'); // For JWT handling
 
 const app = express();
 const PORT = 5000;
@@ -11,57 +13,174 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // MongoDB connection
-const uri = 'mongodb+srv://hrana988:K1onIgvERqGBx3gP@cluster0.xpxxo.mongodb.net/chatApp';  // Ensure this matches your MongoDB configuration
+const uri = 'mongodb+srv://hrana988:K1onIgvERqGBx3gP@cluster0.xpxxo.mongodb.net/chatApp'; // Ensure this matches your MongoDB configuration
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log(err));
 
+// User schema and model
+const userSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+});
+
+const User = mongoose.model('User', userSchema);
+
 // Chat session schema and model
 const chatSessionSchema = new mongoose.Schema({
-    id: String,
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },  // Link sessions to specific users
     date: String,
     messages: Array,
 });
 
 const ChatSession = mongoose.model('ChatSession', chatSessionSchema);
 
-// Routes
-app.get('/sessions', async (req, res) => {
+// Sentiment score schema and model
+const sentimentScoreSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },  // Link to specific user
+    sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'ChatSession', required: true },  // Link to specific session
+    sessionName: { type: String, required: true },
+    averageSentiment: { type: Number, required: true },
+    date: { type: Date, default: Date.now }
+});
+
+const SentimentScore = mongoose.model('SentimentScore', sentimentScoreSchema);
+
+
+
+// Signup route
+app.post('/signup', async (req, res) => {
+    const { username, email, password } = req.body;
+
+    // Validate input
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        return res.status(400).json({ message: "Invalid email format." });
+    }
+    if (!password || password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long." });
+    }
+
     try {
-        const sessions = await ChatSession.find();
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ username, email, password: hashedPassword });
+        await newUser.save();
+
+        // Generate JWT token
+        const token = jwt.sign({ userId: newUser._id }, 'your_jwt_secret', { expiresIn: '1h' });
+
+        res.status(201).json({ message: "User created successfully", token });  // Properly return the token
+    } catch (err) {
+        if (err.code === 11000) { // Duplicate key error
+            res.status(400).json({ message: "Email or username already in use." });
+        } else {
+            res.status(500).json({ message: err.message });
+        }
+    }
+});
+
+// Login route
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // Compare password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) return res.status(401).json({ message: 'Invalid credentials' });
+
+        // Generate JWT token
+        const token = jwt.sign({ userId: user._id }, 'your_jwt_secret', { expiresIn: '1h' });
+
+        res.status(200).json({ token });  // Properly return the token
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Middleware to verify JWT and extract user ID
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];  // Extract token from 'Bearer <token>'
+
+    if (!token) return res.status(401).json({ message: 'Access denied' });
+
+    jwt.verify(token, 'your_jwt_secret', (err, user) => {
+        if (err) {
+            console.error("Token verification failed:", err);
+            return res.status(403).json({ message: 'Invalid token' });
+        }
+        req.userId = user.userId;  // Attach the user ID to the request object
+        next();
+    });
+};
+
+// Fetch user-specific sessions
+app.get('/sessions', authenticateToken, async (req, res) => {
+    try {
+        const sessions = await ChatSession.find({ userId: req.userId });
         res.json(sessions);
     } catch (err) {
-        res.status(500).send(err);
+        res.status(500).json({ message: err.message });
     }
 });
 
-app.get('/sessions/:id', async (req, res) => {
+// Fetch a single session by ID for the authenticated user
+app.get('/sessions/:id', authenticateToken, async (req, res) => {
     try {
-        const session = await ChatSession.findById(req.params.id);
+        const session = await ChatSession.findOne({ _id: req.params.id, userId: req.userId });
+        if (!session) return res.status(404).json({ message: 'Session not found' });
         res.json(session);
     } catch (err) {
-        res.status(500).send(err);
+        res.status(500).json({ message: err.message });
     }
 });
 
-app.post('/sessions', async (req, res) => {
-    const newSession = new ChatSession(req.body);
+// Create a new session for the authenticated user
+app.post('/sessions', authenticateToken, async (req, res) => {
+    const newSession = new ChatSession({ ...req.body, userId: req.userId });
     try {
         await newSession.save();
-        res.status(201).send(newSession);
+        res.status(201).json(newSession);
     } catch (err) {
-        res.status(400).send(err);
+        res.status(400).json({ message: err.message });
     }
 });
 
-app.delete('/sessions/:id', async (req, res) => {
+// Delete a user-specific session
+app.delete('/sessions/:id', authenticateToken, async (req, res) => {
     try {
-        await ChatSession.findByIdAndDelete(req.params.id);
-        res.status(200).send({ message: 'Session deleted successfully' });
+        const session = await ChatSession.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+        if (!session) return res.status(404).json({ message: 'Session not found' });
+        res.status(200).json({ message: 'Session deleted successfully' });
     } catch (err) {
-        res.status(500).send(err);
+        res.status(500).json({ message: err.message });
     }
 });
+
+// Save sentiment score
+app.post('/sentiment', authenticateToken, async (req, res) => {
+    const { sessionId, sessionName, averageSentiment } = req.body;  // Get data from request body
+
+    try {
+        // Create a new sentiment score entry
+        const sentimentScore = new SentimentScore({
+            userId: req.userId,  // From the authenticated token
+            sessionId: sessionId,
+            sessionName: sessionName,
+            averageSentiment: averageSentiment,
+            date: new Date()
+        });
+
+        await sentimentScore.save();  // Save to the database
+        res.status(201).json(sentimentScore);  // Return the saved sentiment score
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 
 // Start server
 app.listen(PORT, () => {

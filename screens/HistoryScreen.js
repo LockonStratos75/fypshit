@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Button, Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Button, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
+import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
 import query from '../config/SpeechEmotionRecognition';
-import {ButtonComponent} from "../components/ButtonComponent";
+import { ButtonComponent } from "../components/ButtonComponent";
 
 export const HistoryScreen = () => {
     const [result, setResult] = useState(null);
@@ -58,7 +59,8 @@ export const HistoryScreen = () => {
             });
 
             // Query the moved file
-            const response = await query(targetPath);
+            const token = await SecureStore.getItemAsync('token');  // Retrieve JWT token from SecureStore, if needed
+            const response = await query(targetPath, token);  // Pass token to query function
             const emotions = processResponse(response);
             setResult(emotions);
         } catch (error) {

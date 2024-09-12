@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
 
 // Define the base URL as a constant
-const BASE_URL = 'http://192.168.100.90:5000'; // Replace with your IP address or localhost based on your setup
+const BASE_URL = 'http://192.168.1.101:5000'; // Replace with your IP address or localhost based on your setup
 
 const API_URL = 'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest';
 const API_KEY = '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';  // Replace with your actual Hugging Face API key
@@ -16,7 +17,12 @@ const ChatSessionScreen = ({ route }) => {
     useEffect(() => {
         const fetchSession = async () => {
             try {
-                const response = await axios.get(`${BASE_URL}/sessions/${sessionId}`); // Fetch chat session data
+                const token = await SecureStore.getItemAsync('token');  // Retrieve JWT token from SecureStore
+                const response = await axios.get(`${BASE_URL}/sessions/${sessionId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Include token in Authorization header
+                    }
+                });  // Fetch chat session data
                 const sessionData = response.data;
                 setSession(sessionData);
 

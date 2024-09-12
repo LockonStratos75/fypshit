@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
+import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
 
 const query = async (filename) => {
     try {
@@ -7,12 +8,17 @@ const query = async (filename) => {
             encoding: FileSystem.EncodingType.Base64,
         }); // Read file as base64 string
         const buffer = Buffer.from(data, 'base64'); // Convert base64 string to buffer
+
+        // Retrieve the JWT token from SecureStore
+        const token = await SecureStore.getItemAsync('token');  // Get the JWT token
+
         const response = await fetch(
             'https://api-inference.huggingface.co/models/ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition',
             {
                 method: 'POST',
                 headers: {
-                    Authorization: 'Bearer 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', // Replace with your actual token
+                    // Authorization: `Bearer ${token}`,  // Include JWT token in the Authorization header
+                    Authorization: `Bearer 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`,  // Include JWT token in the Authorization header
                     'Content-Type': 'audio/wav',
                 },
                 body: buffer,

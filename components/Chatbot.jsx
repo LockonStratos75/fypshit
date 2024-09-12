@@ -1,21 +1,20 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, ScrollView, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
-import { styles } from "../App";
-import TypingIndicator from '../components/TypingIndicator'; // Ensure this import points to the correct file
-import { LinearGradient } from "expo-linear-gradient";
-import { FileArrowUp, PaperPlaneRight, TrashSimple } from "phosphor-react-native";
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {Image, ScrollView, Text, TextInput, TouchableOpacity, View, Platform} from 'react-native';
+import {styles} from "../App";
+import TypingIndicator from '../components/TypingIndicator';
+import {LinearGradient} from "expo-linear-gradient";
+import {FileArrowUp, PaperPlaneRight, TrashSimple} from "phosphor-react-native";
 import Sentiment from "sentiment";
 import axios from 'axios';
-import { useRoute } from '@react-navigation/native';
-import * as Speech from 'expo-speech'; // Import Expo Speech for text-to-speech
-// import { WebView } from 'react-native-webview'; // WebView for speech-to-text
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import {useRoute} from '@react-navigation/native';
+import * as Speech from 'expo-speech';
+import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
+import {GoogleGenerativeAI, HarmBlockThreshold, HarmCategory} from '@google/generative-ai';
 
-// const IP_ADDRESS = 'http://10.113.88.141:5000';
-const IP_ADDRESS = 'http://192.168.100.90:5000';
+const IP_ADDRESS = 'http://192.168.1.101:5000';
 
-const MODEL_NAME = 'gemini-1.5-pro-latest';
-const API_KEY = 'AIzaSyBEpDxix0X-uiO-faUUOxQ2943m6_Mkfgk';  // Replace with your actual API key
+const MODEL_NAME = 'gemini-1.5-flash';
+const API_KEY = 'AIzaSyDBj5nEBMQf9h0RBj0kL1rPRZCrfD1G728';  // Replace with your actual API key
 const sysInstruct = `Eunoia, act as a mental health expert and therapist specializing in helping individuals in their 20s and 30s overcome challenges related to motivation, career, and self-esteem. Utilize your extensive experience of several decades to provide the best possible advice for improving mental health. Before offering specific advice, ask clarifying questions to understand the user's unique situation and tailor your response accordingly.`;
 
 const Chatbot = () => {
@@ -24,17 +23,14 @@ const Chatbot = () => {
     const scrollViewRef = useRef();
     const [isBotTyping, setIsBotTyping] = useState(false);
     const route = useRoute();
-    const { onNewSession } = route.params || {};
+    const {onNewSession} = route.params || {};
     const [recordButton, setRecordButton] = useState(require('../icons/microphone-fill.png'));
     const sentiment = new Sentiment();
     const [sentimentScore, setSentimentScore] = useState('');
     const [results, setResults] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
-
-    // WebView Ref for Speech-to-Text
     const webViewRef = useRef(null);
-
-    const [chat, setChat] = useState(null); // State for Gemini API chat session
+    const [chat, setChat] = useState(null);
 
     useEffect(() => {
         if (Platform.OS === 'web') {
@@ -82,7 +78,6 @@ const Chatbot = () => {
         setChat(chatSession);
     }, []);
 
-    // Function to handle Text-to-Speech (if needed)
     const speakText = (text) => {
         Speech.speak(text, {
             language: 'en-US',
@@ -91,7 +86,6 @@ const Chatbot = () => {
         });
     };
 
-    // Function to handle Speech-to-Text using WebView
     const onMessageFromWebView = (event) => {
         const data = event.nativeEvent.data;
         if (data) {
@@ -170,17 +164,47 @@ const Chatbot = () => {
                 sender: message.sender
             }))
         };
+
         try {
-            const response = await axios.post(`${IP_ADDRESS}/sessions`, sessionData); // Use IP_ADDRESS variable
+            const token = await SecureStore.getItemAsync('token');  // Retrieve JWT token from SecureStore
+
+            // Save the chat session to the server
+            const response = await axios.post(`${IP_ADDRESS}/sessions`, sessionData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`  // Include token in Authorization header
+                }
+            });
+
             alert("Chat session saved successfully!");
             if (onNewSession) {
                 onNewSession(response.data);
             }
+
+            // New variable to calculate average sentiment score
+            const userMessages = messages.filter(message => message.sender === 'You');  // Filter user messages only
+            const sentimentScores = userMessages.map(message => sentiment.analyze(message.text).score);  // Calculate sentiment scores
+            const averageSentimentScore = sentimentScores.length > 0
+                ? sentimentScores.reduce((a, b) => a + b, 0) / sentimentScores.length  // Calculate average sentiment
+                : 0;  // Default to 0 if no user messages
+
+            // Save the sentiment score to the server
+            const sentimentResponse = await axios.post(`${IP_ADDRESS}/sentiment`, {
+                sessionId: response.data._id,  // Use the saved session ID from response
+                sessionName: `Chat Session ${sessionId}`,
+                averageSentiment: averageSentimentScore,  // Average sentiment score calculated above
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`  // Include token in Authorization header
+                }
+            });
+
+            // alert("Sentiment score saved successfully!");
         } catch (error) {
-            console.error("Error saving chat session", error);
+            console.error("Error saving chat session", error.response ? error.response.data : error.message);
             alert("Error saving chat session.");
         }
     };
+
 
     const clearChatHistory = () => {
         setMessages([]);
@@ -189,16 +213,15 @@ const Chatbot = () => {
 
     const handleSend = useCallback(async () => {
         if (input.trim()) {
-            const newMessages = [...messages, { text: input, sender: 'You' }];
+            const newMessages = [...messages, {text: input, sender: 'You'}];
             setMessages(newMessages);
             setIsBotTyping(true);
 
-            // Use the Gemini API to get a response from the chatbot
             try {
                 const result = await chat.sendMessage(input.trim());
                 setIsBotTyping(false);
                 const botMessageText = extractText(result.response.text());
-                newMessages.push({ text: botMessageText, sender: 'Bot' });
+                newMessages.push({text: botMessageText, sender: 'Bot'});
                 setMessages([...newMessages]);
                 setInput('');
             } catch (error) {
@@ -213,7 +236,7 @@ const Chatbot = () => {
             <ScrollView
                 ref={scrollViewRef}
                 style={styles.messageContainer}
-                onContentSizeChange={() => scrollViewRef.current.scrollToEnd({ animated: true })}
+                onContentSizeChange={() => scrollViewRef.current.scrollToEnd({animated: true})}
             >
                 {messages.map((msg, index) => (
                     <View
@@ -233,7 +256,7 @@ const Chatbot = () => {
                 ))}
                 {isBotTyping && (
                     <View style={styles.botMessage}>
-                        <TypingIndicator />
+                        <TypingIndicator/>
                     </View>
                 )}
             </ScrollView>
@@ -244,17 +267,17 @@ const Chatbot = () => {
                         value={input}
                         placeholder="Type your message here..."
                         multiline={true}
-                        style={{ width: 150, marginRight: 20, }}
+                        style={{width: 150, marginRight: 20,}}
                     />
                     <TouchableOpacity onPress={() => saveChatSession()}>
-                        <FileArrowUp size={25} color="#212529" weight="fill" />
+                        <FileArrowUp size={25} color="#212529" weight="fill"/>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => clearChatHistory()}>
-                        <TrashSimple size={25} color="red" weight="fill" />
+                        <TrashSimple size={25} color="red" weight="fill"/>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => RecordButtonHandler()}>
-                        <Image source={recordButton} style={styles.iconImg} />
+                        <Image source={recordButton} style={styles.iconImg}/>
                     </TouchableOpacity>
                 </View>
 
@@ -263,7 +286,7 @@ const Chatbot = () => {
                         colors={['#247C8A', '#164D82']}
                         style={styles.circleButton}
                     >
-                        <PaperPlaneRight size={24} color="#ffffff" weight="fill" />
+                        <PaperPlaneRight size={24} color="#ffffff" weight="fill"/>
                     </LinearGradient>
                 </TouchableOpacity>
             </View>

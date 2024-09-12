@@ -2,10 +2,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
 
 // Define the base URL as a constant
-const BASE_URL = 'http://192.168.100.90:5000'; // Replace with your IP address or localhost based on your setup
-// const BASE_URL = 'http://10.113.88.141:5000'; // Replace with your IP address or localhost based on your setup
+const BASE_URL = 'http://192.168.1.101:5000'; // Replace with your IP address or localhost based on your setup
 
 const ChatSessionsScreen = () => {
     const navigation = useNavigation();
@@ -13,7 +13,12 @@ const ChatSessionsScreen = () => {
 
     const fetchSessions = useCallback(async () => {
         try {
-            const response = await axios.get(`${BASE_URL}/sessions`); // Use the base URL variable
+            const token = await SecureStore.getItemAsync('token');  // Retrieve JWT token from SecureStore
+            const response = await axios.get(`${BASE_URL}/sessions`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`  // Include token in Authorization header
+                }
+            });  // Use the base URL variable
             setSessions(response.data);
         } catch (error) {
             console.error("Error fetching chat sessions", error);
@@ -28,7 +33,12 @@ const ChatSessionsScreen = () => {
 
     const deleteSession = async (id) => {
         try {
-            await axios.delete(`${BASE_URL}/sessions/${id}`); // Use the base URL variable
+            const token = await SecureStore.getItemAsync('token');  // Retrieve JWT token from SecureStore
+            await axios.delete(`${BASE_URL}/sessions/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`  // Include token in Authorization header
+                }
+            });  // Use the base URL variable
             setSessions(prevSessions => prevSessions.filter(session => session._id !== id));
         } catch (error) {
             console.error("Error deleting chat session", error);
