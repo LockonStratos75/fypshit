@@ -29,7 +29,7 @@ export function SignUpScreen({ navigation }) {
             }
 
             try {
-                const response = await axios.post('http://192.168.1.101:5000/signup', { username, email, password });  // Include username in request
+                const response = await axios.post('http://192.168.100.90:5000/signup', { username, email, password });  // Include username in request
                 console.log('Server response:', response.data);  // Log the server response
                 const { token } = response.data;  // Extract JWT token from response
 

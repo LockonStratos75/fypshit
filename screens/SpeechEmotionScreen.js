@@ -3,10 +3,13 @@ import { Button, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
+import axios from 'axios';  // Import axios for HTTP requests
 import query from '../config/SpeechEmotionRecognition';
 import { ButtonComponent } from "../components/ButtonComponent";
 
-export const HistoryScreen = () => {
+const IP_ADDRESS = 'http://192.168.100.90:5000';  // Replace with your server's IP address
+
+export const SpeechEmotionScreen = () => {
     const [result, setResult] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recording, setRecording] = useState(null);
@@ -59,10 +62,14 @@ export const HistoryScreen = () => {
             });
 
             // Query the moved file
-            const token = await SecureStore.getItemAsync('token');  // Retrieve JWT token from SecureStore, if needed
+            const token = await SecureStore.getItemAsync('token');  // Retrieve JWT token from SecureStore
             const response = await query(targetPath, token);  // Pass token to query function
             const emotions = processResponse(response);
             setResult(emotions);
+
+            // Save SER results to the server
+            await saveSERResultToServer(emotions, token);
+
         } catch (error) {
             console.error('Failed to process recording', error);
             setError(error.message);
@@ -87,6 +94,22 @@ export const HistoryScreen = () => {
             highestEmotion,
             emotions,
         };
+    };
+
+    const saveSERResultToServer = async (emotions, token) => {
+        try {
+            const response = await axios.post(`${IP_ADDRESS}/ser`, {
+                highestEmotion: emotions.highestEmotion,
+                emotions: emotions.emotions,
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`  // Include token in Authorization header
+                }
+            });
+            console.log("SER result saved successfully:", response.data);
+        } catch (error) {
+            console.error("Error saving SER result", error);
+        }
     };
 
     return (

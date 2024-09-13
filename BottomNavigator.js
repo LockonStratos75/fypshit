@@ -2,7 +2,8 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {ChatCenteredText, Chats, DotsThreeOutlineVertical, Record, User} from 'phosphor-react-native';
 import { Chat } from "./screens/Chat";  // Import Chat component here
 import ChatSessions from "./screens/ChatSessions";
-import { HistoryScreen } from "./screens/HistoryScreen";
+import { SpeechEmotionScreen } from "./screens/SpeechEmotionScreen";
+import EmotionLevelScreen from "./screens/EmotionLevelScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -51,14 +52,14 @@ export function MyTabs() {
             />
             <Tab.Screen
                 name="Emotion Recognition"
-                component={HistoryScreen}
+                component={SpeechEmotionScreen}
                 options={{
                     tabBarIcon: ({ color, size }) => (<Record color={color} size={size} weight={'fill'} />),
                 }}
             />
             <Tab.Screen
                 name="Profile"
-                component={HistoryScreen}
+                component={EmotionLevelScreen}
                 options={{
                     tabBarIcon: ({ color, size }) => (<User color={color} size={size} weight={'fill'} />),
                 }}

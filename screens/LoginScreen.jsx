@@ -18,7 +18,7 @@ export function LoginScreen({ navigation }) {
     const handleSubmit = async () => {
         if (email && password) {
             try {
-                const response = await axios.post('http://192.168.1.101:5000/login', { email, password });  // Corrected line
+                const response = await axios.post('http://192.168.100.90:5000/login', { email, password });  // Corrected line
                 const { token } = response.data;  // Extract JWT token from response
 
                 if (token && typeof token === 'string') {  // Ensure token is a valid string

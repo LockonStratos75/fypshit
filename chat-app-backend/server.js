@@ -47,6 +47,19 @@ const sentimentScoreSchema = new mongoose.Schema({
 
 const SentimentScore = mongoose.model('SentimentScore', sentimentScoreSchema);
 
+// SER Result schema and model
+const serResultSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },  // Link to specific user
+    date: { type: Date, default: Date.now },
+    highestEmotion: { label: String, score: Number },
+    emotions: [{ label: String, score: Number, percentage: String }],
+});
+
+const SERResult = mongoose.model('SERResult', serResultSchema);
+
+
+
+
 
 
 // Signup route
@@ -176,6 +189,47 @@ app.post('/sentiment', authenticateToken, async (req, res) => {
 
         await sentimentScore.save();  // Save to the database
         res.status(201).json(sentimentScore);  // Return the saved sentiment score
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
+// Save SER results
+app.post('/ser', authenticateToken, async (req, res) => {
+    const { highestEmotion, emotions } = req.body;  // Get data from request body
+
+    try {
+        // Create a new SER result entry
+        const serResult = new SERResult({
+            userId: req.userId,  // From the authenticated token
+            highestEmotion,
+            emotions,
+            date: new Date()
+        });
+
+        await serResult.save();  // Save to the database
+        res.status(201).json(serResult);  // Return the saved SER result
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Fetch sentiment scores for the authenticated user
+app.get('/sentiment', authenticateToken, async (req, res) => {
+    try {
+        const sentimentScores = await SentimentScore.find({ userId: req.userId });
+        res.json(sentimentScores);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Fetch SER results for the authenticated user
+app.get('/ser', authenticateToken, async (req, res) => {
+    try {
+        const serResults = await SERResult.find({ userId: req.userId });
+        res.json(serResults);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

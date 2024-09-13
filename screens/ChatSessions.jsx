@@ -5,7 +5,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
 
 // Define the base URL as a constant
-const BASE_URL = 'http://192.168.1.101:5000'; // Replace with your IP address or localhost based on your setup
+const BASE_URL = 'http://192.168.100.90:5000'; // Replace with your IP address or localhost based on your setup
 
 const ChatSessionsScreen = () => {
     const navigation = useNavigation();

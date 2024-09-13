@@ -4,18 +4,20 @@ import {styles} from "../App";
 import TypingIndicator from '../components/TypingIndicator';
 import {LinearGradient} from "expo-linear-gradient";
 import {FileArrowUp, PaperPlaneRight, TrashSimple} from "phosphor-react-native";
-import Sentiment from "sentiment";
 import axios from 'axios';
 import {useRoute} from '@react-navigation/native';
 import * as Speech from 'expo-speech';
 import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
 import {GoogleGenerativeAI, HarmBlockThreshold, HarmCategory} from '@google/generative-ai';
 
-const IP_ADDRESS = 'http://192.168.1.101:5000';
+const IP_ADDRESS = 'http://192.168.100.90:5000';
 
 const MODEL_NAME = 'gemini-1.5-flash';
 const API_KEY = 'AIzaSyDBj5nEBMQf9h0RBj0kL1rPRZCrfD1G728';  // Replace with your actual API key
 const sysInstruct = `Eunoia, act as a mental health expert and therapist specializing in helping individuals in their 20s and 30s overcome challenges related to motivation, career, and self-esteem. Utilize your extensive experience of several decades to provide the best possible advice for improving mental health. Before offering specific advice, ask clarifying questions to understand the user's unique situation and tailor your response accordingly.`;
+
+const API_URL = 'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest';
+const HUGGING_FACE_API_KEY = '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';  // Replace with your actual Hugging Face API key
 
 const Chatbot = () => {
     const [input, setInput] = useState('');
@@ -25,8 +27,6 @@ const Chatbot = () => {
     const route = useRoute();
     const {onNewSession} = route.params || {};
     const [recordButton, setRecordButton] = useState(require('../icons/microphone-fill.png'));
-    const sentiment = new Sentiment();
-    const [sentimentScore, setSentimentScore] = useState('');
     const [results, setResults] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
     const webViewRef = useRef(null);
@@ -154,6 +154,40 @@ const Chatbot = () => {
         return extractText(jsxElement.props.children);
     };
 
+    // Function to analyze sentiment using Hugging Face API
+    const analyzeSentiment = async (text) => {
+        try {
+            const response = await axios.post(API_URL, {
+                inputs: text,
+            }, {
+                headers: { Authorization: `Bearer ${HUGGING_FACE_API_KEY}` }
+            });
+
+            const data = response.data;
+
+            if (Array.isArray(data) && Array.isArray(data[0])) {
+                const sentiments = data[0];
+
+                // Extract sentiment scores safely
+                const positive = sentiments.find(s => s.label.toLowerCase() === 'positive');
+                const negative = sentiments.find(s => s.label.toLowerCase() === 'negative');
+
+                if (positive && negative) {
+                    // Convert to a single score: Positive (1), Neutral (0), Negative (-1)
+                    const sentimentScore = positive.score - negative.score;
+                    return sentimentScore;
+                }
+            }
+
+            // If data format is unexpected or analysis fails, log the response and return null
+            console.error("Unexpected response format:", data);
+            return null;
+        } catch (error) {
+            console.error("Error analyzing sentiment", error);
+            return null; // Return null if an error occurs
+        }
+    };
+
     const saveChatSession = async () => {
         const sessionId = `session-${Date.now()}`;
         const sessionData = {
@@ -180,31 +214,38 @@ const Chatbot = () => {
                 onNewSession(response.data);
             }
 
-            // New variable to calculate average sentiment score
-            const userMessages = messages.filter(message => message.sender === 'You');  // Filter user messages only
-            const sentimentScores = userMessages.map(message => sentiment.analyze(message.text).score);  // Calculate sentiment scores
-            const averageSentimentScore = sentimentScores.length > 0
-                ? sentimentScores.reduce((a, b) => a + b, 0) / sentimentScores.length  // Calculate average sentiment
-                : 0;  // Default to 0 if no user messages
+            // Analyze and save sentiment score
+            const userMessages = messages.filter(msg => msg.sender === 'You');
+            const sentimentScores = await Promise.all(userMessages.map(msg => analyzeSentiment(msg.text)));
+            const validScores = sentimentScores.filter(score => score !== null);
+            const averageSentimentScore = validScores.length > 0 ? validScores.reduce((a, b) => a + b, 0) / validScores.length : 0;
 
-            // Save the sentiment score to the server
-            const sentimentResponse = await axios.post(`${IP_ADDRESS}/sentiment`, {
-                sessionId: response.data._id,  // Use the saved session ID from response
-                sessionName: `Chat Session ${sessionId}`,
-                averageSentiment: averageSentimentScore,  // Average sentiment score calculated above
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`  // Include token in Authorization header
-                }
-            });
+            // Save the sentiment score to MongoDB
+            await saveSentimentScore(response.data._id, sessionData.id, averageSentimentScore, token);
 
-            // alert("Sentiment score saved successfully!");
         } catch (error) {
             console.error("Error saving chat session", error.response ? error.response.data : error.message);
             alert("Error saving chat session.");
         }
     };
 
+    // Function to save the sentiment score to MongoDB
+    const saveSentimentScore = async (sessionId, sessionName, averageSentiment, token) => {
+        try {
+            const response = await axios.post(`${IP_ADDRESS}/sentiment`, {
+                sessionId: sessionId,
+                sessionName: sessionName,
+                averageSentiment: averageSentiment,
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`  // Include token in Authorization header
+                }
+            });
+            console.log("Sentiment score saved successfully:", response.data);
+        } catch (error) {
+            console.error("Error saving sentiment score", error);
+        }
+    };
 
     const clearChatHistory = () => {
         setMessages([]);
