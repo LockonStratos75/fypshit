@@ -1,20 +1,24 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {Image, ScrollView, Text, TextInput, TouchableOpacity, View, Platform} from 'react-native';
-import {styles} from "../App";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Image, ScrollView, Text, TextInput, TouchableOpacity, View, Platform, Alert } from 'react-native';
+import { styles } from "../App";
 import TypingIndicator from '../components/TypingIndicator';
-import {LinearGradient} from "expo-linear-gradient";
-import {FileArrowUp, PaperPlaneRight, TrashSimple} from "phosphor-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { FileArrowUp, PaperPlaneRight, TrashSimple } from "phosphor-react-native";
 import axios from 'axios';
-import {useRoute} from '@react-navigation/native';
-import * as Speech from 'expo-speech';
-import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
-import {GoogleGenerativeAI, HarmBlockThreshold, HarmCategory} from '@google/generative-ai';
+import { useRoute } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import Voice from '@react-native-voice/voice'; // Import react-native-voice
+import { decode } from 'he'; // For decoding HTML entities
+import { MarkdownView } from 'react-native-markdown-view'; // For rendering Markdown
 
 const IP_ADDRESS = 'http://192.168.100.90:5000';
 
 const MODEL_NAME = 'gemini-1.5-flash';
 const API_KEY = 'AIzaSyDBj5nEBMQf9h0RBj0kL1rPRZCrfD1G728';  // Replace with your actual API key
-const sysInstruct = `Eunoia, act as a mental health expert and therapist specializing in helping individuals in their 20s and 30s overcome challenges related to motivation, career, and self-esteem. Utilize your extensive experience of several decades to provide the best possible advice for improving mental health. Before offering specific advice, ask clarifying questions to understand the user's unique situation and tailor your response accordingly.`;
+
+// Improved sysInstruct
+const sysInstruct = `As Eunoia, a compassionate and understanding mental health therapist with decades of experience, engage with users in their 20s and 30s seeking guidance on motivation, career, and self-esteem. Provide responses that are empathetic, concise, and emotionally supportive. Use a warm and friendly tone, and keep your messages short and relatable. Before giving specific advice, ask thoughtful questions to better understand the user's situation and tailor your guidance accordingly.`;
 
 const API_URL = 'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest';
 const HUGGING_FACE_API_KEY = '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';  // Replace with your actual Hugging Face API key
@@ -25,16 +29,15 @@ const Chatbot = () => {
     const scrollViewRef = useRef();
     const [isBotTyping, setIsBotTyping] = useState(false);
     const route = useRoute();
-    const {onNewSession} = route.params || {};
+    const { onNewSession } = route.params || {};
     const [recordButton, setRecordButton] = useState(require('../icons/microphone-fill.png'));
     const [results, setResults] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
-    const webViewRef = useRef(null);
     const [chat, setChat] = useState(null);
 
     useEffect(() => {
         if (Platform.OS === 'web') {
-            alert("Speech recognition is not supported on web yet.");
+            Alert.alert("Speech recognition is not supported on web yet.");
         }
 
         // Initialize Google Generative AI Model
@@ -45,10 +48,10 @@ const Chatbot = () => {
         });
 
         const generationConfig = {
-            temperature: 1,
-            topK: 0,
-            topP: 0.95,
-            maxOutputTokens: 8192,
+            temperature: 0.7, // Adjusted for more concise and human-like responses
+            topK: 40,
+            topP: 0.9,
+            maxOutputTokens: 256, // Limit response length
         };
 
         const safetySettings = [
@@ -76,43 +79,60 @@ const Chatbot = () => {
             history: [],
         });
         setChat(chatSession);
+
+        // Initialize voice recognition event handlers
+        Voice.onSpeechStart = onSpeechStart;
+        Voice.onSpeechResults = onSpeechResults;
+        Voice.onSpeechEnd = onSpeechEnd;
+        Voice.onSpeechError = onSpeechError;
+
+        return () => {
+            Voice.destroy().then(Voice.removeAllListeners);
+        };
     }, []);
 
-    const speakText = (text) => {
-        Speech.speak(text, {
-            language: 'en-US',
-            pitch: 1.0,
-            rate: 1.0,
-        });
+    const onSpeechStart = (e) => {
+        console.log('onSpeechStart: ', e);
     };
 
-    const onMessageFromWebView = (event) => {
-        const data = event.nativeEvent.data;
-        if (data) {
-            setInput(data);
-            setResults([data]);
+    const onSpeechResults = (e) => {
+        console.log('onSpeechResults: ', e);
+        setResults(e.value);
+        setInput(e.value[0]);
+    };
+
+    const onSpeechEnd = (e) => {
+        console.log('onSpeechEnd: ', e);
+        setIsRecording(false);
+        setRecordButton(require('../icons/microphone-fill.png'));
+    };
+
+    const onSpeechError = (e) => {
+        console.log('onSpeechError: ', e);
+        setIsRecording(false);
+        setRecordButton(require('../icons/microphone-fill.png'));
+        Alert.alert('Error', 'Speech recognition error. Please try again.');
+    };
+
+    const startRecognizing = async () => {
+        try {
+            await Voice.start('en-US');
+            setIsRecording(true);
+            setResults([]);
+        } catch (error) {
+            console.error('Error starting voice recognition: ', error);
+            Alert.alert('Error', 'Failed to start voice recognition.');
         }
     };
 
-    const startRecognizing = () => {
-        setIsRecording(true);
-        webViewRef.current.injectJavaScript(`
-            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'en-US';
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                window.ReactNativeWebView.postMessage(transcript);
-            };
-            recognition.start();
-        `);
-    };
-
-    const stopRecognizing = () => {
-        setIsRecording(false);
-        webViewRef.current.injectJavaScript(`
-            recognition.stop();
-        `);
+    const stopRecognizing = async () => {
+        try {
+            await Voice.stop();
+            setIsRecording(false);
+        } catch (error) {
+            console.error('Error stopping voice recognition: ', error);
+            Alert.alert('Error', 'Failed to stop voice recognition.');
+        }
     };
 
     const RecordButtonHandler = () => {
@@ -125,21 +145,26 @@ const Chatbot = () => {
         }
     };
 
+    // Updated parseMarkdown function
     const parseMarkdown = (text) => {
-        const parts = text.split(/(\*\*.*?\*\*)/).map((part, index) => {
-            if (/^\*\*(.*)\*\*$/.test(part)) {
-                const boldText = part.match(/^\*\*(.*)\*\*$/)[1];
-                return (
-                    <Text key={index} style={[styles.botMessageText, styles.boldText]}>
-                        {boldText}
-                    </Text>
-                );
-            } else {
-                return <Text key={index} style={styles.botMessageText}>{part}</Text>;
-            }
-        });
+        // Decode any HTML entities
+        const decodedText = decode(text);
 
-        return <Text style={styles.botMessageText}>{parts}</Text>;
+        return (
+            <MarkdownView
+                styles={{
+                    paragraph: { marginTop: 0, marginBottom: 0 },
+                    strong: { fontWeight: 'bold' },
+                    em: { fontStyle: 'italic' },
+                    listItemBullet: { fontSize: 12 },
+                    listItemNumber: { fontSize: 12 },
+                    listItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 },
+                    listItemContent: { flex: 1 },
+                }}
+            >
+                {decodedText}
+            </MarkdownView>
+        );
     };
 
     const extractText = (jsxElement) => {
@@ -209,7 +234,7 @@ const Chatbot = () => {
                 }
             });
 
-            alert("Chat session saved successfully!");
+            Alert.alert("Success", "Chat session saved successfully!");
             if (onNewSession) {
                 onNewSession(response.data);
             }
@@ -225,7 +250,7 @@ const Chatbot = () => {
 
         } catch (error) {
             console.error("Error saving chat session", error.response ? error.response.data : error.message);
-            alert("Error saving chat session.");
+            Alert.alert("Error", "Error saving chat session.");
         }
     };
 
@@ -254,15 +279,19 @@ const Chatbot = () => {
 
     const handleSend = useCallback(async () => {
         if (input.trim()) {
-            const newMessages = [...messages, {text: input, sender: 'You'}];
+            const newMessages = [...messages, { text: input, sender: 'You' }];
             setMessages(newMessages);
             setIsBotTyping(true);
 
             try {
                 const result = await chat.sendMessage(input.trim());
                 setIsBotTyping(false);
-                const botMessageText = extractText(result.response.text());
-                newMessages.push({text: botMessageText, sender: 'Bot'});
+                const botMessageText = result.response.text();
+
+                // Use parseMarkdown to render formatted text
+                const formattedMessage = parseMarkdown(botMessageText);
+
+                newMessages.push({ text: formattedMessage, sender: 'Bot' });
                 setMessages([...newMessages]);
                 setInput('');
             } catch (error) {
@@ -277,7 +306,7 @@ const Chatbot = () => {
             <ScrollView
                 ref={scrollViewRef}
                 style={styles.messageContainer}
-                onContentSizeChange={() => scrollViewRef.current.scrollToEnd({animated: true})}
+                onContentSizeChange={() => scrollViewRef.current.scrollToEnd({ animated: true })}
             >
                 {messages.map((msg, index) => (
                     <View
@@ -297,7 +326,7 @@ const Chatbot = () => {
                 ))}
                 {isBotTyping && (
                     <View style={styles.botMessage}>
-                        <TypingIndicator/>
+                        <TypingIndicator />
                     </View>
                 )}
             </ScrollView>
@@ -308,17 +337,17 @@ const Chatbot = () => {
                         value={input}
                         placeholder="Type your message here..."
                         multiline={true}
-                        style={{width: 150, marginRight: 20,}}
+                        style={{ width: 150, marginRight: 20 }}
                     />
                     <TouchableOpacity onPress={() => saveChatSession()}>
-                        <FileArrowUp size={25} color="#212529" weight="fill"/>
+                        <FileArrowUp size={25} color="#212529" weight="fill" />
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => clearChatHistory()}>
-                        <TrashSimple size={25} color="red" weight="fill"/>
+                        <TrashSimple size={25} color="red" weight="fill" />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => RecordButtonHandler()}>
-                        <Image source={recordButton} style={styles.iconImg}/>
+                        <Image source={recordButton} style={styles.iconImg} />
                     </TouchableOpacity>
                 </View>
 
@@ -327,7 +356,7 @@ const Chatbot = () => {
                         colors={['#247C8A', '#164D82']}
                         style={styles.circleButton}
                     >
-                        <PaperPlaneRight size={24} color="#ffffff" weight="fill"/>
+                        <PaperPlaneRight size={24} color="#ffffff" weight="fill" />
                     </LinearGradient>
                 </TouchableOpacity>
             </View>
