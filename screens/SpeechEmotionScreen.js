@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { Button, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { Audio } from 'expo-av';
+import React, {useState} from 'react';
+import {Button, SafeAreaView, StyleSheet, Text, View} from 'react-native';
+import {Audio} from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
 import axios from 'axios';  // Import axios for HTTP requests
 import query from '../config/SpeechEmotionRecognition';
-import { ButtonComponent } from "../components/ButtonComponent";
+import {ButtonComponent} from "../components/ButtonComponent";
+import {IP_ADDRESS} from '@env';
 
-const IP_ADDRESS = 'http://192.168.100.90:5000';  // Replace with your server's IP address
 
 export const SpeechEmotionScreen = () => {
     const [result, setResult] = useState(null);
@@ -80,7 +80,7 @@ export const SpeechEmotionScreen = () => {
         if (!response || !Array.isArray(response) || response.length === 0) {
             console.error('Invalid response format:', response);
             setError('Invalid response format');
-            return { highestEmotion: { label: 'unknown', score: 0 }, emotions: [] };
+            return {highestEmotion: {label: 'unknown', score: 0}, emotions: []};
         }
 
         const sortedEmotions = response.sort((a, b) => b.score - a.score);

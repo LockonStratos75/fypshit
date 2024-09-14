@@ -3,9 +3,12 @@ import { View, Text, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
+import {
+    IP_ADDRESS,
+} from '@env';
 
 // Define the base URL as a constant
-const BASE_URL = 'http://192.168.100.90:5000'; // Replace with your IP address or localhost based on your setup
+const BASE_URL = IP_ADDRESS; // Replace with your IP address or localhost based on your setup
 
 const ChatSessionsScreen = () => {
     const navigation = useNavigation();

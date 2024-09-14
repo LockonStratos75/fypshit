@@ -11,17 +11,19 @@ import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/ge
 import Voice from '@react-native-voice/voice'; // Import react-native-voice
 import { decode } from 'he'; // For decoding HTML entities
 import { MarkdownView } from 'react-native-markdown-view'; // For rendering Markdown
-
-const IP_ADDRESS = 'http://192.168.100.90:5000';
+import {
+    GOOGLE_API_KEY,
+    HUGGING_FACE_API_KEY,
+    IP_ADDRESS,
+} from '@env';
 
 const MODEL_NAME = 'gemini-1.5-flash';
-const API_KEY = 'AIzaSyDBj5nEBMQf9h0RBj0kL1rPRZCrfD1G728';  // Replace with your actual API key
+const API_KEY = GOOGLE_API_KEY;  // Replace with your actual API key
 
 // Improved sysInstruct
 const sysInstruct = `As Eunoia, a compassionate and understanding mental health therapist with decades of experience, engage with users in their 20s and 30s seeking guidance on motivation, career, and self-esteem. Provide responses that are empathetic, concise, and emotionally supportive. Use a warm and friendly tone, and keep your messages short and relatable. Before giving specific advice, ask thoughtful questions to better understand the user's situation and tailor your guidance accordingly.`;
 
 const API_URL = 'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest';
-const HUGGING_FACE_API_KEY = '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';  // Replace with your actual Hugging Face API key
 
 const Chatbot = () => {
     const [input, setInput] = useState('');

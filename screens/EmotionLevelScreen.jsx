@@ -2,8 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import {
+    IP_ADDRESS,
+} from '@env';
+import {ButtonComponent} from "../components/ButtonComponent";
 
-const BASE_URL = 'http://192.168.100.90:5000'; // Replace with your server's IP address or hostname
+const BASE_URL = IP_ADDRESS; // Replace with your server's IP address or hostname
 
 const EmotionLevelScreen = () => {
     const [overallEmotion, setOverallEmotion] = useState(null);
@@ -151,10 +155,11 @@ const EmotionLevelScreen = () => {
 
             {/* Refresh Button */}
             <View style={styles.buttonContainer}>
-                <Button
+                <ButtonComponent
                     title={isRefreshing ? "Refreshing..." : "Refresh"}
                     onPress={handleRefresh}
                     disabled={isRefreshing}
+
                 />
             </View>
         </View>

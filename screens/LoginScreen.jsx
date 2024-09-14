@@ -10,6 +10,9 @@ import { ButtonComponent } from "../components/ButtonComponent";
 import axios from 'axios';  // Import axios for API requests
 import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
 import { styles } from '../App';
+import {
+    IP_ADDRESS,
+} from '@env';
 
 export function LoginScreen({ navigation }) {
     const [email, setEmail] = useState("");
@@ -18,7 +21,7 @@ export function LoginScreen({ navigation }) {
     const handleSubmit = async () => {
         if (email && password) {
             try {
-                const response = await axios.post('http://192.168.100.90:5000/login', { email, password });  // Corrected line
+                const response = await axios.post(`${IP_ADDRESS}/login`, { email, password });  // Corrected line
                 const { token } = response.data;  // Extract JWT token from response
 
                 if (token && typeof token === 'string') {  // Ensure token is a valid string

@@ -1,6 +1,9 @@
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
 import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
+import {
+    HUGGING_FACE_API_KEY,
+} from '@env';
 
 const query = async (filename) => {
     try {
@@ -17,8 +20,7 @@ const query = async (filename) => {
             {
                 method: 'POST',
                 headers: {
-                    // Authorization: `Bearer ${token}`,  // Include JWT token in the Authorization header
-                    Authorization: `Bearer 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`,  // Include JWT token in the Authorization header
+                    Authorization: `Bearer ${HUGGING_FACE_API_KEY}`,  // Include JWT token in the Authorization header
                     'Content-Type': 'audio/wav',
                 },
                 body: buffer,
