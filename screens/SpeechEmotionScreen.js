@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
-import { Button, Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { Audio } from 'expo-av';
+import React, {useState} from 'react';
+import {Button, SafeAreaView, StyleSheet, Text, View} from 'react-native';
+import {Audio} from 'expo-av';
 import * as FileSystem from 'expo-file-system';
+import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
+import axios from 'axios';  // Import axios for HTTP requests
 import query from '../config/SpeechEmotionRecognition';
 import {ButtonComponent} from "../components/ButtonComponent";
+import {IP_ADDRESS} from '@env';
 
-export const HistoryScreen = () => {
+
+export const SpeechEmotionScreen = () => {
     const [result, setResult] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recording, setRecording] = useState(null);
@@ -58,9 +62,14 @@ export const HistoryScreen = () => {
             });
 
             // Query the moved file
-            const response = await query(targetPath);
+            const token = await SecureStore.getItemAsync('token');  // Retrieve JWT token from SecureStore
+            const response = await query(targetPath, token);  // Pass token to query function
             const emotions = processResponse(response);
             setResult(emotions);
+
+            // Save SER results to the server
+            await saveSERResultToServer(emotions, token);
+
         } catch (error) {
             console.error('Failed to process recording', error);
             setError(error.message);
@@ -71,7 +80,7 @@ export const HistoryScreen = () => {
         if (!response || !Array.isArray(response) || response.length === 0) {
             console.error('Invalid response format:', response);
             setError('Invalid response format');
-            return { highestEmotion: { label: 'unknown', score: 0 }, emotions: [] };
+            return {highestEmotion: {label: 'unknown', score: 0}, emotions: []};
         }
 
         const sortedEmotions = response.sort((a, b) => b.score - a.score);
@@ -85,6 +94,22 @@ export const HistoryScreen = () => {
             highestEmotion,
             emotions,
         };
+    };
+
+    const saveSERResultToServer = async (emotions, token) => {
+        try {
+            const response = await axios.post(`${IP_ADDRESS}/ser`, {
+                highestEmotion: emotions.highestEmotion,
+                emotions: emotions.emotions,
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`  // Include token in Authorization header
+                }
+            });
+            console.log("SER result saved successfully:", response.data);
+        } catch (error) {
+            console.error("Error saving SER result", error);
+        }
     };
 
     return (
