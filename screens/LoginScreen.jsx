@@ -1,32 +1,45 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import {
     Text,
     View,
-    StyleSheet,
     TextInput,
     TouchableOpacity,
-    StatusBar, Alert,
+    Alert,
 } from "react-native";
-import {ButtonComponent} from "../components/ButtonComponent";
-import {signInWithEmailAndPassword} from "firebase/auth";
-import {auth} from "../config/firebase";
-import {styles} from '../App'
+import { ButtonComponent } from "../components/ButtonComponent";
+import axios from 'axios';  // Import axios for API requests
+import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
+import { styles } from '../App';
+import {
+    IP_ADDRESS,
+} from '@env';
 
-export function LoginScreen({navigation}) {
+export function LoginScreen({ navigation }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const handleSubmit = async () => {
         if (email && password) {
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                const response = await axios.post(`${IP_ADDRESS}/login`, { email, password });  // Corrected line
+                const { token } = response.data;  // Extract JWT token from response
+
+                if (token && typeof token === 'string') {  // Ensure token is a valid string
+                    await SecureStore.setItemAsync('token', token);  // Store the token directly as it is already a string
+                } else {
+                    console.error('Invalid token format');
+                    throw new Error('Invalid token format received from server.');
+                }
+
                 Alert.alert("Login", "Login Successful!");
-            }
-            catch (error) {
-                Alert.alert("Error", error.message)
+                navigation.navigate("Home");  // Navigate to the next screen
+            } catch (error) {
+                Alert.alert("Error", error.message);
             }
         }
-    }
+    };
+
+
 
     return (
         <View style={styles.wrapper}>
@@ -59,11 +72,10 @@ export function LoginScreen({navigation}) {
 
                 <TouchableOpacity onPress={() => navigation.navigate("Sign Up")}>
                     <Text style={styles.caption}>
-                        Don't have an account? <Text style={[styles.mainCap,styles.mainCap]}>Create One</Text>
+                        Don't have an account? <Text style={[styles.mainCap, styles.mainCap]}>Create One</Text>
                     </Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
 }
-

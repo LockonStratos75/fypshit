@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
+import {
+    IP_ADDRESS,
+} from '@env';
 
 // Define the base URL as a constant
-const BASE_URL = 'http://192.168.100.90:5000'; // Replace with your IP address or localhost based on your setup
+const BASE_URL = IP_ADDRESS; // Replace with your IP address or localhost based on your setup
 
 const ChatSessionScreen = ({ route }) => {
     const { sessionId } = route.params;
@@ -12,8 +16,17 @@ const ChatSessionScreen = ({ route }) => {
     useEffect(() => {
         const fetchSession = async () => {
             try {
-                const response = await axios.get(`${BASE_URL}/sessions/${sessionId}`); // Use the base URL variable
-                setSession(response.data);
+                console.log("Fetching session with ID:", sessionId);
+                const token = await SecureStore.getItemAsync('token');  // Retrieve JWT token from SecureStore
+                console.log("Retrieved Token:", token);
+                const response = await axios.get(`${BASE_URL}/sessions/${sessionId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Include token in Authorization header
+                    }
+                });  // Fetch chat session data
+                const sessionData = response.data;
+                console.log("Session Data:", sessionData);
+                setSession(sessionData);
             } catch (error) {
                 console.error("Error fetching chat session", error);
             }
@@ -21,6 +34,10 @@ const ChatSessionScreen = ({ route }) => {
 
         fetchSession();
     }, [sessionId]);
+
+    useEffect(() => {
+        console.log("Session updated:", session);
+    }, [session]);
 
     if (!session) {
         return (
@@ -33,6 +50,7 @@ const ChatSessionScreen = ({ route }) => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Chat Session {session.id}</Text>
+
             <FlatList
                 data={session.messages}
                 renderItem={({ item }) => (
