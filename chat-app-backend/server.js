@@ -1,4 +1,4 @@
-
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -10,30 +10,36 @@ const chatSessionRoutes = require('./routes/chatSessionRoutes');
 const sentimentRoutes = require('./routes/sentimentRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const serRoutes = require('./routes/serRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000; 
+const IP_ADDRESS = process.env.IP_ADDRESS; 
 
-// Load environment variables from .env file
-require('dotenv').config();
+
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://192.168.1.8:3000', 
+  credentials: true, 
+}));
+
 app.use(bodyParser.json());
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.error(err));
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error(err));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/assessments', assessmentRoutes);
-app.use('/api/monitoring', monitoringRoutes);
-app.use('/api/sessions', chatSessionRoutes);
-app.use('/api/sentiment', sentimentRoutes);
-app.use('/api/profiles', profileRoutes);
-app.use('/api/analytics', analyticsRoutes);
+app.use('/auth', authRoutes);
+app.use('/assessments', assessmentRoutes);
+app.use('/monitoring', monitoringRoutes);
+app.use('/sessions', chatSessionRoutes);
+app.use('/sentiment', sentimentRoutes);
+app.use('/profiles', profileRoutes);
+app.use('/analytics', analyticsRoutes);
+app.use('/ser', serRoutes);
 
 // Start server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, IP_ADDRESS, () => console.log(`Server running on http://${IP_ADDRESS}:${PORT}`));
