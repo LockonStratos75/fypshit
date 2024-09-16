@@ -4,7 +4,7 @@ import {Audio} from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
 import axios from 'axios';  // Import axios for HTTP requests
-import query from '../config/SpeechEmotionRecognition';
+import query from '../../config/SpeechEmotionRecognition';
 import {ButtonComponent} from "../components/ButtonComponent";
 import {IP_ADDRESS} from '@env';
 
