@@ -1,0 +1,25 @@
+/* frontend/src/styles/App.css */
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #FFFFFF;
+  color: #333333;
+}
+
+a {
+  text-decoration: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #004080;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-size: 16px;
+}
+
+.form-title, .section-title {
+  color: #004080;
+}
