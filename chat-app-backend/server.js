@@ -17,7 +17,6 @@ const PORT = process.env.PORT || 5000;
 const IP_ADDRESS = process.env.IP_ADDRESS; 
 
 
-
 // Middleware
 app.use(cors({
   origin: 'http://192.168.1.8:3000', 
