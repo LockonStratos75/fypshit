@@ -1,0 +1,108 @@
+/* frontend/src/styles/Components.css */
+
+.login-container, .signup-container, .signup-therapist-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #F4F4F4;
+  }
+  
+  .login-form, .signup-form {
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .form-input, .form-textarea {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #E0E0E0;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .form-button {
+    padding: 10px;
+    background-color: #004080;
+    color: #FFFFFF;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+  }
+  
+  .form-button:hover {
+    background-color: #6FB9FF;
+  }
+  
+  .dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F4F4F4;
+  }
+  
+  .dashboard-nav {
+    background-color: #004080;
+    padding: 20px;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .nav-link {
+    color: #FFFFFF;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+  
+  .nav-link:hover {
+    background-color: #6FB9FF;
+  }
+  
+  .dashboard-content {
+    flex: 1;
+    padding: 20px;
+  }
+  
+  .profiles-container {
+    padding: 20px;
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .section-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .subsection-title {
+    font-size: 20px;
+    color: #004080;
+    margin-bottom: 10px;
+  }
+  
+  .profile-list {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .profile-item {
+    background-color: #F4F4F4;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #E0E0E0;
+    transition: background-color 0.3s;
+  }
+  
+  .profile-item:hover {
+    background-color: #E0E0E0;
+  }
+  
