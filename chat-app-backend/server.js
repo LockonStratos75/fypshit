@@ -13,14 +13,14 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const serRoutes = require('./routes/serRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5000; 
-const IP_ADDRESS = process.env.IP_ADDRESS; 
+const PORT = process.env.PORT || 5000;
+const IP_ADDRESS = process.env.IP_ADDRESS;
 
 
 // Middleware
 app.use(cors({
-  origin: 'http://192.168.1.8:3000', 
-  credentials: true, 
+  origin: 'http://192.168.1.106:3000',
+  credentials: true,
 }));
 
 app.use(bodyParser.json());
