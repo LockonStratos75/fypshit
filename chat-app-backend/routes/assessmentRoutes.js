@@ -1,7 +1,7 @@
 // backend/routes/assessmentRoutes.js
 const express = require('express');
 const { createAssessment, getAssessments } = require('../controllers/assessmentController');
-const authenticateToken = require('../middlewares/authMiddleware');
+const { authenticateToken } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 

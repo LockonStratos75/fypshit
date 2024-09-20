@@ -1,4 +1,5 @@
 // backend/routes/adminRoutes.js
+
 const express = require('express');
 const {
   manageUserAccounts,
@@ -8,11 +9,15 @@ const {
   sendAnnouncement,
   getLogs,
 } = require('../controllers/adminController');
-const { authorizeRoles } = require('../middlewares/authMiddleware');
+const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware'); // Correct import
 
 const router = express.Router();
 
-router.use(authorizeRoles('admin'));
+// Apply authentication middleware
+router.use(authenticateToken);
+
+// Apply authorization middleware for admin role
+router.use(authorizeRoles('admin')); // This line requires authorizeRoles to be a function
 
 // User account management
 router.post('/users/manage', manageUserAccounts);
