@@ -23,15 +23,44 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
     const { email, password } = req.body;
     try {
-        const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ message: 'User not found' });
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) return res.status(401).json({ message: 'Invalid credentials' });
-
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ token });
+      const user = await User.findOne({ email });
+      if (!user)
+        return res.status(404).json({ message: 'User not found' });
+  
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        user.password
+      );
+      if (!isPasswordValid)
+        return res.status(401).json({ message: 'Invalid credentials' });
+  
+      // Update lastLogin field
+      user.lastLogin = new Date();
+      await user.save();
+  
+      const token = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+  
+      res
+        .cookie('token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'Strict',
+          maxAge: 3600000, // 1 hour
+        })
+        .status(200)
+        .json({ message: 'Login successful' });
+  
+      await Log.create({
+        userId: user._id,
+        action: 'User Logged In',
+        details: `Email: ${email}`,
+      });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+      res.status(500).json({ message: err.message });
     }
-};
+  };
+  
