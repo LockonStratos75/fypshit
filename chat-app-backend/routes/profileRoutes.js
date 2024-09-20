@@ -1,15 +1,18 @@
 // backend/routes/profileRoutes.js
 const express = require('express');
 const {
-  manageProfiles,
-  updateUserProfile,
-  updatePsychologistProfile,
+    manageProfiles,
+    updateUserProfile,
+    updatePsychologistProfile,
+    reviewPsychologistApplication,
 } = require('../controllers/profileController');
+const authenticateToken = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.get('/', manageProfiles);
-router.post('/updateUser', updateUserProfile);
-router.post('/updatePsychologist', updatePsychologistProfile);
+router.get('/', authenticateToken, manageProfiles);
+router.post('/updateUser', authenticateToken, updateUserProfile);
+router.post('/updatePsychologist', authenticateToken, updatePsychologistProfile);
+router.post('/reviewApplication', authenticateToken, reviewPsychologistApplication);
 
 module.exports = router;
