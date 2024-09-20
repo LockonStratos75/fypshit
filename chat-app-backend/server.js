@@ -16,6 +16,7 @@ const sentimentRoutes = require('./routes/sentimentRoutes');
 const serRoutes = require('./routes/serRoutes');
 const sanityLevelRoutes = require('./routes/sanityLevelRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const chatRoutes = require('./routes/chatSessionRoutes');
 
 // Middlewares
 const { authenticateToken } = require('./middlewares/authMiddleware');
@@ -28,8 +29,8 @@ const IP_ADDRESS = process.env.IP_ADDRESS;
 
 // Middleware
 app.use(cors({
-  origin: 'http://192.168.1.8:3000',  
-  credentials: true, 
+  origin: 'http://192.168.100.92:8081',
+  credentials: true,
 }));
 
 
@@ -55,6 +56,7 @@ app.use('/assessments', assessmentRoutes);
 app.use('/monitoring', monitoringRoutes);
 app.use('/profiles', profileRoutes);
 app.use('/analytics', analyticsRoutes);
+app.use('/sessions', chatRoutes)
 app.use('/sentiment', sentimentRoutes);
 app.use('/ser', serRoutes);
 app.use('/sanity', sanityLevelRoutes);
