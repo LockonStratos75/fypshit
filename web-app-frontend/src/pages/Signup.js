@@ -1,23 +1,36 @@
-// frontend/src/pages/Signup.js
-import React, { useState, useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import '../styles/Components.css'; // Import component-specific styles
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { signupAdmin } from '../redux/slices/userSlice'; // Import admin signup action
+import { useNavigate } from 'react-router-dom';
+import '../styles/Components.css'; // Import your styles
 
 const Signup = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signup } = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { status, error } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (status === 'succeeded') {
+      navigate('/dashboard');
+    }
+  }, [status, navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    signup({ username, email, password });
+    dispatch(signupAdmin({ username, email, password })); // Dispatch admin signup
   };
 
   return (
     <div className="signup-container">
       <form onSubmit={handleSubmit} className="signup-form">
-        <h2 className="form-title">Signup</h2>
+        <h2 className="form-title">Signup as Admin</h2>
+
+        {status === 'loading' && <p>Signing up...</p>}
+        {status === 'failed' && <p className="error-message">{error}</p>}
+
         <input
           type="text"
           value={username}
