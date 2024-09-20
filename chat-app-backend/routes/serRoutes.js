@@ -1,6 +1,6 @@
 const express = require('express');
 const { getSERResults, saveSERResult } = require('../controllers/serController');
-const authenticateToken = require('../middlewares/authMiddleware');
+const { authenticateToken } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 

@@ -26,6 +26,6 @@ exports.saveSERResult = async (req, res) => {
         await serResult.save();  // Save to the database
         res.status(201).json(serResult);  // Return the saved SER result
     } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+        res.status(500).json({ message: err.message});
+    }
 };

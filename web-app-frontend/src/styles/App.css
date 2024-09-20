@@ -1,13 +1,23 @@
 /* frontend/src/styles/App.css */
+
+/* Reset some default browser styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: 'Arial', sans-serif;
   background-color: #FFFFFF;
   color: #333333;
+  line-height: 1.6;
 }
 
 a {
   text-decoration: none;
+  color: inherit;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -22,4 +32,14 @@ button {
 
 .form-title, .section-title {
   color: #004080;
+}
+
+input, textarea, select, button {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Adding some global link styles */
+a:hover {
+  color: #6FB9FF;
 }
