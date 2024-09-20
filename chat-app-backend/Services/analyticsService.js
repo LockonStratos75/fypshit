@@ -1,5 +1,3 @@
-// backend/services/analyticsService.js
-
 const getSystemMetrics = async () => {
     // Example data - Replace with actual implementation
     const metrics = {

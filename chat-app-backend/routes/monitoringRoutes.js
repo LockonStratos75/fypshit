@@ -1,10 +1,11 @@
 // backend/routes/monitoringRoutes.js
 const express = require('express');
-const { monitorUserInteractions, getAlerts } = require('../controllers/monitoringController');
+const { createAlert, getAlerts } = require('../controllers/monitoringController');
+const authenticateToken = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.post('/interactions', monitorUserInteractions);
-router.get('/alerts', getAlerts);
+router.post('/', authenticateToken, createAlert);
+router.get('/', authenticateToken, getAlerts);
 
 module.exports = router;
