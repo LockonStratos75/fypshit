@@ -33,5 +33,5 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
-/chat-app-backend/.env
-/mobile-app-frontend/.env
+./chat-app-backend/.env
+./mobile-app-frontend/.env
