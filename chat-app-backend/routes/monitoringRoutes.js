@@ -1,7 +1,7 @@
 // backend/routes/monitoringRoutes.js
 const express = require('express');
 const { createAlert, getAlerts } = require('../controllers/monitoringController');
-const authenticateToken = require('../middlewares/authMiddleware');
+const { authenticateToken } = require('../middlewares/authMiddleware'); // Fixed import
 
 const router = express.Router();
 

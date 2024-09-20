@@ -1,12 +1,12 @@
 // backend/routes/profileRoutes.js
 const express = require('express');
 const {
-    manageProfiles,
-    updateUserProfile,
-    updatePsychologistProfile,
-    reviewPsychologistApplication,
+  manageProfiles,
+  updateUserProfile,
+  updatePsychologistProfile,
+  reviewPsychologistApplication,
 } = require('../controllers/profileController');
-const authenticateToken = require('../middlewares/authMiddleware');
+const { authenticateToken } = require('../middlewares/authMiddleware'); // Fixed import
 
 const router = express.Router();
 

@@ -1,7 +1,7 @@
 // backend/routes/chatSessionRoutes.js
 const express = require('express');
 const { getUserSessions, getSessionById, createSession, deleteSession } = require('../controllers/chatSessionController');
-const authenticateToken = require('../middlewares/authMiddleware');
+const { authenticateToken } = require('../middlewares/authMiddleware'); // Fixed import
 
 const router = express.Router();
 

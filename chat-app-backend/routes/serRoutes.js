@@ -1,11 +1,11 @@
+// backend/routes/serRoutes.js
 const express = require('express');
 const { getSERResults, saveSERResult } = require('../controllers/serController');
-const authenticateToken = require('../middlewares/authMiddleware');
+const { authenticateToken } = require('../middlewares/authMiddleware'); // Fixed import
 
 const router = express.Router();
 
-// Define the routes for SER results
-router.get('/', authenticateToken, getSERResults);  
-router.post('/', authenticateToken, saveSERResult); 
+router.get('/', authenticateToken, getSERResults);
+router.post('/', authenticateToken, saveSERResult);
 
 module.exports = router;
