@@ -71,9 +71,15 @@ const SanityLevelScreen = () => {
                 ? serResponse.data
                 : serResponse.data.results || []; // Replace 'results' with actual key
 
+            // **Filter out SER results with 'unknown' emotions**
+            const validSerResults = serResults.filter(result => {
+                const label = result.highestEmotion?.label?.toLowerCase();
+                return label && label !== 'unknown';
+            });
+
             // Check for missing data
             const isSentimentEmpty = !Array.isArray(sentimentScores) || sentimentScores.length === 0;
-            const isSEREmpty = !Array.isArray(serResults) || serResults.length === 0;
+            const isSEREmpty = !Array.isArray(validSerResults) || validSerResults.length === 0;
 
             if (isSentimentEmpty && isSEREmpty) {
                 setDataMissingMessage("No Sentiment or SER data available. Please interact more to generate data.");
@@ -85,13 +91,13 @@ const SanityLevelScreen = () => {
                 setDataMissingMessage("No SER data available. Please interact more to generate SER data.");
                 setSanityLevel(null);
             } else {
-                // Both datasets have data, proceed to calculate sanity level
+                // Both datasets have valid data, proceed to calculate sanity level
                 // Calculate average sentiment score
                 const averageSentiment = calculateAverageSentiment(sentimentScores);
                 console.log("Average Sentiment:", averageSentiment);
 
-                // Calculate average SER score
-                const averageSER = calculateAverageSER(serResults);
+                // Calculate average SER score using validSerResults
+                const averageSER = calculateAverageSER(validSerResults);
                 console.log("Average SER:", averageSER);
 
                 // Compute overall sanity score
