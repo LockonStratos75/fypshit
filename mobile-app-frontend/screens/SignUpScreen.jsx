@@ -32,7 +32,7 @@ export function SignUpScreen({ navigation }) {
             }
 
             try {
-                const response = await axios.post(`${IP_ADDRESS}/signup`, { username, email, password });  // Include username in request
+                const response = await axios.post(`${IP_ADDRESS}/auth/signup`, { username, email, password }, {withCredentials: true});  // Include username in request
                 console.log('Server response:', response.data);  // Log the server response
                 const { token } = response.data;  // Extract JWT token from response
 
@@ -45,7 +45,7 @@ export function SignUpScreen({ navigation }) {
                 }
 
                 Alert.alert("Signup", "Signup Successful!");
-                navigation.navigate("Chat");  // Navigate to the next screen
+                navigation.navigate("Home");  // Navigate to the next screen
             } catch (error) {
                 console.error('Error during signup:', error);  // Log the error for debugging
                 Alert.alert("Error", error.response?.data?.message || "Signup failed. Please try again.");  // Show a relevant error message
@@ -92,12 +92,6 @@ export function SignUpScreen({ navigation }) {
                     title={"Sign Up"}
                     onPress={handleSubmit}
                 />
-
-                <TouchableOpacity onPress={() => navigation.navigate("Sign Up T")}>
-                    <Text style={styles.caption}>
-                        Want to create an account as a <Text style={[styles.mainCap, styles.mainCap]}>Therapist?</Text>
-                    </Text>
-                </TouchableOpacity>
             </View>
         </View>
     );

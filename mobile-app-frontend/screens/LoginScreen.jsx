@@ -22,7 +22,9 @@ export function LoginScreen({ navigation }) {
         console.log(IP_ADDRESS)
         if (email && password) {
             try {
-                const response = await axios.post(`${IP_ADDRESS}/auth/login`, { email, password });  // Corrected line
+                const response = await axios.post(`${IP_ADDRESS}/auth/login`, { email, password }, {
+                    withCredentials: true,
+                });  // Corrected line
                 const { token } = response.data;  // Extract JWT token from response
 
                 if (token && typeof token === 'string') {  // Ensure token is a valid string
