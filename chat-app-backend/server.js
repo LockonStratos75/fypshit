@@ -11,6 +11,8 @@ const sentimentRoutes = require('./routes/sentimentRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const serRoutes = require('./routes/serRoutes');
+const sanityLevelRoutes = require('./routes/sanityLevelRoutes');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,6 +41,7 @@ app.use('/sentiment', sentimentRoutes);
 app.use('/profiles', profileRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/ser', serRoutes);
+app.use('/sanity', sanityLevelRoutes);
 
 // Start server
 app.listen(PORT, IP_ADDRESS, () => console.log(`Server running on http://${IP_ADDRESS}:${PORT}`));
