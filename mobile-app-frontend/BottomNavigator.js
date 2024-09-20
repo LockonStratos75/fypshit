@@ -3,7 +3,7 @@ import {ChatCenteredText, Chats, DotsThreeOutlineVertical, Record, User} from 'p
 import { Chat } from "./screens/Chat";  // Import Chat component here
 import ChatSessions from "./screens/ChatSessions";
 import { SpeechEmotionScreen } from "./screens/SpeechEmotionScreen";
-import EmotionLevelScreen from "./screens/EmotionLevelScreen";
+import SanityLevelScreen from "./screens/SanityLevelScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -59,7 +59,7 @@ export function MyTabs() {
             />
             <Tab.Screen
                 name="Profile"
-                component={EmotionLevelScreen}
+                component={SanityLevelScreen}
                 options={{
                     tabBarIcon: ({ color, size }) => (<User color={color} size={size} weight={'fill'} />),
                 }}
