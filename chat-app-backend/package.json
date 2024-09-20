@@ -18,7 +18,8 @@
     "express": "^4.19.2",
     "force": "^0.0.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.3.5"
+    "mongoose": "^8.3.5",
+    "os-utils": "^0.0.14"
   },
   "description": "",
   "devDependencies": {
