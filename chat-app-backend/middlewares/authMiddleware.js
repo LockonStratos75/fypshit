@@ -1,20 +1,35 @@
 // backend/middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+const authenticateToken = async (req, res, next) => {
+  if (req.path.startsWith('/auth')) return next(); 
 
-    if (!token) return res.status(401).json({ message: 'Access denied' });
+  const token = req.cookies.token;
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            console.error("Token verification failed:", err);
-            return res.status(403).json({ message: 'Invalid token' });
-        }
-        req.userId = user.userId;
-        next();
-    });
+  if (!token) return res.status(401).json({ message: 'Access denied' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error('Token verification failed:', err);
+    res.status(403).json({ message: 'Invalid token' });
+  }
 };
 
-module.exports = authenticateToken;
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access forbidden: Insufficient rights' });
+    }
+    next();
+  };
+};
+
+module.exports = { authenticateToken, authorizeRoles };

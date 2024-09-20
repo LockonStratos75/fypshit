@@ -1,6 +1,7 @@
-// frontend/src/pages/SignupTherapist.js
-import React, { useState, useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { signupTherapist } from '../redux/slices/userSlice'; // Import therapist signup action
+import { useNavigate } from 'react-router-dom';
 import '../styles/Components.css'; // Import component-specific styles
 
 const SignupTherapist = () => {
@@ -8,17 +9,31 @@ const SignupTherapist = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [qualifications, setQualifications] = useState('');
-  const { signup } = useContext(AuthContext);
+  
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
+  const { status, error } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (status === 'succeeded') {
+      navigate('/dashboard'); // Navigate to dashboard on successful signup
+    }
+  }, [status, navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    signup({ name, email, password, qualifications });
+    dispatch(signupTherapist({ name, email, password, qualifications })); // Dispatch therapist signup action
   };
 
   return (
     <div className="signup-therapist-container">
       <form onSubmit={handleSubmit} className="signup-form">
         <h2 className="form-title">Signup as a Therapist</h2>
+        
+        {status === 'loading' && <p>Signing up...</p>}
+        {status === 'failed' && <p className="error-message">{error}</p>}
+
         <input
           type="text"
           value={name}

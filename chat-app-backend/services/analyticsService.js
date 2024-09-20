@@ -1,23 +1,33 @@
 // backend/services/analyticsService.js
+const User = require('../models/User');
+const Log = require('../models/Log');
 
 const getSystemMetrics = async () => {
-    // Example data - Replace with actual implementation
-    const metrics = {
-        totalUsers: 1000,
-        activeUsers: 300,
-        systemHealth: 'Good',
+  try {
+    const totalUsers = await User.countDocuments({ role: 'user' });
+    const totalTherapists = await User.countDocuments({ role: 'psychologist' });
+    const totalAdmins = await User.countDocuments({ role: 'admin' });
+
+    const systemHealth = 'Good'; // Placeholder for actual system health metrics
+
+    return {
+      totalUsers,
+      totalTherapists,
+      totalAdmins,
+      systemHealth,
     };
-    return metrics;
+  } catch (err) {
+    throw new Error(err.message);
+  }
 };
 
 const getUserActions = async () => {
-    // Example data - Replace with actual implementation
-    const userActions = [
-        { action: 'login', timestamp: '2024-09-16T10:00:00Z' },
-        { action: 'logout', timestamp: '2024-09-16T10:15:00Z' },
-        { action: 'profile_update', timestamp: '2024-09-16T11:00:00Z' },
-    ];
+  try {
+    const userActions = await Log.find().sort({ timestamp: -1 }).limit(100).populate('userId', 'username email');
     return userActions;
+  } catch (err) {
+    throw new Error(err.message);
+  }
 };
 
 module.exports = { getSystemMetrics, getUserActions };
