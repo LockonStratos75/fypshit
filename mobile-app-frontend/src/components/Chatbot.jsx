@@ -1,34 +1,44 @@
 // Chatbot.js
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, ScrollView, Text, TextInput, TouchableOpacity, View, Platform, Alert, ActivityIndicator } from 'react-native';
-import { styles } from "../App";
+import {
+    Image,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    Platform,
+    Alert,
+    ActivityIndicator,
+} from 'react-native';
+import { styles } from '../App';
 import TypingIndicator from '../components/TypingIndicator';
-import { LinearGradient } from "expo-linear-gradient";
-import { FileArrowUp, PaperPlaneRight, TrashSimple } from "phosphor-react-native";
+import { LinearGradient } from 'expo-linear-gradient';
+import { FileArrowUp, PaperPlaneRight, TrashSimple } from 'phosphor-react-native';
 import axios from 'axios';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import {
+    GoogleGenerativeAI,
+    HarmBlockThreshold,
+    HarmCategory,
+} from '@google/generative-ai';
 import Voice from '@react-native-voice/voice';
 import { decode } from 'he';
 import { MarkdownView } from 'react-native-markdown-view';
-import CustomPicker from './CustomPicker'; // Import CustomPicker
-import { getSpeech, getAvailableVoices } from '../services/textToSpeech'; // Import TTS functions
+import { getSpeech } from '../services/textToSpeech'; // Import TTS functions
 import { Audio } from 'expo-av'; // Import Audio
 
-import {
-    GOOGLE_API_KEY,
-    HUGGING_FACE_API_KEY,
-    IP_ADDRESS,
-} from '@env';
+import { GOOGLE_API_KEY, HUGGING_FACE_API_KEY, IP_ADDRESS } from '@env';
 
 const MODEL_NAME = 'gemini-1.5-flash';
-const API_KEY = GOOGLE_API_KEY;  // Replace with your actual API key
+const API_KEY = GOOGLE_API_KEY; // Replace with your actual API key
 
 const sysInstruct = `As Eunoia, a compassionate and understanding mental health therapist with decades of experience, engage with users in their 20s and 30s seeking guidance on motivation, career, and self-esteem. Provide responses that are empathetic, concise, and emotionally supportive. Use a warm and friendly tone, and keep your messages short and relatable. Before giving specific advice, ask thoughtful questions to better understand the user's situation and tailor your guidance accordingly.`;
 
-const API_URL = 'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest';
+const API_URL =
+    'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest';
 
 const Chatbot = () => {
     const [input, setInput] = useState('');
@@ -37,20 +47,22 @@ const Chatbot = () => {
     const [isBotTyping, setIsBotTyping] = useState(false);
     const route = useRoute();
     const { onNewSession } = route.params || {};
-    const [recordButton, setRecordButton] = useState(require('../../assets/icons/microphone-fill.png'));
+    const [recordButton, setRecordButton] = useState(
+        require('../../assets/icons/microphone-fill.png')
+    );
     const [results, setResults] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
     const [chat, setChat] = useState(null);
 
     // TTS States
-    const [voices, setVoices] = useState([]);
     const [selectedVoice, setSelectedVoice] = useState('');
     const [audioEncoding, setAudioEncoding] = useState('LINEAR16'); // Default encoding
+    const [isTtsEnabled, setIsTtsEnabled] = useState(true);
     const [ttsLoading, setTtsLoading] = useState(false);
 
     useEffect(() => {
         if (Platform.OS === 'web') {
-            Alert.alert("Speech recognition is not supported on web yet.");
+            Alert.alert('Speech recognition is not supported on web yet.');
         }
 
         // Initialize Google Generative AI Model
@@ -99,36 +111,31 @@ const Chatbot = () => {
         Voice.onSpeechEnd = onSpeechEnd;
         Voice.onSpeechError = onSpeechError;
 
-        // Fetch available voices for TTS
-        const fetchVoices = async () => {
-            try {
-                const availableVoices = await getAvailableVoices();
-                setVoices(availableVoices);
-                if (availableVoices.length > 0) {
-                    setSelectedVoice(availableVoices[0].name); // Default to first voice
-                }
-            } catch (error) {
-                Alert.alert('Error', 'Failed to load voices.');
-            }
-        };
-
-        fetchVoices();
-
         return () => {
             Voice.destroy().then(Voice.removeAllListeners);
         };
     }, []);
 
-    const voiceItems = voices.map((voice) => ({
-        label: `${voice.name} (${voice.ssmlGender})`,
-        value: voice.name,
-    }));
+    // Load TTS settings when the screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            const loadTtsSettings = async () => {
+                try {
+                    const storedVoice = await SecureStore.getItemAsync('selectedVoice');
+                    const storedEncoding = await SecureStore.getItemAsync('audioEncoding');
+                    const storedIsTtsEnabled = await SecureStore.getItemAsync('isTtsEnabled');
 
-    const encodingItems = [
-        { label: 'LINEAR16 (WAV)', value: 'LINEAR16' },
-        { label: 'MULAW', value: 'MULAW' },
-        // Add more encodings if needed
-    ];
+                    setSelectedVoice(storedVoice || '');
+                    setAudioEncoding(storedEncoding || 'LINEAR16');
+                    setIsTtsEnabled(storedIsTtsEnabled === 'true');
+                } catch (error) {
+                    console.error('Error loading TTS settings:', error);
+                }
+            };
+
+            loadTtsSettings();
+        }, [])
+    );
 
     const onSpeechStart = (e) => {
         console.log('onSpeechStart: ', e);
@@ -197,7 +204,11 @@ const Chatbot = () => {
                     em: { fontStyle: 'italic' },
                     listItemBullet: { fontSize: 12 },
                     listItemNumber: { fontSize: 12 },
-                    listItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 },
+                    listItem: {
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        marginBottom: 4,
+                    },
                     listItemContent: { flex: 1 },
                 }}
             >
@@ -212,13 +223,13 @@ const Chatbot = () => {
         }
 
         if (Array.isArray(jsxElement.props.children)) {
-            return jsxElement.props.children.map(child => extractText(child)).join('');
+            return jsxElement.props.children.map((child) => extractText(child)).join('');
         }
 
         return extractText(jsxElement.props.children);
     };
 
-    // Function to analyze sentiment using Hugging Face API
+    /// Function to analyze sentiment using Hugging Face API
     const analyzeSentiment = async (text) => {
         try {
             const response = await axios.post(API_URL, {
@@ -318,7 +329,7 @@ const Chatbot = () => {
 
     // Function to play bot response using TTS
     const playBotResponse = async (text) => {
-        if (!text.trim()) {
+        if (!text.trim() || !isTtsEnabled) {
             return;
         }
 
@@ -374,35 +385,20 @@ const Chatbot = () => {
                 // Play the bot's response using TTS
                 playBotResponse(botMessageText);
             } catch (error) {
-                console.error("Error with Gemini API response:", error);
+                console.error('Error with Gemini API response:', error);
                 setIsBotTyping(false);
             }
         }
-    }, [input, messages, chat, selectedVoice, audioEncoding]);
+    }, [input, messages, chat, selectedVoice, audioEncoding, isTtsEnabled]);
 
     return (
         <View style={[styles.botContainer]}>
-            {/* Optional: Voice Selection and Audio Encoding Pickers */}
-            <View style={{ padding: 10 }}>
-                <CustomPicker
-                    label="Select Voice:"
-                    selectedValue={selectedVoice}
-                    onValueChange={setSelectedVoice}
-                    items={voiceItems}
-                />
-
-                <CustomPicker
-                    label="Select Audio Encoding:"
-                    selectedValue={audioEncoding}
-                    onValueChange={setAudioEncoding}
-                    items={encodingItems}
-                />
-            </View>
-
             <ScrollView
                 ref={scrollViewRef}
                 style={styles.messageContainer}
-                onContentSizeChange={() => scrollViewRef.current.scrollToEnd({ animated: true })}
+                onContentSizeChange={() =>
+                    scrollViewRef.current.scrollToEnd({ animated: true })
+                }
             >
                 {messages.map((msg, index) => (
                     <View
@@ -411,7 +407,9 @@ const Chatbot = () => {
                     >
                         {typeof msg.text === 'string' ? (
                             <Text
-                                style={msg.sender === 'You' ? styles.messageText : styles.botMessageText}
+                                style={
+                                    msg.sender === 'You' ? styles.messageText : styles.botMessageText
+                                }
                             >
                                 {msg.text}
                             </Text>

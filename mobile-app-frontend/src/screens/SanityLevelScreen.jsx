@@ -1,12 +1,23 @@
-// frontend/screens/SanityLevelScreen.js
+// SanityLevelScreen.js
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Dimensions, Alert } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    ActivityIndicator,
+    Dimensions,
+    Alert,
+    Switch,
+} from 'react-native';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { IP_ADDRESS } from '@env';
-import { ButtonComponent } from "../components/ButtonComponent";
+import { TouchableOpacity } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import { ArrowsClockwise } from 'phosphor-react-native';
+import CustomPicker from '../components/CustomPicker';
+import { getAvailableVoices } from '../services/textToSpeech';
 
 const BASE_URL = `${IP_ADDRESS}`; // Ensure the port matches your server's
 
@@ -22,10 +33,99 @@ const SanityLevelScreen = () => {
     const [isRefreshing, setIsRefreshing] = useState(false); // State to manage refresh button
     const [dataMissingMessage, setDataMissingMessage] = useState(null); // State to handle missing data messages
 
+    // Voice Settings States
+    const [voices, setVoices] = useState([]);
+    const [selectedVoice, setSelectedVoice] = useState('');
+    const [audioEncoding, setAudioEncoding] = useState('LINEAR16'); // Default encoding
+    const [isTtsEnabled, setIsTtsEnabled] = useState(true);
+
     // Fetch data when the component mounts
     useEffect(() => {
         fetchSanityData();
+        fetchVoices();
+        loadSettings();
     }, []);
+
+    // Function to fetch voices
+    const fetchVoices = async () => {
+        try {
+            const availableVoices = await getAvailableVoices();
+            setVoices(availableVoices);
+            console.log(voices);
+
+            // Check if 'en-US-Journey-D' is available
+            const defaultVoiceName = 'Journey';
+            const defaultVoice = availableVoices.find(
+                (voice) => voice.name === defaultVoiceName
+            );
+
+            if (defaultVoice) {
+                setSelectedVoice(defaultVoice.name);
+            } else if (availableVoices.length > 0) {
+                setSelectedVoice(availableVoices[0].name); // Default to first voice
+            }
+            console.log(selectedVoice);
+        } catch (error) {
+            Alert.alert('Error', 'Failed to load voices.');
+        }
+    };
+
+    // Function to load settings from SecureStore
+    const loadSettings = async () => {
+        try {
+            const storedVoice = await SecureStore.getItemAsync('selectedVoice');
+            const storedEncoding = await SecureStore.getItemAsync('audioEncoding');
+            const storedIsTtsEnabled = await SecureStore.getItemAsync('isTtsEnabled');
+            if (storedVoice !== null) setSelectedVoice(storedVoice);
+            if (storedEncoding !== null) setAudioEncoding(storedEncoding);
+            if (storedIsTtsEnabled !== null)
+                setIsTtsEnabled(storedIsTtsEnabled === 'true');
+        } catch (error) {
+            console.error('Error loading settings:', error);
+        }
+    };
+
+    // Function to save selected voice
+    const handleVoiceChange = async (voice) => {
+        setSelectedVoice(voice);
+        try {
+            await SecureStore.setItemAsync('selectedVoice', voice);
+        } catch (error) {
+            console.error('Error saving selected voice:', error);
+        }
+    };
+
+    // Function to save audio encoding
+    const handleEncodingChange = async (encoding) => {
+        setAudioEncoding(encoding);
+        try {
+            await SecureStore.setItemAsync('audioEncoding', encoding);
+        } catch (error) {
+            console.error('Error saving audio encoding:', error);
+        }
+    };
+
+    // Function to save TTS toggle state
+    const handleTtsToggle = async (value) => {
+        setIsTtsEnabled(value);
+        try {
+            await SecureStore.setItemAsync('isTtsEnabled', value.toString());
+        } catch (error) {
+            console.error('Error saving TTS enabled state:', error);
+        }
+    };
+
+    // Voice and Encoding Items for Picker
+    const voiceItems = voices.map((voice) => ({
+        label: `${voice.name} (${voice.ssmlGender})`,
+        value: voice.name,
+    }));
+
+    const encodingItems = [
+        { label: 'LINEAR16 (WAV)', value: 'LINEAR16' },
+        { label: 'MULAW', value: 'MULAW' },
+        // Add more encodings if needed
+    ];
 
     // Function to fetch sanity data and update backend
     const fetchSanityData = async () => {
@@ -288,7 +388,9 @@ const SanityLevelScreen = () => {
                                     r={RADIUS}
                                     strokeWidth={STROKE_WIDTH}
                                     strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-                                    strokeDashoffset={CIRCUMFERENCE - (sanityLevel / 100) * CIRCUMFERENCE}
+                                    strokeDashoffset={
+                                        CIRCUMFERENCE - (sanityLevel / 100) * CIRCUMFERENCE
+                                    }
                                     strokeLinecap="round"
                                     rotation="-90"
                                     origin={`${SIZE / 2}, ${SIZE / 2}`}
@@ -296,25 +398,54 @@ const SanityLevelScreen = () => {
                             </Svg>
                             {/* Percentage and Label */}
                             <View style={styles.percentageContainer}>
-                                <Text style={styles.percentageText}>{sanityLevel.toFixed(2)}%</Text>
-                                <Text style={styles.labelText}>{getSanityLabel(sanityLevel)}</Text>
+                                <Text style={styles.percentageText}>
+                                    {sanityLevel.toFixed(2)}%
+                                </Text>
+                                <Text style={styles.labelText}>
+                                    {getSanityLabel(sanityLevel)}
+                                </Text>
                             </View>
                         </View>
                     ) : (
                         <Text style={styles.missingDataText}>
-                            No sanity data available. Start interacting to see your sanity level.
+                            No sanity data available. Start interacting to see your sanity
+                            level.
                         </Text>
                     )}
                 </>
             )}
 
             {/* Refresh Button */}
-            <View style={styles.buttonContainer}>
-                <ButtonComponent
-                    title={isRefreshing ? "Refreshing..." : "Refresh"}
-                    onPress={handleRefresh}
-                    disabled={isRefreshing}
+            <TouchableOpacity
+                onPress={handleRefresh}
+                disabled={isRefreshing}
+                style={styles.refreshButton}
+            >
+                {isRefreshing ? (
+                    <ActivityIndicator size="small" color="#0000ff" />
+                ) : (
+                    <ArrowsClockwise size={28} weight="fill" />
+                )}
+            </TouchableOpacity>
+
+            {/* Voice Settings and TTS Toggle */}
+            <View style={styles.settingsContainer}>
+                <CustomPicker
+                    label="Select Voice:"
+                    selectedValue={selectedVoice}
+                    onValueChange={handleVoiceChange}
+                    items={voiceItems}
                 />
+                <CustomPicker
+                    label="Select Audio Encoding:"
+                    selectedValue={audioEncoding}
+                    onValueChange={handleEncodingChange}
+                    items={encodingItems}
+                />
+                <View style={styles.toggleContainer}>
+                    <Text style={styles.toggleLabel}>Enable Text-to-Speech</Text>
+                    <Switch value={isTtsEnabled} onValueChange={handleTtsToggle} thumbColor={'#164D82'} trackColor={{ false: '#767577', true: '#256eaf' }} />
+                </View>
             </View>
         </View>
     );
@@ -324,8 +455,8 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
+        paddingTop: 40, // Adjust this to move the circle up
         backgroundColor: '#fff',
-        justifyContent: 'center',
         alignItems: 'center', // Center horizontally
     },
     title: {
@@ -338,6 +469,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginVertical: 16,
+        marginTop: 0, // Adjust this to move the circle up
     },
     percentageContainer: {
         position: 'absolute',
@@ -354,10 +486,23 @@ const styles = StyleSheet.create({
         marginTop: 4,
         textAlign: 'center',
     },
-    buttonContainer: {
+    refreshButton: {
+        marginTop: 10,
+        alignItems: 'center',
+    },
+    settingsContainer: {
+        width: '80%',
         marginTop: 20,
-        alignSelf: 'center',
-        width: '50%',
+    },
+    toggleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 10,
+    },
+    toggleLabel: {
+        fontSize: 16,
+        color: '#555',
     },
     missingDataText: {
         fontSize: 16,
