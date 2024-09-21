@@ -19,13 +19,17 @@ export function LoginScreen({ navigation }) {
     const [password, setPassword] = useState("");
 
     const handleSubmit = async () => {
+        console.log(IP_ADDRESS)
         if (email && password) {
             try {
-                const response = await axios.post(`${IP_ADDRESS}/login`, { email, password });  // Corrected line
+                const response = await axios.post(`${IP_ADDRESS}/auth/login`, { email, password }, {
+                    withCredentials: true,
+                });  // Corrected line
                 const { token } = response.data;  // Extract JWT token from response
 
                 if (token && typeof token === 'string') {  // Ensure token is a valid string
                     await SecureStore.setItemAsync('token', token);  // Store the token directly as it is already a string
+                    console.log(token);
                 } else {
                     console.error('Invalid token format');
                     throw new Error('Invalid token format received from server.');
