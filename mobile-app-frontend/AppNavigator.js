@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { LoginScreen } from "./screens/LoginScreen";
 import { SignUpScreen } from "./screens/SignUpScreen";
 import { MyTabs } from "./BottomNavigator";  // Import the bottom tab navigator
-import { SignUpTherapist } from "./screens/SignUpTherapist";
 import ChatSessionScreen from "./screens/ChatSessionScreen";
 
 const Stack = createNativeStackNavigator();

@@ -1,5 +1,7 @@
+// Chatbot.js
+
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, ScrollView, Text, TextInput, TouchableOpacity, View, Platform, Alert } from 'react-native';
+import { Image, ScrollView, Text, TextInput, TouchableOpacity, View, Platform, Alert, ActivityIndicator } from 'react-native';
 import { styles } from "../App";
 import TypingIndicator from '../components/TypingIndicator';
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,9 +10,13 @@ import axios from 'axios';
 import { useRoute } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
-import Voice from '@react-native-voice/voice'; // Import react-native-voice
-import { decode } from 'he'; // For decoding HTML entities
-import { MarkdownView } from 'react-native-markdown-view'; // For rendering Markdown
+import Voice from '@react-native-voice/voice';
+import { decode } from 'he';
+import { MarkdownView } from 'react-native-markdown-view';
+import CustomPicker from './CustomPicker'; // Import CustomPicker
+import { getSpeech, getAvailableVoices } from '../services/textToSpeech'; // Import TTS functions
+import { Audio } from 'expo-av'; // Import Audio
+
 import {
     GOOGLE_API_KEY,
     HUGGING_FACE_API_KEY,
@@ -20,7 +26,6 @@ import {
 const MODEL_NAME = 'gemini-1.5-flash';
 const API_KEY = GOOGLE_API_KEY;  // Replace with your actual API key
 
-// Improved sysInstruct
 const sysInstruct = `As Eunoia, a compassionate and understanding mental health therapist with decades of experience, engage with users in their 20s and 30s seeking guidance on motivation, career, and self-esteem. Provide responses that are empathetic, concise, and emotionally supportive. Use a warm and friendly tone, and keep your messages short and relatable. Before giving specific advice, ask thoughtful questions to better understand the user's situation and tailor your guidance accordingly.`;
 
 const API_URL = 'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest';
@@ -37,6 +42,12 @@ const Chatbot = () => {
     const [isRecording, setIsRecording] = useState(false);
     const [chat, setChat] = useState(null);
 
+    // TTS States
+    const [voices, setVoices] = useState([]);
+    const [selectedVoice, setSelectedVoice] = useState('');
+    const [audioEncoding, setAudioEncoding] = useState('LINEAR16'); // Default encoding
+    const [ttsLoading, setTtsLoading] = useState(false);
+
     useEffect(() => {
         if (Platform.OS === 'web') {
             Alert.alert("Speech recognition is not supported on web yet.");
@@ -50,10 +61,10 @@ const Chatbot = () => {
         });
 
         const generationConfig = {
-            temperature: 0.7, // Adjusted for more concise and human-like responses
+            temperature: 0.7,
             topK: 40,
             topP: 0.9,
-            maxOutputTokens: 256, // Limit response length
+            maxOutputTokens: 256,
         };
 
         const safetySettings = [
@@ -88,10 +99,36 @@ const Chatbot = () => {
         Voice.onSpeechEnd = onSpeechEnd;
         Voice.onSpeechError = onSpeechError;
 
+        // Fetch available voices for TTS
+        const fetchVoices = async () => {
+            try {
+                const availableVoices = await getAvailableVoices();
+                setVoices(availableVoices);
+                if (availableVoices.length > 0) {
+                    setSelectedVoice(availableVoices[0].name); // Default to first voice
+                }
+            } catch (error) {
+                Alert.alert('Error', 'Failed to load voices.');
+            }
+        };
+
+        fetchVoices();
+
         return () => {
             Voice.destroy().then(Voice.removeAllListeners);
         };
     }, []);
+
+    const voiceItems = voices.map((voice) => ({
+        label: `${voice.name} (${voice.ssmlGender})`,
+        value: voice.name,
+    }));
+
+    const encodingItems = [
+        { label: 'LINEAR16 (WAV)', value: 'LINEAR16' },
+        { label: 'MULAW', value: 'MULAW' },
+        // Add more encodings if needed
+    ];
 
     const onSpeechStart = (e) => {
         console.log('onSpeechStart: ', e);
@@ -279,6 +316,43 @@ const Chatbot = () => {
         setInput('');
     };
 
+    // Function to play bot response using TTS
+    const playBotResponse = async (text) => {
+        if (!text.trim()) {
+            return;
+        }
+
+        setTtsLoading(true);
+        try {
+            const audioContent = await getSpeech(text, selectedVoice, audioEncoding);
+
+            let mimeType;
+            if (audioEncoding === 'LINEAR16') {
+                mimeType = 'audio/wav'; // LINEAR16 is typically wrapped in WAV
+            } else if (audioEncoding === 'MULAW') {
+                mimeType = 'audio/mulaw';
+            } else {
+                mimeType = 'audio/mp3'; // Fallback
+            }
+
+            const { sound } = await Audio.Sound.createAsync(
+                { uri: `data:${mimeType};base64,${audioContent}` },
+                { shouldPlay: true }
+            );
+
+            // Optionally, handle sound lifecycle
+            sound.setOnPlaybackStatusUpdate((status) => {
+                if (status.didJustFinish) {
+                    sound.unloadAsync();
+                }
+            });
+        } catch (error) {
+            Alert.alert('Error', 'Failed to synthesize speech.');
+        } finally {
+            setTtsLoading(false);
+        }
+    };
+
     const handleSend = useCallback(async () => {
         if (input.trim()) {
             const newMessages = [...messages, { text: input, sender: 'You' }];
@@ -296,15 +370,35 @@ const Chatbot = () => {
                 newMessages.push({ text: formattedMessage, sender: 'Bot' });
                 setMessages([...newMessages]);
                 setInput('');
+
+                // Play the bot's response using TTS
+                playBotResponse(botMessageText);
             } catch (error) {
                 console.error("Error with Gemini API response:", error);
                 setIsBotTyping(false);
             }
         }
-    }, [input, messages, chat]);
+    }, [input, messages, chat, selectedVoice, audioEncoding]);
 
     return (
         <View style={[styles.botContainer]}>
+            {/* Optional: Voice Selection and Audio Encoding Pickers */}
+            <View style={{ padding: 10 }}>
+                <CustomPicker
+                    label="Select Voice:"
+                    selectedValue={selectedVoice}
+                    onValueChange={setSelectedVoice}
+                    items={voiceItems}
+                />
+
+                <CustomPicker
+                    label="Select Audio Encoding:"
+                    selectedValue={audioEncoding}
+                    onValueChange={setAudioEncoding}
+                    items={encodingItems}
+                />
+            </View>
+
             <ScrollView
                 ref={scrollViewRef}
                 style={styles.messageContainer}
@@ -329,6 +423,12 @@ const Chatbot = () => {
                 {isBotTyping && (
                     <View style={styles.botMessage}>
                         <TypingIndicator />
+                    </View>
+                )}
+                {ttsLoading && (
+                    <View style={{ marginTop: 10, alignItems: 'center' }}>
+                        <Text>Playing audio...</Text>
+                        <ActivityIndicator size="small" color="#0000ff" />
                     </View>
                 )}
             </ScrollView>

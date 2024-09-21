@@ -4,10 +4,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const authenticateToken = async (req, res, next) => {
-  // Get the token from the 'Authorization' header
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Extract the token after 'Bearer '
-
   console.log('Token received:', token);
 
   if (!token) {

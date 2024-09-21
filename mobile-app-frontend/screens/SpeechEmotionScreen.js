@@ -1,13 +1,12 @@
-import React, {useState} from 'react';
-import {Button, SafeAreaView, StyleSheet, Text, View} from 'react-native';
-import {Audio} from 'expo-av';
+import React, { useState } from 'react';
+import { Button, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
-import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
-import axios from 'axios';  // Import axios for HTTP requests
-import query from '../../config/SpeechEmotionRecognition';
-import {ButtonComponent} from "../components/ButtonComponent";
-import {IP_ADDRESS} from '@env';
-
+import * as SecureStore from 'expo-secure-store'; // Import SecureStore from Expo
+import axios from 'axios'; // Import axios for HTTP requests
+import query from './../config/SpeechEmotionRecognition';
+import { ButtonComponent } from "../components/ButtonComponent";
+import { IP_ADDRESS } from '@env';
 
 export const SpeechEmotionScreen = () => {
     const [result, setResult] = useState(null);
@@ -22,6 +21,7 @@ export const SpeechEmotionScreen = () => {
 
             if (permission.status !== 'granted') {
                 console.log('Permission to access microphone is required!');
+                setError('Permission to access microphone is required!');
                 return;
             }
 
@@ -39,14 +39,21 @@ export const SpeechEmotionScreen = () => {
             console.log('Recording started');
         } catch (err) {
             console.error('Failed to start recording', err);
-            setError(err.message);
+            setError('Failed to start recording: ' + err.message);
         }
     };
 
     const stopRecording = async () => {
         console.log('Stopping recording..');
         setIsRecording(false);
-        await recording.stopAndUnloadAsync();
+        try {
+            await recording.stopAndUnloadAsync();
+        } catch (stopError) {
+            console.error('Error stopping recording', stopError);
+            setError('Error stopping recording: ' + stopError.message);
+            return;
+        }
+
         const uri = recording.getURI();
         setRecording(null);
         console.log('Recording stopped and stored at', uri);
@@ -62,17 +69,25 @@ export const SpeechEmotionScreen = () => {
             });
 
             // Query the moved file
-            const token = await SecureStore.getItemAsync('token');  // Retrieve JWT token from SecureStore
-            const response = await query(targetPath, token);  // Pass token to query function
+            const token = await SecureStore.getItemAsync('token'); // Retrieve JWT token from SecureStore
+            const response = await query(targetPath, token); // Pass token to query function
             const emotions = processResponse(response);
-            setResult(emotions);
 
-            // Save SER results to the server
-            await saveSERResultToServer(emotions, token);
+            if (emotions && emotions.highestEmotion.label !== 'unknown') {
+                setResult(emotions);
+                // Save SER results to the server
+                await saveSERResultToServer(emotions, token);
+            } else {
+                console.log('Highest emotion is unknown. Result not saved or displayed.');
+                setResult(null);
+                if (emotions && emotions.highestEmotion.label === 'unknown') {
+                    setError('Unable to determine emotion.');
+                }
+            }
 
         } catch (error) {
             console.error('Failed to process recording', error);
-            setError(error.message);
+            setError('Failed to process recording: ' + error.message);
         }
     };
 
@@ -80,7 +95,7 @@ export const SpeechEmotionScreen = () => {
         if (!response || !Array.isArray(response) || response.length === 0) {
             console.error('Invalid response format:', response);
             setError('Invalid response format');
-            return {highestEmotion: {label: 'unknown', score: 0}, emotions: []};
+            return null;
         }
 
         const sortedEmotions = response.sort((a, b) => b.score - a.score);
@@ -90,6 +105,7 @@ export const SpeechEmotionScreen = () => {
             ...emotion,
             percentage: ((emotion.score / totalScore) * 100).toFixed(2),
         }));
+
         return {
             highestEmotion,
             emotions,
@@ -103,12 +119,13 @@ export const SpeechEmotionScreen = () => {
                 emotions: emotions.emotions,
             }, {
                 headers: {
-                    'Authorization': `Bearer ${token}`  // Include token in Authorization header
+                    'Authorization': `Bearer ${token}` // Include token in Authorization header
                 }
             });
             console.log("SER result saved successfully:", response.data);
         } catch (error) {
             console.error("Error saving SER result", error);
+            setError('Error saving SER result: ' + error.message);
         }
     };
 
