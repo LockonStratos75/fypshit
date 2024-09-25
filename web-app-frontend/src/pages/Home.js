@@ -8,7 +8,7 @@ const Home = () => {
     <Container>
       <Box mt={5} textAlign="center">
         <Typography variant="h3" gutterBottom>
-          Welcome to Fypshit
+          Welcome to EUNOIA
         </Typography>
         <Typography variant="h6">
           Empowering mental health professionals to manage and support users effectively.
