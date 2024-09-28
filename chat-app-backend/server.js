@@ -84,11 +84,8 @@ if (!MONGO_URI) {
   process.exit(1); // Exit the application if MONGO_URI is missing
 }
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('✅ MongoDB connected successfully'))
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('MongoDB connected successfully'))
   .catch(err => {
     console.error('❌ MongoDB connection error:', err.message);
     process.exit(1); // Exit the application if unable to connect to MongoDB
