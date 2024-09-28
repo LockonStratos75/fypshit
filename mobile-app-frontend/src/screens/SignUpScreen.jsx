@@ -18,6 +18,7 @@ export function SignUpScreen({ navigation }) {
     const [username, setUsername] = useState("");  // New state for username
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [role, setRole] = useState("");
 
     const isValidEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -32,7 +33,7 @@ export function SignUpScreen({ navigation }) {
             }
 
             try {
-                const response = await axios.post(`${IP_ADDRESS}/auth/signup`, { username, email, password }, {withCredentials: true});  // Include username in request
+                const response = await axios.post(`${IP_ADDRESS}/auth/signup`, { username, email, password}, {withCredentials: true});  // Include username in request
                 console.log('Server response:', response.data);  // Log the server response
                 const { token } = response.data;  // Extract JWT token from response
 

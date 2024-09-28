@@ -1,5 +1,3 @@
-// backend/models/User.js
-
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
@@ -13,9 +11,9 @@ const UserSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true, 
+    unique: true,
     match: [
-      /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+      /^\w+([.-]?\w+)@\w+([.-]?\w+)(\.\w{2,3})+$/,
       'Please fill a valid email address',
     ],
   },
@@ -26,8 +24,8 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'psychologist'],
-    required: [true, 'Role is required'],
+    enum: ['admin', 'psychologist', 'user'],
+    default: 'user', // Default role set to 'user'
   },
 }, { timestamps: true });
 
