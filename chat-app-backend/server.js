@@ -40,7 +40,7 @@ const IP_ADDRESS = process.env.IP_ADDRESS || '0.0.0.0'; // Listen on all network
 // Define allowed origins based on environment variables for flexibility
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : ['http://192.168.1.8:3000', 'http://localhost:3000','http://192.168.100.92:8081'];
+  : ['http://192.168.1.8:3000', 'http://localhost:3000','http://192.168.100.92:8081', 'http://192.168.100.92:3000'];
 
 // Configure CORS options
 const corsOptions = {
