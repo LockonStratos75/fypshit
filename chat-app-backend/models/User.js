@@ -1,5 +1,3 @@
-// backend/models/User.js
-
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
@@ -26,8 +24,8 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'psychologist'],
-    required: [true, 'Role is required'],
+    enum: ['admin', 'psychologist', 'user'],
+    default: 'user', // Default role set to 'user'
   },
 }, { timestamps: true });
 

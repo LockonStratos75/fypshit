@@ -1,5 +1,3 @@
-// backend/controllers/authController.js
-
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
@@ -17,19 +15,14 @@ exports.signup = async (req, res, next) => {
   try {
     const { username, email, password, role } = req.body;
 
-    // Validate role
-    if (!['admin', 'psychologist'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role specified.' });
-    }
-
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: 'Email already registered.' });
     }
 
-    // Create new user
-    const newUser = new User({ username, email, password, role });
+    // Create new user with default role 'user' if role is not provided
+    const newUser = new User({ username, email, password, role: role || 'user' });
     await newUser.save();
 
     // Generate token
