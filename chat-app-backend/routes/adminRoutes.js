@@ -1,5 +1,3 @@
-// backend/routes/adminRoutes.js
-
 const express = require('express');
 const {
   manageUserAccounts,
@@ -8,19 +6,20 @@ const {
   rejectPsychologist,
   sendAnnouncement,
   getLogs,
+  getAllUsers, // New controller function to get users by role
 } = require('../controllers/adminController');
-const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware'); // Correct import
+const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-// Apply authentication middleware
 router.use(authenticateToken);
-
-// Apply authorization middleware for admin role
-router.use(authorizeRoles('admin')); // This line requires authorizeRoles to be a function
+router.use(authorizeRoles('admin'));
 
 // User account management
 router.post('/users/manage', manageUserAccounts);
+
+// Get users by role
+router.get('/users', getAllUsers); // New endpoint to fetch users with a specific role
 
 // Review psychologist registrations
 router.get('/psychologists/pending', reviewPsychologistRegistrations);

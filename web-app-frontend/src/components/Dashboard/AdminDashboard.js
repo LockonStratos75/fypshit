@@ -1,7 +1,5 @@
-// src/components/Dashboard/AdminDashboard.js
-
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Box, Grid, Paper, Button } from '@mui/material'; // Ensure Button is imported
+import { Container, Typography, Box, Grid, Paper, Button } from '@mui/material';
 import api from '../../services/ApiService';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
@@ -16,23 +14,19 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await api.get('/analytics/system-metrics'); // Update endpoint as per backend
+        const response = await api.get('/analytics/system-metrics');
         setStats(response.data);
       } catch (error) {
-        console.error('Error fetching system metrics:', error);
         toast.error('Failed to fetch system metrics');
       }
     };
-
     fetchMetrics();
   }, []);
 
   return (
     <Container>
       <Box mt={5}>
-        <Typography variant="h4" gutterBottom>
-          Admin Dashboard
-        </Typography>
+        <Typography variant="h4" gutterBottom>Admin Dashboard</Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ padding: 2 }}>

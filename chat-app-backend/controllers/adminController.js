@@ -4,6 +4,17 @@ const PsychologistProfile = require('../models/PsychologistProfile');
 const Log = require('../models/Log');
 const bcrypt = require('bcrypt');
 
+// Get all users with 'user' role
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({ role: 'user' });
+    res.status(200).json({ users });
+  } catch (err) {
+    console.error('Error fetching users:', err.message);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 exports.manageUserAccounts = async (req, res) => {
   const { action, userId, updates } = req.body;
   try {
