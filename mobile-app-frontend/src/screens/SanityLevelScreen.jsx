@@ -327,10 +327,10 @@ const SanityLevelScreen = () => {
         }
     };
 
-    // Function to fetch the stored sanity level from the backend
+// Function to fetch the stored sanity level from the backend
     const fetchStoredSanityLevel = async (token) => {
         try {
-            const response = await axios.get(`${BASE_URL}/sanity`, {
+            const response = await axios.get(`${BASE_URL}/sanity/user`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
@@ -338,18 +338,22 @@ const SanityLevelScreen = () => {
 
             if (response.status === 200) {
                 const { sanityPercentage } = response.data;
+                console.log('Fetched sanityPercentage:', sanityPercentage);
                 setSanityLevel(sanityPercentage);
+            } else {
+                setSanityLevel(null);
             }
         } catch (error) {
-            console.error("Error fetching stored sanity level:", error.message);
+            console.error('Error fetching stored sanity level:', error.message);
             if (error.response) {
-                setDataMissingMessage(error.response.data.message || "Failed to fetch stored sanity level.");
+                setDataMissingMessage(error.response.data.message || 'Failed to fetch stored sanity level.');
             } else {
-                setDataMissingMessage("Network error while fetching sanity level.");
+                setDataMissingMessage('Network error while fetching sanity level.');
             }
             setSanityLevel(null);
         }
     };
+
 
     // Handler for the refresh button
     const handleRefresh = () => {
