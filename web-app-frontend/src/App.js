@@ -1,5 +1,3 @@
-// src/App.js
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -45,7 +43,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/psychologist/dashboard"
             element={
@@ -54,7 +51,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/admin/report"
             element={

@@ -1,5 +1,4 @@
 // src/components/Report/ReportGenerator.js
-
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, TextField, Button, MenuItem } from '@mui/material';
 import api from '../../services/ApiService';
@@ -9,55 +8,53 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
-
 const ReportGenerator = () => {
   const { handleSubmit, control } = useForm();
   const [users, setUsers] = useState([]);
+  const [averageSanity, setAverageSanity] = useState(0);
 
   useEffect(() => {
-    // Fetch all users (Admins and Psychologists)
-    const fetchUsers = async () => {
+    const fetchUsersAndSanityLevels = async () => {
       try {
-        const response = await api.get('/admin/users'); // Ensure this endpoint exists
-        setUsers(response.data.users);
+        const [usersResponse, sanityResponse] = await Promise.all([
+          api.get('/admin/users'),  // Fetch users with role 'user'
+          api.get('/sanity')  // Fetch all sanity levels and average
+        ]);
+
+        setUsers(usersResponse.data.users);
+        setAverageSanity(sanityResponse.data.averageSanityLevel);
       } catch (error) {
-        console.error('Error fetching users:', error);
-        toast.error('Failed to fetch users');
+        console.error('Error fetching data:', error);
+        toast.error('Failed to fetch data');
       }
     };
 
-    fetchUsers();
+    fetchUsersAndSanityLevels();
   }, []);
 
   const onSubmit = async (data) => {
     const { userId } = data;
 
     try {
-      // Fetch user's sanity levels and assessments
       const [sanityRes, assessmentsRes] = await Promise.all([
-        api.get(`/sanity/user/${userId}`), // Ensure this endpoint exists
-        api.get(`/assessments/user/${userId}`), // Ensure this endpoint exists
+        api.get(`/sanity/user/${userId}`),  // Fetch user's sanity level
+        api.get(`/assessments/user/${userId}`),  // Fetch user's assessments
       ]);
 
       const sanityLevel = sanityRes.data.sanityPercentage;
       const assessments = assessmentsRes.data.assessments;
 
-      // Fetch user details
-      const userRes = await api.get(`/admin/users/${userId}`); // Ensure this endpoint exists
+      const userRes = await api.get(`/admin/users/${userId}`);  // Fetch user details
       const user = userRes.data.user;
 
-      // Prepare the report content
-      // We'll render the report content invisibly and capture it using html2canvas
-      // To do this, we'll dynamically insert the report content into the DOM
-
-      // Create a temporary div to hold the report content
+      // Create a PDF of the report
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '0';
-      tempDiv.style.width = '210mm'; // A4 size width
+      tempDiv.style.width = '210mm';
       tempDiv.style.padding = '20px';
-      tempDiv.style.backgroundColor = '#fff'; // Ensure background is white
+      tempDiv.style.backgroundColor = '#fff';
+
       tempDiv.innerHTML = `
         <h1>Sanity Report</h1>
         <h2>User Information</h2>
@@ -89,14 +86,10 @@ const ReportGenerator = () => {
 
       document.body.appendChild(tempDiv);
 
-      // Capture the report content
       const canvas = await html2canvas(tempDiv, { scale: 2 });
       const imgData = canvas.toDataURL('image/png');
-
-      // Remove the temporary div
       document.body.removeChild(tempDiv);
 
-      // Create PDF
       const pdf = new jsPDF('p', 'mm', 'a4');
       const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -118,6 +111,11 @@ const ReportGenerator = () => {
         <Typography variant="h4" gutterBottom>
           Generate User Report
         </Typography>
+
+        <Typography variant="h6" gutterBottom>
+          Average Sanity Level: {averageSanity}%
+        </Typography>
+        
         <form onSubmit={handleSubmit(onSubmit)}>
           <Controller
             name="userId"

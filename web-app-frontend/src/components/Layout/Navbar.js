@@ -1,10 +1,7 @@
-// src/components/Layout/Navbar.js
-
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-
+import {jwtDecode} from 'jwt-decode';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -30,7 +27,7 @@ const Navbar = () => {
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-        EUNOIA
+          EUNOIA
         </Typography>
         {!token ? (
           <>
@@ -48,7 +45,6 @@ const Navbar = () => {
             {role === 'psychologist' && (
               <>
                 <Button color="inherit" component={Link} to="/psychologist/dashboard">Psychologist Dashboard</Button>
-                <Button color="inherit" component={Link} to="/admin/report">Generate Report</Button>
               </>
             )}
             <Box ml={2}>

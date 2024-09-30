@@ -1,5 +1,3 @@
-// src/components/Dashboard/PsychologistDashboard.js
-
 import React, { useEffect, useState } from 'react';
 import { Container, Typography, Box, Grid, Paper } from '@mui/material';
 import api from '../../services/ApiService';
@@ -15,23 +13,30 @@ const PsychologistDashboard = () => {
   useEffect(() => {
     const fetchPsychologistData = async () => {
       try {
+        // API calls
         const [assessmentsRes, sanityRes, sessionsRes] = await Promise.all([
-          api.get('/assessments'), // Update endpoint as per backend
-          api.get('/sanity'), // Update endpoint as per backend
-          api.get('/sessions'), // Update endpoint as per backend
+          api.get('/assessments/total'),
+          api.get('/sanity'),
+          api.get('/sessions'),
         ]);
-
+  
+        // Log responses to check the data
+        console.log('Assessments Response:', assessmentsRes.data);
+        console.log('Sanity Response:', sanityRes.data);
+        console.log('Sessions Response:', sessionsRes.data);
+  
+        // Update state with the fetched data
         setStats({
-          totalAssessments: assessmentsRes.data.assessments.length,
-          averageSanityLevel: assessmentsRes.data.averageSanityLevel || 0,
-          latestSessions: sessionsRes.data.sessions.slice(0, 5),
+          totalAssessments: assessmentsRes.data.totalAssessments || 0,
+          averageSanityLevel: sanityRes.data.averageSanityLevel || 0,
+          latestSessions: sessionsRes.data.sessions ? sessionsRes.data.sessions.slice(0, 5) : [],
         });
       } catch (error) {
-        console.error('Error fetching psychologist data:', error);
+        console.error('Error fetching dashboard data:', error);
         toast.error('Failed to fetch dashboard data');
       }
     };
-
+  
     fetchPsychologistData();
   }, []);
 
@@ -42,18 +47,23 @@ const PsychologistDashboard = () => {
           Psychologist Dashboard
         </Typography>
         <Grid container spacing={3}>
+          {/* Total Assessments */}
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Total Assessments</Typography>
               <Typography variant="h4">{stats.totalAssessments}</Typography>
             </Paper>
           </Grid>
+
+          {/* Average Sanity Level */}
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Average Sanity Level</Typography>
               <Typography variant="h4">{stats.averageSanityLevel}%</Typography>
             </Paper>
           </Grid>
+
+          {/* Latest Sessions */}
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Latest Sessions</Typography>
