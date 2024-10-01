@@ -15,16 +15,16 @@ const PsychologistDashboard = () => {
       try {
         // API calls
         const [assessmentsRes, sanityRes, sessionsRes] = await Promise.all([
-          api.get('/assessments/total'),
-          api.get('/sanity'),
-          api.get('/sessions'),
+          api.get('/assessments/total'),     // Fetch total assessments
+          api.get('/sanity'),                // Fetch average sanity level
+          api.get('/sessions/recent'),       // Fetch recent sessions
         ]);
-  
+
         // Log responses to check the data
         console.log('Assessments Response:', assessmentsRes.data);
         console.log('Sanity Response:', sanityRes.data);
         console.log('Sessions Response:', sessionsRes.data);
-  
+
         // Update state with the fetched data
         setStats({
           totalAssessments: assessmentsRes.data.totalAssessments || 0,
@@ -71,7 +71,6 @@ const PsychologistDashboard = () => {
                 stats.latestSessions.map((session) => (
                   <Box key={session._id} mt={1}>
                     <Typography variant="body1">Session ID: {session._id}</Typography>
-                    <Typography variant="body2">Date: {new Date(session.date).toLocaleString()}</Typography>
                   </Box>
                 ))
               ) : (

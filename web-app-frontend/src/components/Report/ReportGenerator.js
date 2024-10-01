@@ -1,83 +1,112 @@
-// src/components/Report/ReportGenerator.js
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Container, Typography, Box, TextField, Button, MenuItem } from '@mui/material';
 import api from '../../services/ApiService';
 import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
 const ReportGenerator = () => {
   const { handleSubmit, control } = useForm();
-  const [users, setUsers] = useState([]);
-  const [averageSanity, setAverageSanity] = useState(0);
+  const [users, setUsers] = React.useState([]);
 
-  useEffect(() => {
-    const fetchUsersAndSanityLevels = async () => {
+  React.useEffect(() => {
+    const fetchUsers = async () => {
       try {
-        const [usersResponse, sanityResponse] = await Promise.all([
-          api.get('/admin/users'),  // Fetch users with role 'user'
-          api.get('/sanity')  // Fetch all sanity levels and average
-        ]);
-
-        setUsers(usersResponse.data.users);
-        setAverageSanity(sanityResponse.data.averageSanityLevel);
+        const response = await api.get('/admin/users'); // Ensure this endpoint exists
+        setUsers(response.data.users);
       } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error('Failed to fetch data');
+        console.error('Error fetching users:', error);
+        toast.error('Failed to fetch users');
       }
     };
 
-    fetchUsersAndSanityLevels();
+    fetchUsers();
   }, []);
 
   const onSubmit = async (data) => {
     const { userId } = data;
 
     try {
-      const [sanityRes, assessmentsRes] = await Promise.all([
-        api.get(`/sanity/user/${userId}`),  // Fetch user's sanity level
-        api.get(`/assessments/user/${userId}`),  // Fetch user's assessments
-      ]);
+      // Fetch user's report data
+      const reportRes = await api.get(`/report/user/${userId}`);
 
-      const sanityLevel = sanityRes.data.sanityPercentage;
-      const assessments = assessmentsRes.data.assessments;
+      const { user, sanityLevels, serResults, sentimentScores } = reportRes.data;
 
-      const userRes = await api.get(`/admin/users/${userId}`);  // Fetch user details
-      const user = userRes.data.user;
-
-      // Create a PDF of the report
+      // Prepare the report content
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
       tempDiv.style.width = '210mm';
       tempDiv.style.padding = '20px';
       tempDiv.style.backgroundColor = '#fff';
 
       tempDiv.innerHTML = `
-        <h1>Sanity Report</h1>
+        <h1>User Report</h1>
         <h2>User Information</h2>
         <p><strong>Username:</strong> ${user.username}</p>
         <p><strong>Email:</strong> ${user.email}</p>
-        <p><strong>Sanity Level:</strong> ${sanityLevel}%</p>
-        <h2>Assessments</h2>
+
+        <h2>Sanity Levels</h2>
         <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
           <thead>
             <tr>
               <th>#</th>
-              <th>Type</th>
-              <th>Score</th>
+              <th>Sanity Level</th>
               <th>Date</th>
             </tr>
           </thead>
           <tbody>
-            ${assessments.map((assessment, index) => `
+            ${sanityLevels.map((level, index) => `
               <tr>
                 <td>${index + 1}</td>
-                <td>${assessment.assessmentType}</td>
-                <td>${assessment.score}</td>
-                <td>${new Date(assessment.createdAt).toLocaleDateString()}</td>
+                <td>${level.sanityPercentage}%</td>
+                <td>${new Date(level.createdAt).toLocaleDateString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <h2>SER Results</h2>
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Highest Emotion</th>
+              <th>Emotion Scores</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${serResults.map((result, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${result.highestEmotion.label} (${result.highestEmotion.score})</td>
+                <td>${result.emotions.map(emotion => `${emotion.label}: ${emotion.score}`).join(', ')}</td>
+                <td>${new Date(result.date).toLocaleDateString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <h2>Sentiment Scores</h2>
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Session Name</th>
+              <th>Average Sentiment</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sentimentScores.map((score, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${score.sessionName}</td>
+                <td>${score.averageSentiment}</td>
+                <td>${new Date(score.date).toLocaleDateString()}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -88,15 +117,15 @@ const ReportGenerator = () => {
 
       const canvas = await html2canvas(tempDiv, { scale: 2 });
       const imgData = canvas.toDataURL('image/png');
+
       document.body.removeChild(tempDiv);
 
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Sanity_Report_${user.username}.pdf`);
+      pdf.save(`User_Report_${user.username}.pdf`);
 
       toast.success('Report generated successfully');
     } catch (error) {
@@ -111,11 +140,6 @@ const ReportGenerator = () => {
         <Typography variant="h4" gutterBottom>
           Generate User Report
         </Typography>
-
-        <Typography variant="h6" gutterBottom>
-          Average Sanity Level: {averageSanity}%
-        </Typography>
-        
         <form onSubmit={handleSubmit(onSubmit)}>
           <Controller
             name="userId"
