@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Box, Grid, Paper, Button } from '@mui/material';
+import { Container, Typography, Box, Grid, Paper } from '@mui/material';
 import api from '../../services/ApiService';
 import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -12,34 +11,48 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    const fetchMetrics = async () => {
+    const fetchAdminData = async () => {
       try {
-        const response = await api.get('/analytics/system-metrics');
-        setStats(response.data);
+        const systemMetricsRes = await api.get('/analytics/system-metrics');
+        console.log('System Metrics:', systemMetricsRes.data);
+        setStats({
+          totalUsers: systemMetricsRes.data.totalUsers || 0,
+          activeUsers: systemMetricsRes.data.activeUsers || 0,
+          systemHealth: systemMetricsRes.data.systemHealth || 'Good',
+        });
       } catch (error) {
-        toast.error('Failed to fetch system metrics');
+        console.error('Error fetching admin dashboard data:', error);
+        toast.error('Failed to fetch dashboard data');
       }
     };
-    fetchMetrics();
+
+    fetchAdminData();
   }, []);
 
   return (
     <Container>
       <Box mt={5}>
-        <Typography variant="h4" gutterBottom>Admin Dashboard</Typography>
+        <Typography variant="h4" gutterBottom>
+          Admin Dashboard
+        </Typography>
         <Grid container spacing={3}>
+          {/* Total Users */}
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">Total Users</Typography>
               <Typography variant="h4">{stats.totalUsers}</Typography>
             </Paper>
           </Grid>
+
+          {/* Active Users */}
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ padding: 2 }}>
-              <Typography variant="h6">Active Users (Last 24h)</Typography>
+              <Typography variant="h6">Active Users (Last 24 Hours)</Typography>
               <Typography variant="h4">{stats.activeUsers}</Typography>
             </Paper>
           </Grid>
+
+          {/* System Health */}
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ padding: 2 }}>
               <Typography variant="h6">System Health</Typography>
@@ -47,11 +60,6 @@ const AdminDashboard = () => {
             </Paper>
           </Grid>
         </Grid>
-        <Box mt={4}>
-          <Button variant="contained" color="primary" component={Link} to="/admin/report">
-            Generate User Report
-          </Button>
-        </Box>
       </Box>
     </Container>
   );

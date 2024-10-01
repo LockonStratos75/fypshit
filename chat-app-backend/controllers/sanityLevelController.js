@@ -76,3 +76,19 @@ exports.updateSanityLevel = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
+exports.getSanityLevelForCurrentUser = async (req, res) => {
+  const userId = req.user._id;
+
+  try {
+    const sanityLevel = await SanityLevel.findOne({ user: userId }).populate('user', 'username role');
+    if (!sanityLevel) {
+      return res.status(404).json({ message: 'Sanity level not found for the user.' });
+    }
+
+    res.status(200).json({ sanityPercentage: sanityLevel.sanityPercentage });
+  } catch (err) {
+    console.error('Error in getSanityLevelForCurrentUser:', err.message);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};

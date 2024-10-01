@@ -57,8 +57,8 @@ const getSystemHealth = async () => {
         ((totalMemoryMB - freeMemoryMB) / totalMemoryMB) * 100;
 
       // Define thresholds
-      const cpuThreshold = 80; // 80%
-      const memoryThreshold = 80; // 80%
+      const cpuThreshold = 90; // 80%
+      const memoryThreshold = 90; // 80%
 
       let systemHealth = 'Good';
 

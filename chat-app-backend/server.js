@@ -20,6 +20,7 @@ const serRoutes = require('./routes/serRoutes');
 const sanityLevelRoutes = require('./routes/sanityLevelRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const chatRoutes = require('./routes/chatSessionRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 // Import Middlewares
 const { authenticateToken } = require('./middlewares/authMiddleware');
@@ -114,6 +115,7 @@ app.use('/sentiment', sentimentRoutes);
 app.use('/ser', serRoutes);
 app.use('/sanity', sanityLevelRoutes);
 app.use('/admin', adminRoutes);
+app.use('/report', reportRoutes);
 
 // ========================
 // Error Handling Middleware
