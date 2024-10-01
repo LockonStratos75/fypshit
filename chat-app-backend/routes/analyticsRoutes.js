@@ -1,9 +1,9 @@
 const express = require('express');
-const { accessSystemAnalytics, monitorSystemMetrics } = require('../controllers/analyticsController');
+const { getSystemMetrics } = require('../controllers/analyticsController');
 const { authenticateToken } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.get('/system-metrics', authenticateToken, monitorSystemMetrics);
+router.get('/system-metrics', authenticateToken, getSystemMetrics);
 
 module.exports = router;

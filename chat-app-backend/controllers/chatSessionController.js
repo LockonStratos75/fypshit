@@ -1,6 +1,16 @@
 // backend/controllers/chatSessionController.js
 const ChatSession = require('../models/ChatSession');
 
+// Fetch recent sessions (limit to 5 most recent)
+exports.getRecentSessions = async (req, res) => {
+  try {
+    const recentSessions = await ChatSession.find().sort({ date: -1 }).limit(10);  
+    res.status(200).json({ sessions: recentSessions });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error fetching recent sessions.' });
+  }
+};
+
 exports.getUserSessions = async (req, res) => {
   try {
     const sessions = await ChatSession.find({ userId: req.user._id });
