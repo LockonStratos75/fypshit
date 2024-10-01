@@ -31,26 +31,4 @@ export function AppNavigator() {
             </Stack.Navigator>
         </NavigationContainer>
     );
-    // const { user } = useAuth();
-    // if (user) {
-    //     return (
-    //         <NavigationContainer theme={MyTheme}>
-    //             <Stack.Navigator initialRouteName="Home">
-    //                 <Stack.Screen name="Home" component={MyTabs} options={{ headerShown: false }} />  {/* Register Home instead of HomeTab */}
-    //                 <Stack.Screen name="ChatSession" component={ChatSessionScreen} />
-    //             </Stack.Navigator>
-    //         </NavigationContainer>
-    //     );
-    // } else {
-    //     return (
-    //         <NavigationContainer theme={MyTheme}>
-    //             <Stack.Navigator initialRouteName="Login">
-    //                 <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-    //                 <Stack.Screen name="Sign Up" component={SignUpScreen} options={{ headerShown: false }} />
-    //                 <Stack.Screen name="Sign Up T" component={SignUpTherapist} options={{ headerShown: false }} />
-    //                 <Stack.Screen name="Home" component={MyTabs} options={{ headerShown: false }} />
-    //             </Stack.Navigator>
-    //         </NavigationContainer>
-    //     );
-    // }
 }
