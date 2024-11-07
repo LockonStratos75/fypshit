@@ -37,13 +37,6 @@ export const getAvailableVoices = async () => {
     }
 };
 
-/**
- * Synthesize speech using Google Cloud Text-to-Speech API
- * @param {string} text - The text to synthesize
- * @param {string} selectedVoice - The name of the selected voice
- * @param {string} audioEncoding - The desired audio encoding format
- * @returns {string} - Base64-encoded audio content
- */
 export const getSpeech = async (text, selectedVoice, audioEncoding = 'LINEAR16') => {
     const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_CLOUD_API_KEY}`;
 
