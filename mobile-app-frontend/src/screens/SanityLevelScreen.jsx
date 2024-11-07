@@ -76,24 +76,35 @@ const SanityLevelScreen = () => {
             const storedVoice = await SecureStore.getItemAsync('selectedVoice');
             const storedEncoding = await SecureStore.getItemAsync('audioEncoding');
             const storedIsTtsEnabled = await SecureStore.getItemAsync('isTtsEnabled');
-            if (storedVoice !== null) setSelectedVoice(storedVoice);
-            if (storedEncoding !== null) setAudioEncoding(storedEncoding);
-            if (storedIsTtsEnabled !== null)
-                setIsTtsEnabled(storedIsTtsEnabled === 'true');
+
+            const parsedVoice = storedVoice ? JSON.parse(storedVoice) : null;
+
+            setSelectedVoice(parsedVoice || null);
+            setAudioEncoding(storedEncoding || 'LINEAR16');
+            setIsTtsEnabled(storedIsTtsEnabled === 'true');
         } catch (error) {
             console.error('Error loading settings:', error);
         }
     };
 
+
     // Function to save selected voice
-    const handleVoiceChange = async (voice) => {
-        setSelectedVoice(voice);
-        try {
-            await SecureStore.setItemAsync('selectedVoice', voice);
-        } catch (error) {
-            console.error('Error saving selected voice:', error);
+    const handleVoiceChange = async (voiceName) => {
+        // Find the full voice object based on the selected voice name
+        const selectedVoiceObject = voices.find((voice) => voice.name === voiceName);
+
+        if (selectedVoiceObject) {
+            setSelectedVoice(selectedVoiceObject);
+            try {
+                await SecureStore.setItemAsync('selectedVoice', JSON.stringify(selectedVoiceObject));
+            } catch (error) {
+                console.error('Error saving selected voice:', error);
+            }
+        } else {
+            console.error('Selected voice not found in voices array');
         }
     };
+
 
     // Function to save audio encoding
     const handleEncodingChange = async (encoding) => {
@@ -120,6 +131,7 @@ const SanityLevelScreen = () => {
         label: `${voice.name} (${voice.ssmlGender})`,
         value: voice.name,
     }));
+
 
     const encodingItems = [
         { label: 'LINEAR16 (WAV)', value: 'LINEAR16' },
@@ -436,10 +448,11 @@ const SanityLevelScreen = () => {
             <View style={styles.settingsContainer}>
                 <CustomPicker
                     label="Select Voice:"
-                    selectedValue={selectedVoice}
+                    selectedValue={selectedVoice ? selectedVoice.name : ''}
                     onValueChange={handleVoiceChange}
                     items={voiceItems}
                 />
+
                 <CustomPicker
                     label="Select Audio Encoding:"
                     selectedValue={audioEncoding}
