@@ -17,6 +17,10 @@ class EmotionResponse(BaseModel):
     emotions: List[EmotionPrediction]
     highestEmotion: EmotionPrediction
 
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the API!"}
+
 @app.post("/predict", response_model=EmotionResponse)
 async def predict(file: UploadFile = File(...)):
     # Read the audio file data
