@@ -261,5 +261,7 @@ export const styles = StyleSheet.create({
   bottomMarg: {
     marginBottom: 40,
   }
+
+
 });
 export default App;
