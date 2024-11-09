@@ -23,6 +23,7 @@
     "cors": "^2.8.5",
     "eas-cli": "^12.1.0",
     "expo": "^50.0.0",
+    "expo-app-loading": "^2.1.1",
     "expo-av": "~13.10.6",
     "expo-blur": "^12.9.1",
     "expo-dev-client": "~3.3.12",

@@ -709,3 +709,11 @@
 2024-11-07T15:56:42.011Z - Ditto@gmail.com - GET /ser
 2024-11-07T15:56:42.382Z - Ditto@gmail.com - POST /sanity
 2024-11-07T15:56:42.868Z - Ditto@gmail.com - GET /sanity/user
+2024-11-08T04:16:36.267Z - Ditto@gmail.com - GET /sessions
+2024-11-08T04:16:42.395Z - Ditto@gmail.com - GET /sessions
+2024-11-08T04:30:57.040Z - Ditto@gmail.com - GET /sessions
+2024-11-08T04:32:12.249Z - Ditto@gmail.com - GET /sessions
+2024-11-08T15:07:44.194Z - Ditto@gmail.com - POST /ser
+2024-11-08T15:13:41.855Z - Ditto@gmail.com - GET /sessions
+2024-11-08T15:13:45.576Z - Ditto@gmail.com - GET /sessions/66fab331eb5ffed49ff2e810
+2024-11-08T15:13:50.129Z - Ditto@gmail.com - GET /sessions
