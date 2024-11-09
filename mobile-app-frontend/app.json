@@ -52,14 +52,6 @@
       "url": "https://u.expo.dev/b1d12296-ef37-47bd-80f4-4da2a2c101fb"
     },
     "plugins": [
-      [
-        "expo-font",
-        {
-          "fonts": [
-            "./assets/fonts/Poppins-Regular.ttf"
-          ]
-        }
-      ],
       "expo-secure-store"
     ]
   }
