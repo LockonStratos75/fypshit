@@ -7,7 +7,7 @@ import {
 } from '@env';
 
 // Define the base URL as a constant
-const BASE_URL = IP_ADDRESS; // Replace with your IP address or localhost based on your setup
+const BASE_URL = IP_ADDRESS;
 
 const ChatSessionScreen = ({ route }) => {
     const { sessionId } = route.params;
