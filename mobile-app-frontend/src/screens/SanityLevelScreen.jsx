@@ -27,7 +27,7 @@ const STROKE_WIDTH = 15;
 const RADIUS = (SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-const SanityLevelScreen = () => {
+const SanityLevelScreen = ({navigation}) => {
     const [sanityLevel, setSanityLevel] = useState(null);
     const [isLoading, setIsLoading] = useState(false); // State to manage loading indicator
     const [isRefreshing, setIsRefreshing] = useState(false); // State to manage refresh button

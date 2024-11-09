@@ -15,7 +15,7 @@ export default function Dashboard({ navigation }) {
                         style={styles.buttonImage}
                     />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Emotion Recognition")}>
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Emotion")}>
                     <Image
                         source={require('../../assets/check-emotion-button.png')} // Your exported button image
                         style={styles.buttonImage}

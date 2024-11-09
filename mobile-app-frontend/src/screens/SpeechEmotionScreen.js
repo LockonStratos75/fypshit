@@ -8,7 +8,7 @@ import query from '../config/SpeechEmotionRecognition';
 import { ButtonComponent } from "../components/ButtonComponent";
 import { IP_ADDRESS } from '@env';
 
-export const SpeechEmotionScreen = () => {
+export const SpeechEmotionScreen = ({navigation}) => {
     const [result, setResult] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recording, setRecording] = useState(null);

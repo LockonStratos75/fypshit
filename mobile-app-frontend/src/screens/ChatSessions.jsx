@@ -49,13 +49,15 @@ const ChatSessionsScreen = () => {
         }
     };
 
-    const renderItem = ({ item }) => (
+    const renderItem = ({ item, index }) => (
         <View style={styles.sessionItem}>
             <TouchableOpacity
                 style={styles.sessionContent}
                 onPress={() => navigation.navigate('ChatSession', { sessionId: item._id })}
             >
-                <Text style={styles.sessionTitle}>{`Chat Session ${item.id}`}</Text>
+                <Text style={styles.sessionTitle}>
+                    {`Chat Session ${index + 1 ||item.id}`}
+                </Text>
                 <Text style={styles.sessionDate}>{item.date}</Text>
             </TouchableOpacity>
             <TouchableOpacity

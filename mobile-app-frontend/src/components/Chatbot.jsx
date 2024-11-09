@@ -1,6 +1,6 @@
 // Chatbot.js
 
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle} from 'react';
 import {
     Image,
     ScrollView,
@@ -35,7 +35,7 @@ const sysInstruct = `As Eunoia, a compassionate and understanding mental health 
 
 const API_URL = 'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest';
 
-const Chatbot = () => {
+const Chatbot = forwardRef((props, ref) => {
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState([]);
     const scrollViewRef = useRef();
@@ -52,6 +52,15 @@ const Chatbot = () => {
     const [audioEncoding, setAudioEncoding] = useState('LINEAR16'); // Default encoding
     const [isTtsEnabled, setIsTtsEnabled] = useState(true);
     const [ttsLoading, setTtsLoading] = useState(false);
+
+    // Expose methods to parent via ref
+    useImperativeHandle(ref, () => ({
+        getMessages: () => messages,
+        clearMessages: () => {
+            setMessages([]);
+            setInput('');
+        },
+    }));
 
     useEffect(() => {
         if (Platform.OS === 'web') {
@@ -448,15 +457,15 @@ const Chatbot = () => {
                         value={input}
                         placeholder="Type your message here..."
                         multiline={true}
-                        style={{width: 150, marginRight: 20}}
+                        style={{width: 150, marginRight: 20, fontFamily: 'Poppins400Regular'}}
                     />
-                    <TouchableOpacity onPress={saveChatSession}>
-                        <FileArrowUp size={25} color="#212529" weight="fill"/>
-                    </TouchableOpacity>
+                    {/*<TouchableOpacity onPress={saveChatSession}>*/}
+                    {/*    <FileArrowUp size={25} color="#212529" weight="fill"/>*/}
+                    {/*</TouchableOpacity>*/}
 
-                    <TouchableOpacity onPress={clearChatHistory}>
-                        <TrashSimple size={25} color="red" weight="fill"/>
-                    </TouchableOpacity>
+                    {/*<TouchableOpacity onPress={clearChatHistory}>*/}
+                    {/*    <TrashSimple size={25} color="red" weight="fill"/>*/}
+                    {/*</TouchableOpacity>*/}
                     <TouchableOpacity onPress={RecordButtonHandler}>
                         <Image source={recordButton} style={styles.iconImg}/>
                     </TouchableOpacity>
@@ -470,6 +479,6 @@ const Chatbot = () => {
             </View>
         </View>
     );
-};
+});
 
 export default Chatbot;

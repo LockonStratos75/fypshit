@@ -2,20 +2,19 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 
-
-export default function ChatScreen({navigation}) {
+export default function EmotionMenuScreen({navigation}) {
     return (
         <View style={styles.container}>
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.chatButton} onPress={() => navigation.navigate('ChatScreen')}>
+                <TouchableOpacity style={styles.chatButton} onPress={() => navigation.navigate('Profile')}>
                     <Image
-                        source={require('../../assets/chat-with-eunoia.png')} // Chat with Eunoia button image
+                        source={require('../../assets/sanity.png')} // Chat with Eunoia button image
                         style={styles.chatImage}
                     />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.chatButton} onPress={() => navigation.navigate('Sessions')}>
+                <TouchableOpacity style={styles.chatButton} onPress={() => navigation.navigate('Emotion Recognition')}>
                     <Image
-                        source={require('../../assets/chat-sessions.png')} // Chat Sessions button image
+                        source={require('../../assets/ser.png')} // Chat Sessions button image
                         style={styles.chatImage}
                     />
                 </TouchableOpacity>

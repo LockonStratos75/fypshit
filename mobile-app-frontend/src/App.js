@@ -1,14 +1,22 @@
 import "react-native-gesture-handler";
 import {AppNavigator} from "./navigation/AppNavigator";
 
+
 import React, {useCallback} from "react";
 import {StyleSheet} from "react-native";
 import {StatusBar} from "expo-status-bar";
-
+import { useFonts, Poppins_700Bold, Poppins_400Regular, Poppins_600SemiBold, Poppins500Medium} from '@expo-google-fonts/poppins';
 
 
 
 function App() {
+  useFonts({
+    Poppins_700Bold,
+    Poppins_400Regular,
+    Poppins500Medium,
+    Poppins_600SemiBold
+    // Load the Poppins bold font
+  });
   return (
     <>
     <StatusBar backgroundColor="#ffffff" style="dark"/>
@@ -40,6 +48,8 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   textInput: {
+    fontFamily: 'Poppins_600SemiBold',
+
     // backgroundColor: "#485096",
     borderColor: 'rgba(33,37,41,0.12)',
     borderWidth: 2,
@@ -49,46 +59,45 @@ export const styles = StyleSheet.create({
     paddingLeft: 20,
     marginBottom: 16,
     color: "#212529",
-    fontWeight: 'bold',
     fontSize: 16,
   },
   h1: {
+    fontFamily: 'Poppins_700Bold',
     fontSize: 32,
-    fontWeight: "900",
     color: "#212529",
     marginTop: 64,
     marginLeft: 20,
   },
 
   h1Center: {
+    fontFamily: 'Poppins_700Bold',
     fontSize: 28,
-    fontWeight: "bold",
     color: "#212529",
     marginTop: 64,
     // marginLeft: 20,
   },
 
   h2: {
+    fontFamily: 'Poppins_600SemiBold',
     fontSize: 16,
     color: "rgba(33,37,41,0.72)",
     marginTop: 4,
     marginLeft: 20,
-    fontWeight: "bold",
   },
 
   h2Normal: {
+    fontFamily: 'Poppins_600SemiBold',
     fontSize: 16,
     color: "rgba(33,37,41,0.07)",
     marginTop: 14,
-    fontWeight: "bold",
   },
 
   h2Color: {
+    fontFamily: 'Poppins_600SemiBold',
     fontSize: 16,
     color: "#212529",
     marginTop: 14,
     marginLeft: 20,
-    fontWeight: "bold",
   },
   buttOuter: {
     // backgroundColor: "#F3AE8B",
@@ -104,15 +113,17 @@ export const styles = StyleSheet.create({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    padding: 30,
   },
 
   buttTitle: {
-    fontWeight: "900",
+    fontFamily: 'Poppins_600SemiBold',
     color: "white",
     textAlign: "center",
   },
 
   bodyText: {
+    fontFamily: 'Poppins_400Regular',
     color: "black",
     fontSize: 14,
     // marginTop: 14,
@@ -127,6 +138,7 @@ export const styles = StyleSheet.create({
   },
 
   bodyText2: {
+    fontFamily: 'Poppins_400Regular',
     color: "black",
     fontSize: 14,
     // marginTop: 14,
@@ -185,7 +197,7 @@ export const styles = StyleSheet.create({
     // marginRight: 55,
   },
   botContainer: {
-    height: '94%'
+    height: '99%'
   },
   messageContainer: {
     flex: 1,
@@ -209,23 +221,29 @@ export const styles = StyleSheet.create({
     maxWidth: '70%',
   },
   messageText: {
+    fontFamily: 'Poppins_400Regular',
     color: 'white',
   },
   botMessageText: {
+    fontFamily: 'Poppins_400Regular',
     color: 'black'
   },
   boldText: {
-    fontWeight: 'bold',
+    fontFamily: 'Poppins_900Bold',
+
   },
   rowDirection: {
     flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
     paddingVertical: 5,
   },
 
   smallInput: {
+    fontFamily: 'Poppins_400Regular',
+    display: 'flex',
+    justifyContent: 'center',
     // backgroundColor: "#485096",
     borderRadius: 12,
     height: 52,
@@ -233,9 +251,11 @@ export const styles = StyleSheet.create({
     borderColor: 'rgba(33,37,41,0.12)',
     borderWidth: 2,
     paddingLeft: 20,
+    margin: 20,
     // marginBottom: 16,
     width: '70%',
-    marginRight: 10
+    padding:10,
+    // marginRight: 10
   },
   fullWidth: {
     width: "100%",
