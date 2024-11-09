@@ -1,9 +1,9 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {ChatCenteredText, Chats, DotsThreeOutlineVertical, Record, User} from 'phosphor-react-native';
-import { Chat } from "./screens/Chat";  // Import Chat component here
-import ChatSessions from "./screens/ChatSessions";
-import { SpeechEmotionScreen } from "./screens/SpeechEmotionScreen";
-import SanityLevelScreen from "./screens/SanityLevelScreen";
+import { Chat } from "../screens/Chat";  // Import Chat component here
+import ChatSessions from "../screens/ChatSessions";
+import { SpeechEmotionScreen } from "../screens/SpeechEmotionScreen";
+import SanityLevelScreen from "../screens/SanityLevelScreen";
 
 const Tab = createBottomTabNavigator();
 
