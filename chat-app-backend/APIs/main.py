@@ -2,8 +2,20 @@ from fastapi import FastAPI, UploadFile, File
 from transformers import pipeline
 from pydantic import BaseModel
 from typing import List
+from fastapi.middleware.cors import CORSMiddleware
+# from dotenv import load_dotenv
+# import os
 
 app = FastAPI()
+
+# # Allow all origins (adjust as needed)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],  # Adjust this in production
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # Initialize the pipeline for audio classification
 pipe = pipeline("audio-classification", model="firdhokk/speech-emotion-recognition-with-openai-whisper-large-v3")

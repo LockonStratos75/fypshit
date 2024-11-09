@@ -32,7 +32,28 @@ export const SpeechEmotionScreen = ({navigation}) => {
             });
 
             const recording = new Audio.Recording();
-            await recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
+            await recording.prepareToRecordAsync({
+                isMeteringEnabled: true,
+                android: {
+                    extension: '.wav',
+                    outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_DEFAULT,
+                    audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_DEFAULT,
+                    sampleRate: 44100,
+                    numberOfChannels: 2,
+                    bitRate: 128000,
+                },
+                ios: {
+                    extension: '.wav',
+                    audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_HIGH,
+                    sampleRate: 44100,
+                    numberOfChannels: 2,
+                    bitRate: 128000,
+                    linearPCMBitDepth: 16,
+                    linearPCMIsBigEndian: false,
+                    linearPCMIsFloat: false,
+                },
+            });
+
             await recording.startAsync();
             setRecording(recording);
             setIsRecording(true);
@@ -58,23 +79,22 @@ export const SpeechEmotionScreen = ({navigation}) => {
         setRecording(null);
         console.log('Recording stopped and stored at', uri);
 
-        // Define the target path in the app's cache directory
-        const targetPath = `${FileSystem.cacheDirectory}sample1.wav`;
-
         try {
-            // Move the file to the target path
-            await FileSystem.moveAsync({
-                from: uri,
-                to: targetPath,
-            });
+            // No need to move the file; it's already in WAV format
+            console.log('Calling query function with URI:', uri);
+            const response = await query(uri);
+            console.log('Response from query:', response);
 
-            // Query the moved file
-            const token = await SecureStore.getItemAsync('token'); // Retrieve JWT token from SecureStore
-            const response = await query(targetPath, token); // Pass token to query function
             const emotions = processResponse(response);
 
             if (emotions && emotions.highestEmotion.label !== 'unknown') {
                 setResult(emotions);
+                // Retrieve token from SecureStore
+                const token = await SecureStore.getItemAsync('token');
+                if (!token) {
+                    setError('User is not authenticated.');
+                    return;
+                }
                 // Save SER results to the server
                 await saveSERResultToServer(emotions, token);
             } else {
@@ -84,33 +104,36 @@ export const SpeechEmotionScreen = ({navigation}) => {
                     setError('Unable to determine emotion.');
                 }
             }
-
         } catch (error) {
             console.error('Failed to process recording', error);
             setError('Failed to process recording: ' + error.message);
         }
     };
 
+
     const processResponse = (response) => {
-        if (!response || !Array.isArray(response) || response.length === 0) {
+        if (!response || !response.emotions || !response.highestEmotion) {
             console.error('Invalid response format:', response);
             setError('Invalid response format');
             return null;
         }
 
-        const sortedEmotions = response.sort((a, b) => b.score - a.score);
-        const highestEmotion = sortedEmotions[0];
-        const totalScore = sortedEmotions.reduce((sum, emotion) => sum + emotion.score, 0);
-        const emotions = sortedEmotions.map((emotion) => ({
+        const emotions = response.emotions;
+        const highestEmotion = response.highestEmotion;
+
+        // Calculate percentages
+        const totalScore = emotions.reduce((sum, emotion) => sum + emotion.score, 0);
+        const emotionsWithPercentage = emotions.map((emotion) => ({
             ...emotion,
             percentage: ((emotion.score / totalScore) * 100).toFixed(2),
         }));
 
         return {
             highestEmotion,
-            emotions,
+            emotions: emotionsWithPercentage,
         };
     };
+
 
     const saveSERResultToServer = async (emotions, token) => {
         try {
