@@ -1,27 +1,33 @@
 import React, { useState } from 'react';
-import { Button, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
-import * as SecureStore from 'expo-secure-store'; // Import SecureStore from Expo
-import axios from 'axios'; // Import axios for HTTP requests
+import * as SecureStore from 'expo-secure-store';
+import axios from 'axios';
 import query from '../config/SpeechEmotionRecognition';
 import { ButtonComponent } from "../components/ButtonComponent";
 import { IP_ADDRESS } from '@env';
 
-export const SpeechEmotionScreen = ({navigation}) => {
+export const SpeechEmotionScreen = ({ navigation }) => {
     const [result, setResult] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recording, setRecording] = useState(null);
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false); // New loading state
 
     const startRecording = async () => {
         try {
             console.log('Requesting permissions..');
+            setLoading(true); // Start loading
+            setResult(null);  // Clear previous results
+            setError(null);   // Clear previous errors
+
             const permission = await Audio.requestPermissionsAsync();
 
             if (permission.status !== 'granted') {
                 console.log('Permission to access microphone is required!');
                 setError('Permission to access microphone is required!');
+                setLoading(false); // Stop loading
                 return;
             }
 
@@ -61,6 +67,7 @@ export const SpeechEmotionScreen = ({navigation}) => {
         } catch (err) {
             console.error('Failed to start recording', err);
             setError('Failed to start recording: ' + err.message);
+            setLoading(false); // Stop loading
         }
     };
 
@@ -72,6 +79,7 @@ export const SpeechEmotionScreen = ({navigation}) => {
         } catch (stopError) {
             console.error('Error stopping recording', stopError);
             setError('Error stopping recording: ' + stopError.message);
+            setLoading(false); // Stop loading
             return;
         }
 
@@ -80,7 +88,6 @@ export const SpeechEmotionScreen = ({navigation}) => {
         console.log('Recording stopped and stored at', uri);
 
         try {
-            // No need to move the file; it's already in WAV format
             console.log('Calling query function with URI:', uri);
             const response = await query(uri);
             console.log('Response from query:', response);
@@ -93,6 +100,7 @@ export const SpeechEmotionScreen = ({navigation}) => {
                 const token = await SecureStore.getItemAsync('token');
                 if (!token) {
                     setError('User is not authenticated.');
+                    setLoading(false); // Stop loading
                     return;
                 }
                 // Save SER results to the server
@@ -107,9 +115,10 @@ export const SpeechEmotionScreen = ({navigation}) => {
         } catch (error) {
             console.error('Failed to process recording', error);
             setError('Failed to process recording: ' + error.message);
+        } finally {
+            setLoading(false); // Stop loading after processing
         }
     };
-
 
     const processResponse = (response) => {
         if (!response || !response.emotions || !response.highestEmotion) {
@@ -134,7 +143,6 @@ export const SpeechEmotionScreen = ({navigation}) => {
         };
     };
 
-
     const saveSERResultToServer = async (emotions, token) => {
         try {
             const response = await axios.post(`${IP_ADDRESS}/ser`, {
@@ -155,7 +163,10 @@ export const SpeechEmotionScreen = ({navigation}) => {
     return (
         <SafeAreaView style={styles.wrapperCenter}>
             <View>
-                {result && (
+                {loading && (
+                    <ActivityIndicator size="large" color="#0000ff" />
+                )}
+                {!loading && result && (
                     <View>
                         <Text style={styles.h1Center}>You sounded {result.highestEmotion.label}!</Text>
                         {result.emotions.map((emotion, index) => (
@@ -165,7 +176,9 @@ export const SpeechEmotionScreen = ({navigation}) => {
                         ))}
                     </View>
                 )}
-                {error && <Text style={styles.errorText}>{error}</Text>}
+                {!loading && error && (
+                    <Text style={styles.errorText}>{error}</Text>
+                )}
             </View>
             <ButtonComponent
                 title={isRecording ? 'Stop Recording' : 'Start Recording'}
@@ -201,3 +214,4 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
 });
+
