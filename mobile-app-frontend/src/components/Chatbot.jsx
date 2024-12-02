@@ -1,6 +1,6 @@
 // Chatbot.js
 
-import React, {useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle} from 'react';
+import React, { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import {
     Image,
     ScrollView,
@@ -12,21 +12,21 @@ import {
     Alert,
     ActivityIndicator,
 } from 'react-native';
-import {styles} from '../App';
+import { styles } from '../App'; // Ensure this path is correct
 import TypingIndicator from '../components/TypingIndicator';
-import {LinearGradient} from 'expo-linear-gradient';
-import {FileArrowUp, PaperPlaneRight, TrashSimple} from 'phosphor-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { PaperPlaneRight } from 'phosphor-react-native';
 import axios from 'axios';
-import {useRoute, useFocusEffect} from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
-import {GoogleGenerativeAI, HarmBlockThreshold, HarmCategory} from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import Voice from '@react-native-voice/voice';
-import {decode} from 'he';
-import {MarkdownView} from 'react-native-markdown-view';
-import {getSpeech} from '../services/textToSpeech'; // Import TTS functions
-import {Audio} from 'expo-av'; // Import Audio
+import { decode } from 'he';
+import { MarkdownView } from 'react-native-markdown-view';
+import { getSpeech } from '../services/textToSpeech'; // Import TTS functions
+import { Audio } from 'expo-av'; // Import Audio for TTS playback
 
-import {GOOGLE_API_KEY, HUGGING_FACE_API_KEY, IP_ADDRESS} from '@env';
+import { GOOGLE_API_KEY, HUGGING_FACE_API_KEY, IP_ADDRESS } from '@env';
 
 const MODEL_NAME = 'gemini-1.5-flash';
 const API_KEY = GOOGLE_API_KEY; // Replace with your actual API key
@@ -36,21 +36,20 @@ const sysInstruct = `As Eunoia, a compassionate and understanding mental health 
 const API_URL = 'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest';
 
 const Chatbot = forwardRef((props, ref) => {
+    // Extract TTS settings from props
+    const { selectedVoice, audioEncoding, isTtsEnabled } = props;
+
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState([]);
     const scrollViewRef = useRef();
     const [isBotTyping, setIsBotTyping] = useState(false);
     const route = useRoute();
-    const {onNewSession} = route.params || {};
+    const { onNewSession } = route.params || {};
     const [recordButton, setRecordButton] = useState(require('../../assets/icons/microphone-fill.png'));
     const [results, setResults] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
     const [chat, setChat] = useState(null);
 
-    // TTS States
-    const [selectedVoice, setSelectedVoice] = useState(null); // Changed to null and expect an object
-    const [audioEncoding, setAudioEncoding] = useState('LINEAR16'); // Default encoding
-    const [isTtsEnabled, setIsTtsEnabled] = useState(true);
     const [ttsLoading, setTtsLoading] = useState(false);
 
     // Expose methods to parent via ref
@@ -118,48 +117,6 @@ const Chatbot = forwardRef((props, ref) => {
         };
     }, []);
 
-    useFocusEffect(
-        React.useCallback(() => {
-            const loadTtsSettings = async () => {
-                try {
-                    const storedVoice = await SecureStore.getItemAsync('selectedVoice');
-                    const storedEncoding = await SecureStore.getItemAsync('audioEncoding');
-                    const storedIsTtsEnabled = await SecureStore.getItemAsync('isTtsEnabled');
-
-                    let parsedVoice = null;
-                    if (storedVoice) {
-                        if (storedVoice.trim().startsWith('{') || storedVoice.trim().startsWith('[')) {
-                            // Stored as JSON string
-                            parsedVoice = JSON.parse(storedVoice);
-                        } else {
-                            // Stored as plain string (legacy format)
-                            console.warn('Stored voice is in legacy format (plain string). Updating to new format.');
-                            parsedVoice = null;
-                            // Optionally, delete the old stored value
-                            await SecureStore.deleteItemAsync('selectedVoice');
-                        }
-                    }
-
-                    setSelectedVoice(parsedVoice || null);
-                    setAudioEncoding(storedEncoding || 'LINEAR16');
-                    setIsTtsEnabled(storedIsTtsEnabled === 'true');
-
-                    if (!parsedVoice) {
-                        Alert.alert(
-                            'Voice Selection Required',
-                            'Please select a voice for Text-to-Speech in your settings.',
-                            [{ text: 'OK' }]
-                        );
-                    }
-                } catch (error) {
-                    console.error('Error loading TTS settings:', error);
-                }
-            };
-
-            loadTtsSettings();
-        }, [])
-    );
-
     const onSpeechStart = (e) => {
         console.log('onSpeechStart: ', e);
     };
@@ -220,17 +177,17 @@ const Chatbot = forwardRef((props, ref) => {
         return (
             <MarkdownView
                 styles={{
-                    paragraph: {marginTop: 0, marginBottom: 0},
-                    strong: {fontWeight: 'bold'},
-                    em: {fontStyle: 'italic'},
-                    listItemBullet: {fontSize: 12},
-                    listItemNumber: {fontSize: 12},
+                    paragraph: { marginTop: 0, marginBottom: 0 },
+                    strong: { fontWeight: 'bold' },
+                    em: { fontStyle: 'italic' },
+                    listItemBullet: { fontSize: 12 },
+                    listItemNumber: { fontSize: 12 },
                     listItem: {
                         flexDirection: 'row',
                         alignItems: 'flex-start',
                         marginBottom: 4,
                     },
-                    listItemContent: {flex: 1},
+                    listItemContent: { flex: 1 },
                 }}
             >
                 {decodedText}
@@ -254,8 +211,8 @@ const Chatbot = forwardRef((props, ref) => {
         try {
             const response = await axios.post(
                 API_URL,
-                {inputs: text},
-                {headers: {Authorization: `Bearer ${HUGGING_FACE_API_KEY}`}}
+                { inputs: text },
+                { headers: { Authorization: `Bearer ${HUGGING_FACE_API_KEY}` } }
             );
 
             const data = response.data;
@@ -263,8 +220,8 @@ const Chatbot = forwardRef((props, ref) => {
             if (Array.isArray(data) && Array.isArray(data[0])) {
                 const sentiments = data[0];
 
-                const positive = sentiments.find(s => s.label.toLowerCase() === 'positive');
-                const negative = sentiments.find(s => s.label.toLowerCase() === 'negative');
+                const positive = sentiments.find((s) => s.label.toLowerCase() === 'positive');
+                const negative = sentiments.find((s) => s.label.toLowerCase() === 'negative');
 
                 if (positive && negative) {
                     const sentimentScore = positive.score - negative.score;
@@ -272,10 +229,10 @@ const Chatbot = forwardRef((props, ref) => {
                 }
             }
 
-            console.error("Unexpected response format:", data);
+            console.error('Unexpected response format:', data);
             return null;
         } catch (error) {
-            console.error("Error analyzing sentiment", error);
+            console.error('Error analyzing sentiment', error);
             return null;
         }
     };
@@ -285,7 +242,7 @@ const Chatbot = forwardRef((props, ref) => {
         const sessionData = {
             id: sessionId,
             date: new Date().toLocaleDateString(),
-            messages: messages.map(message => ({
+            messages: messages.map((message) => ({
                 text: typeof message.text === 'string' ? message.text : extractText(message.text),
                 sender: message.sender,
             })),
@@ -294,27 +251,27 @@ const Chatbot = forwardRef((props, ref) => {
         try {
             const token = await SecureStore.getItemAsync('token');
 
-            const response = await axios.post(
-                `${IP_ADDRESS}/sessions`,
-                sessionData,
-                {headers: {'Authorization': `Bearer ${token}`}}
-            );
+            const response = await axios.post(`${IP_ADDRESS}/sessions`, sessionData, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
-            Alert.alert("Success", "Chat session saved successfully!");
+            Alert.alert('Success', 'Chat session saved successfully!');
+
             if (onNewSession) {
                 onNewSession(response.data);
             }
 
-            const userMessages = messages.filter(msg => msg.sender === 'You');
-            const sentimentScores = await Promise.all(userMessages.map(msg => analyzeSentiment(msg.text)));
-            const validScores = sentimentScores.filter(score => score !== null);
-            const averageSentimentScore = validScores.length > 0 ? validScores.reduce((a, b) => a + b, 0) / validScores.length : 0;
+            // Analyze sentiment
+            const userMessages = messages.filter((msg) => msg.sender === 'You');
+            const sentimentScores = await Promise.all(userMessages.map((msg) => analyzeSentiment(msg.text)));
+            const validScores = sentimentScores.filter((score) => score !== null);
+            const averageSentimentScore =
+                validScores.length > 0 ? validScores.reduce((a, b) => a + b, 0) / validScores.length : 0;
 
             await saveSentimentScore(response.data._id, sessionData.id, averageSentimentScore, token);
-
         } catch (error) {
-            console.error("Error saving chat session", error.response ? error.response.data : error.message);
-            Alert.alert("Error", "Error saving chat session.");
+            console.error('Error saving chat session', error.response ? error.response.data : error.message);
+            Alert.alert('Error', 'Error saving chat session.');
         }
     };
 
@@ -322,12 +279,12 @@ const Chatbot = forwardRef((props, ref) => {
         try {
             const response = await axios.post(
                 `${IP_ADDRESS}/sentiment`,
-                {sessionId, sessionName, averageSentiment},
-                {headers: {'Authorization': `Bearer ${token}`}}
+                { sessionId, sessionName, averageSentiment },
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-            console.log("Sentiment score saved successfully:", response.data);
+            console.log('Sentiment score saved successfully:', response.data);
         } catch (error) {
-            console.error("Error saving sentiment score", error);
+            console.error('Error saving sentiment score', error);
         }
     };
 
@@ -352,7 +309,6 @@ const Chatbot = forwardRef((props, ref) => {
 
         setTtsLoading(true);
         try {
-
             const audioContent = await getSpeech(text, selectedVoice, audioEncoding);
 
             // Adjust the MIME type mapping
@@ -391,9 +347,6 @@ const Chatbot = forwardRef((props, ref) => {
         }
     };
 
-
-
-
     const handleSend = useCallback(async () => {
         if (input.trim()) {
             const newMessages = [...messages, { text: input, sender: 'You' }];
@@ -424,7 +377,7 @@ const Chatbot = forwardRef((props, ref) => {
             <ScrollView
                 ref={scrollViewRef}
                 style={styles.messageContainer}
-                onContentSizeChange={() => scrollViewRef.current.scrollToEnd({animated: true})}
+                onContentSizeChange={() => scrollViewRef.current.scrollToEnd({ animated: true })}
             >
                 {messages.map((msg, index) => (
                     <View key={index} style={msg.sender === 'You' ? styles.userMessage : styles.botMessage}>
@@ -440,13 +393,13 @@ const Chatbot = forwardRef((props, ref) => {
 
                 {isBotTyping && (
                     <View style={styles.botMessage}>
-                        <TypingIndicator/>
+                        <TypingIndicator />
                     </View>
                 )}
                 {ttsLoading && (
-                    <View style={{marginTop: 10, alignItems: 'center'}}>
+                    <View style={{ marginTop: 10, alignItems: 'center' }}>
                         <Text>Playing audio...</Text>
-                        <ActivityIndicator size="small" color="#0000ff"/>
+                        <ActivityIndicator size="small" color="#0000ff" />
                     </View>
                 )}
             </ScrollView>
@@ -457,23 +410,16 @@ const Chatbot = forwardRef((props, ref) => {
                         value={input}
                         placeholder="Type your message here..."
                         multiline={true}
-                        style={{width: 150, marginRight: 20, fontFamily: 'Poppins400Regular'}}
+                        style={{ width: 150, marginRight: 20, fontFamily: 'Poppins400Regular' }}
                     />
-                    {/*<TouchableOpacity onPress={saveChatSession}>*/}
-                    {/*    <FileArrowUp size={25} color="#212529" weight="fill"/>*/}
-                    {/*</TouchableOpacity>*/}
-
-                    {/*<TouchableOpacity onPress={clearChatHistory}>*/}
-                    {/*    <TrashSimple size={25} color="red" weight="fill"/>*/}
-                    {/*</TouchableOpacity>*/}
                     <TouchableOpacity onPress={RecordButtonHandler}>
-                        <Image source={recordButton} style={styles.iconImg}/>
+                        <Image source={recordButton} style={styles.iconImg} />
                     </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity onPress={handleSend}>
                     <LinearGradient colors={['#247C8A', '#164D82']} style={styles.circleButton}>
-                        <PaperPlaneRight size={24} color="#ffffff" weight="fill"/>
+                        <PaperPlaneRight size={24} color="#ffffff" weight="fill" />
                     </LinearGradient>
                 </TouchableOpacity>
             </View>
