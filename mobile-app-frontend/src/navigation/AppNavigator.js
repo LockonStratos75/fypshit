@@ -11,6 +11,7 @@ import { Chat } from "../screens/Chat";  // Import Chat component here
 import { SpeechEmotionScreen } from "../screens/SpeechEmotionScreen";
 import SanityLevelScreen from "../screens/SanityLevelScreen";
 import EmotionMenuScreen from "../screens/EmotionMenuScreen";
+import {ImageEmotionScreen} from "../screens/ImageEmotionScreen";
 
 import { useFonts, Poppins_700Bold} from '@expo-google-fonts/poppins';
 // import AppLoading from 'expo-app-loading';
@@ -76,8 +77,11 @@ export function AppNavigator() {
                     name="Profile"
                     component={SanityLevelScreen}
                 />
+                <Stack.Screen name="fer" component={ImageEmotionScreen}/>
+
 
                 <Stack.Screen name="Emotion" component={EmotionMenuScreen}/>
+
             </Stack.Navigator>
         </NavigationContainer>
     );

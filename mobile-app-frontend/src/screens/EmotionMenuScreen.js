@@ -18,6 +18,13 @@ export default function EmotionMenuScreen({navigation}) {
                         style={styles.chatImage}
                     />
                 </TouchableOpacity>
+
+                <TouchableOpacity style={styles.chatButton} onPress={() => navigation.navigate('fer')}>
+                    <Image
+                        source={require('../../assets/fer.png')} // Chat Sessions button image
+                        style={styles.chatImage}
+                    />
+                </TouchableOpacity>
             </View>
         </View>
     );
