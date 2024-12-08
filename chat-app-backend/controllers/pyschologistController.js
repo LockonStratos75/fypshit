@@ -1,5 +1,6 @@
 // backend/controllers/psychologistController.js
 
+const path = require('path');
 const PsychologistProfile = require('../models/PsychologistProfile');
 const Log = require('../models/Log');
 const bcrypt = require('bcrypt');
@@ -178,5 +179,75 @@ exports.getPsychologistProfile = async (req, res) => {
   } catch (err) {
     console.error('Error fetching psychologist profile:', err.message);
     res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+/**
+ * Upload Profile Picture
+ * POST /api/psychologist/:id/profile-picture
+ */
+exports.uploadProfilePicture = async (req, res) => {
+  try {
+    const psychologistId = req.params.id;
+
+    // Ensure the authenticated user is the same as the psychologist being updated
+    if (req.user.id !== psychologistId) {
+      return res.status(403).json({ message: 'Unauthorized to upload profile picture for this account.' });
+    }
+
+    // Check if file is uploaded
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    }
+
+    // Construct the file path (relative to the public directory)
+    const profilePicturePath = `/uploads/profile_pictures/${req.file.filename}`;
+
+    // Update psychologist's profile with the profile picture path
+    const updatedProfile = await PsychologistProfile.findOneAndUpdate(
+      { psychologistId },
+      { profilePicture: profilePicturePath },
+      { new: true, runValidators: true }
+    ).select('-password'); // Exclude password from the response
+
+    if (!updatedProfile) {
+      return res.status(404).json({ success: false, message: 'Psychologist not found.' });
+    }
+
+    // Log the action
+    await Log.create({
+      userId: updatedProfile.psychologistId,
+      userType: 'PsychologistProfile',
+      action: 'Upload Profile Picture',
+      details: `Psychologist uploaded a new profile picture.`,
+    });
+
+    res.status(200).json({ success: true, data: updatedProfile, message: 'Profile picture uploaded successfully.' });
+  } catch (error) {
+    console.error('Error uploading profile picture:', error.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
+/**
+ * Get Psychologist's Profile Picture
+ * GET /api/psychologist/:id/profile-picture
+ */
+exports.getProfilePicture = async (req, res) => {
+  try {
+    const psychologistId = req.params.id;
+
+    const psychologist = await PsychologistProfile.findOne({ psychologistId }).select('profilePicture');
+
+    if (!psychologist) {
+      return res.status(404).json({ success: false, message: 'Psychologist not found.' });
+    }
+
+    const profilePicturePath = path.join(__dirname, '../public', psychologist.profilePicture);
+
+    res.sendFile(profilePicturePath);
+  } catch (error) {
+    console.error('Error retrieving profile picture:', error.message);
+    res.status(500).json({ success: false, message: 'Server Error' });
   }
 };

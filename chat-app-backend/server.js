@@ -12,6 +12,7 @@ const helmet = require('helmet'); // Security middleware
 const morgan = require('morgan'); // HTTP request logger
 const rateLimit = require('express-rate-limit'); // Rate limiting
 const compression = require('compression'); // Compression middleware
+const multer = require('multer'); // For handling multipart/form-data
 
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
@@ -80,7 +81,7 @@ app.use(cors(corsOptions));
 // Rate Limiting Setup
 // ========================
 
-// Apply rate limiting to all requests
+// Apply rate limiting to all requests under /api/
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
@@ -123,12 +124,23 @@ mongoose
   .connect(MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    // useCreateIndex: true, // Note: mongoose >=6.0 no longer supports this option
   })
-  .then(() => console.log('MongoDB connected successfully'))
+  .then(() => console.log('✅ MongoDB connected successfully'))
   .catch(err => {
     console.error('❌ MongoDB connection error:', err.message);
     process.exit(1); // Exit the application if unable to connect to MongoDB
   });
+
+// ========================
+// Static Files Setup
+// ========================
+
+// Serve static files (profile pictures)
+app.use(
+  '/uploads/profile_pictures',
+  express.static(path.join(__dirname, 'public/uploads/profile_pictures'))
+);
 
 // ========================
 // Routes Setup
@@ -159,7 +171,7 @@ app.use('/api/sanity', sanityLevelRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/report', reportRoutes);
 
-// Psychologist Protected Profile Routes (Profile Completion & Retrieval)
+// Psychologist Protected Profile Routes (Profile Completion, Retrieval & Picture Upload)
 app.use('/api/psychologist/profile', psychologistRoutes.profileRouter);
 
 // ========================
@@ -182,5 +194,5 @@ app.use(errorHandler);
 // ========================
 
 app.listen(PORT, IP_ADDRESS, () => {
-  console.log(`Server running on http://${IP_ADDRESS}:${PORT}`);
+  console.log(`🚀 Server running on http://${IP_ADDRESS}:${PORT}`);
 });

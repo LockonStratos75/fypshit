@@ -12,3 +12,5 @@ chat-app-backend/logs/actions.log
 # Ignore large image files
 *.gif
 *.png
+
+public/uploads/profile_pictures/
