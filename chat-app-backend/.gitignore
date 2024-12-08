@@ -3,3 +3,12 @@ node_modules/
 package-lock.json
 package.json
 chat-app-backend/logs/actions.log
+
+# Ignore video files
+*.mov
+*.mp4
+*.avi
+
+# Ignore large image files
+*.gif
+*.png
