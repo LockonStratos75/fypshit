@@ -37,7 +37,5 @@ yarn-error.log*
 *.png
 
 
-# Ignore large asset files
-web-app-frontend/src/assets/home_bg.gif
-web-app-frontend/src/assets/home_bg2.gif
-web-app-frontend/src/assets/home_bg.mov
+src/assets/
+src/fonts/
