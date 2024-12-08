@@ -27,6 +27,7 @@
     "expo-av": "~13.10.6",
     "expo-blur": "^12.9.1",
     "expo-dev-client": "~3.3.12",
+    "expo-face-detector": "~12.6.1",
     "expo-file-system": "~16.0.9",
     "expo-font": "~11.10.3",
     "expo-image-picker": "~14.7.1",

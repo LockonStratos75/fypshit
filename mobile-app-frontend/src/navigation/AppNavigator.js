@@ -77,7 +77,9 @@ export function AppNavigator() {
                     name="Profile"
                     component={SanityLevelScreen}
                 />
-                <Stack.Screen name="fer" component={ImageEmotionScreen}/>
+                <Stack.Screen name="fer" component={ImageEmotionScreen}  options={{
+                    title: 'Face Emotion',
+                }}/>
 
 
                 <Stack.Screen name="Emotion" component={EmotionMenuScreen}/>

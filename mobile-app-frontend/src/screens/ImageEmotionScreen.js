@@ -10,10 +10,11 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import * as FaceDetector from 'expo-face-detector';
 import axios from 'axios';
-import { Buffer } from 'buffer';
 import { useNavigation } from '@react-navigation/native';
-import { ButtonComponent} from '../components/ButtonComponent'
+import { HUGGING_FACE_API_KEY } from '@env'; // Ensure your API key is stored securely
+import {ButtonComponent} from '../components/ButtonComponent'
 
 export const ImageEmotionScreen = () => {
     const navigation = useNavigation();
@@ -86,31 +87,52 @@ export const ImageEmotionScreen = () => {
 
         setLoading(true);
         try {
-            // Read the image file as a Base64-encoded string
-            const fileData = await FileSystem.readAsStringAsync(uri, {
-                encoding: FileSystem.EncodingType.Base64,
+            // Perform face detection
+            const faceDetectionResult = await FaceDetector.detectFacesAsync(uri, {
+                mode: FaceDetector.FaceDetectorMode.fast,
+                detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
+                runClassifications: FaceDetector.FaceDetectorClassifications.none,
             });
 
-            // Prepare the data payload
-            const payload = {
-                inputs: fileData,
-            };
+            if (faceDetectionResult.faces && faceDetectionResult.faces.length > 0) {
+                console.log('Faces detected:', faceDetectionResult.faces.length);
 
-            const apiResponse = await axios.post(
-                'https://api-inference.huggingface.co/models/trpakov/vit-face-expression',
-                payload,
-                {
-                    headers: {
-                        Authorization: 'Bearer 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',
-                        'Content-Type': 'application/json',
-                    },
+                // Read the image file as a Base64-encoded string
+                const fileData = await FileSystem.readAsStringAsync(uri, {
+                    encoding: FileSystem.EncodingType.Base64,
+                });
+
+                // Prepare the data payload
+                const payload = {
+                    inputs: fileData,
+                };
+
+                // Proceed with emotion recognition
+                const emotionResponse = await axios.post(
+                    'https://api-inference.huggingface.co/models/trpakov/vit-face-expression',
+                    payload,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${HUGGING_FACE_API_KEY}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+
+                if (emotionResponse.data && emotionResponse.data.length > 0) {
+                    const highestPrediction = emotionResponse.data[0];
+                    console.log('Emotion Prediction:', highestPrediction);
+                    if (highestPrediction.score >= 0.5) {
+                        setEmotion(highestPrediction.label);
+                    } else {
+                        setEmotion('No emotion detected');
+                    }
+                } else {
+                    setEmotion('No emotion detected');
                 }
-            );
-
-            if (apiResponse.data && apiResponse.data.length > 0) {
-                setEmotion(apiResponse.data[0].label);
             } else {
-                setEmotion('No emotion detected');
+                // No faces detected
+                setEmotion('No face detected');
             }
         } catch (error) {
             console.error('Error analyzing image:', error);
@@ -127,13 +149,13 @@ export const ImageEmotionScreen = () => {
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity style={styles.chatButton} onPress={takePhoto}>
                         <Image
-                            source={require('../../assets/photo.png')}
+                            source={require('../../assets/photo.png')} // Update with your actual image path
                             style={styles.chatImage}
                         />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.chatButton} onPress={pickImage}>
                         <Image
-                            source={require('../../assets/choose.png')}
+                            source={require('../../assets/choose.png')} // Update with your actual image path
                             style={styles.chatImage}
                         />
                     </TouchableOpacity>
@@ -144,14 +166,14 @@ export const ImageEmotionScreen = () => {
                     {loading ? (
                         <ActivityIndicator size="large" color="#0000ff" />
                     ) : (
-                        <Text style={styles.emotionText}>Detected Emotion: {emotion}</Text>
+                        <Text style={styles.emotionText}>
+                            {emotion === 'No face detected' ||
+                            emotion === 'No emotion detected' ||
+                            emotion === 'Error analyzing image'
+                                ? emotion
+                                : `Detected Emotion: ${emotion}`}
+                        </Text>
                     )}
-                    {/*<TouchableOpacity style={styles.chatButton} >*/}
-                    {/*    <Image*/}
-                    {/*        source={require('../../assets/fer.png')}*/}
-                    {/*        style={styles.chatImage}*/}
-                    {/*    />*/}
-                    {/*</TouchableOpacity>*/}
                     <ButtonComponent title={"Try Again"} onPress={() => setImage(null)}/>
                 </View>
             )}
@@ -165,7 +187,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#fff',
-
     },
     buttonContainer: {
         justifyContent: 'center',
@@ -184,7 +205,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#fff',
-        width: '50%'
     },
     emotionText: {
         fontSize: 24,
@@ -199,5 +219,4 @@ const styles = StyleSheet.create({
         resizeMode: 'contain',
         borderRadius: 10,
     },
-
 });

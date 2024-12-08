@@ -892,3 +892,7 @@
 2024-12-02T19:15:43.087Z - Ditto@gmail.com - POST /sanity
 2024-12-02T19:15:43.569Z - Ditto@gmail.com - GET /sanity/user
 2024-12-02T19:15:51.584Z - Ditto@gmail.com - GET /sessions
+2024-12-06T15:33:04.719Z - Ditto@gmail.com - GET /sentiment
+2024-12-06T15:33:05.080Z - Ditto@gmail.com - GET /ser
+2024-12-06T15:33:05.449Z - Ditto@gmail.com - POST /sanity
+2024-12-06T15:33:05.873Z - Ditto@gmail.com - GET /sanity/user

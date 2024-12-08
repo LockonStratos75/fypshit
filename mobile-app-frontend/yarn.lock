@@ -5447,6 +5447,11 @@ expo-eas-client@~0.11.0:
   resolved "https://registry.yarnpkg.com/expo-eas-client/-/expo-eas-client-0.11.2.tgz#2e8d6f347dcea38b58c2b6a21db7c632383fb1ba"
   integrity sha512-SY7rVFxb4ut/OMTgR7A39Jg+8+hXwQNRpZd+RBpB+B5XV2STj/pWXHnGFhBayEF4umI4SxrOvisY90rlPWVO9Q==
 
+expo-face-detector@~12.6.1:
+  version "12.6.1"
+  resolved "https://registry.yarnpkg.com/expo-face-detector/-/expo-face-detector-12.6.1.tgz#5337d128982e4d4ec83cd1468ddeec9d71d808a9"
+  integrity sha512-I3luwDQK53YvMz0zdfAVWf+gTGkfPpfSieK7/NU26RGj5tc4HTxo9UeBa6YCcnPpeJ5dqeKF8TBELRrP2Eb2Aw==
+
 expo-file-system@~16.0.0, expo-file-system@~16.0.9:
   version "16.0.9"
   resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-16.0.9.tgz#cbd6c4b228b60a6b6c71fd1b91fe57299fb24da7"
