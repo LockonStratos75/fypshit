@@ -8,9 +8,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet'); // Security middleware
+const morgan = require('morgan'); // HTTP request logger
+const rateLimit = require('express-rate-limit'); // Rate limiting
+const compression = require('compression'); // Compression middleware
 
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
+const psychologistRoutes = require('./routes/psychologistRoutes'); // Combined Psychologist Routes
 const assessmentRoutes = require('./routes/assessmentRoutes');
 const monitoringRoutes = require('./routes/monitoringRoutes');
 const profileRoutes = require('./routes/profileRoutes');
@@ -33,6 +38,16 @@ const app = express();
 // Define Server Port and IP Address
 const PORT = process.env.PORT || 5000;
 const IP_ADDRESS = process.env.IP_ADDRESS || '0.0.0.0'; // Listen on all network interfaces by default
+
+// ========================
+// Security Middleware Setup
+// ========================
+
+// Use Helmet to secure HTTP headers
+app.use(helmet());
+
+// Use Morgan for HTTP request logging
+app.use(morgan('combined'));
 
 // ========================
 // CORS Configuration
@@ -62,6 +77,25 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // ========================
+// Rate Limiting Setup
+// ========================
+
+// Apply rate limiting to all requests
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+});
+app.use('/api/', apiLimiter);
+
+// ========================
+// Compression Middleware
+// ========================
+
+// Use compression to gzip responses
+app.use(compression());
+
+// ========================
 // Middleware Setup
 // ========================
 
@@ -85,7 +119,11 @@ if (!MONGO_URI) {
   process.exit(1); // Exit the application if MONGO_URI is missing
 }
 
-mongoose.connect(MONGO_URI)
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => {
     console.error('❌ MongoDB connection error:', err.message);
@@ -97,7 +135,11 @@ mongoose.connect(MONGO_URI)
 // ========================
 
 // Public Routes (do not require authentication)
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
+
+// Psychologist Public Authentication Routes (Registration & Login)
+// Mount these routes before applying the authenticateToken middleware
+app.use('/api/psychologist/auth', psychologistRoutes.authRouter);
 
 // Apply Authentication Middleware to Protect Subsequent Routes
 app.use(authenticateToken);
@@ -106,16 +148,19 @@ app.use(authenticateToken);
 app.use(logAction);
 
 // Protected Routes (require authentication)
-app.use('/assessments', assessmentRoutes);
-app.use('/monitoring', monitoringRoutes);
-app.use('/profiles', profileRoutes);
-app.use('/analytics', analyticsRoutes);
-app.use('/sessions', chatRoutes);
-app.use('/sentiment', sentimentRoutes);
-app.use('/ser', serRoutes);
-app.use('/sanity', sanityLevelRoutes);
-app.use('/admin', adminRoutes);
-app.use('/report', reportRoutes);
+app.use('/api/assessments', assessmentRoutes);
+app.use('/api/monitoring', monitoringRoutes);
+app.use('/api/profiles', profileRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/sessions', chatRoutes);
+app.use('/api/sentiment', sentimentRoutes);
+app.use('/api/ser', serRoutes);
+app.use('/api/sanity', sanityLevelRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/report', reportRoutes);
+
+// Psychologist Protected Profile Routes (Profile Completion & Retrieval)
+app.use('/api/psychologist/profile', psychologistRoutes.profileRouter);
 
 // ========================
 // Error Handling Middleware

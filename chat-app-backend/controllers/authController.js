@@ -1,63 +1,105 @@
-const jwt = require('jsonwebtoken');
+// backend/controllers/authController.js
+
 const User = require('../models/User');
+const Log = require('../models/Log');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { validationResult } = require('express-validator');
 
-// Helper function to generate JWT token
-const generateToken = (user) => {
-  const payload = {
-    userId: user._id,
-    role: user.role, // Include role in payload
-  };
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
-};
-
-// Signup Function
-exports.signup = async (req, res, next) => {
+/**
+ * User Registration
+ * POST /api/auth/register
+ */
+exports.registerUser = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    // Validate request
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const { username, email, password } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ message: 'Email already registered.' });
+      return res.status(400).json({ message: 'User with this email already exists.' });
     }
 
-    // Create new user with default role 'user' if role is not provided
-    const newUser = new User({ username, email, password, role: role || 'user' });
-    await newUser.save();
+    // Create user
+    const newUser = await User.create({
+      username,
+      email,
+      password,
+      // profileCompleted is false by default
+    });
 
-    // Generate token
-    const token = generateToken(newUser);
+    // Log the action
+    await Log.create({
+      userId: newUser.userId,
+      userType: 'User',
+      action: 'Register',
+      details: `User registered with email: ${email}`,
+    });
 
-    res.status(201).json({ message: 'Signup successful.', token });
-  } catch (error) {
-    console.error('Signup Error:', error);
-    next(error);
+    // Generate JWT
+    const token = jwt.sign(
+      { id: newUser.userId, userType: 'User' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.status(201).json({ token });
+  } catch (err) {
+    console.error('Error during user registration:', err.message);
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
-// Login Function
-exports.login = async (req, res, next) => {
+/**
+ * User Login
+ * POST /api/auth/login
+ */
+exports.loginUser = async (req, res) => {
   try {
+    // Validate request
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
     const { email, password } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Check if user exists
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
+      return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
-    // Compare passwords
-    const isMatch = await user.comparePassword(password);
+    // Check if password matches
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
+      return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
-    // Generate token
-    const token = generateToken(user);
+    // Generate JWT
+    const token = jwt.sign(
+      { id: user.userId, userType: 'User' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
-    res.status(200).json({ message: 'Login successful.', token });
-  } catch (error) {
-    console.error('Login Error:', error);
-    next(error);
+    // Log the action
+    await Log.create({
+      userId: user.userId,
+      userType: 'User',
+      action: 'Login',
+      details: `User with email ${email} logged in.`,
+    });
+
+    res.status(200).json({ token });
+  } catch (err) {
+    console.error('Error during user login:', err.message);
+    res.status(500).json({ message: 'Server Error' });
   }
 };
