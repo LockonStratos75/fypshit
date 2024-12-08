@@ -6,7 +6,7 @@ const { body } = require('express-validator');
 const { validateRequest } = require('../middlewares/validateRequest');
 const multer = require('multer');
 const path = require('path');
-const authenticate = require('../middlewares/authMiddleware'); // Ensure correct path and export
+const { authenticateToken: authenticate } = require('../middlewares/authMiddleware');
 
 const authRouter = express.Router();
 const profileRouter = express.Router();

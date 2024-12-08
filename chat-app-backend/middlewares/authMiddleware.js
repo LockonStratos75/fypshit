@@ -1,7 +1,6 @@
 // backend/middlewares/authMiddleware.js
 
 const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
 const AdminProfile = require('../models/AdminProfile');
 const PsychologistProfile = require('../models/PsychologistProfile');
 const User = require('../models/User');

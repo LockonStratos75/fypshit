@@ -4,11 +4,6 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: mongoose.Types.ObjectId,
-    unique: true,
-  },
   username: {
     type: String,
     required: [true, 'Username is required.'],
@@ -79,11 +74,12 @@ const userSchema = new mongoose.Schema({
 // Password encryption before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-      next();
+      return next(); // Important to return here to prevent proceeding further
   }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // Method to compare entered password with hashed password

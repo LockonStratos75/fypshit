@@ -36,7 +36,7 @@ exports.registerUser = async (req, res) => {
 
     // Log the action
     await Log.create({
-      userId: newUser.userId,
+      userId: newUser._id, // Changed from userId to _id
       userType: 'User',
       action: 'Register',
       details: `User registered with email: ${email}`,
@@ -44,8 +44,8 @@ exports.registerUser = async (req, res) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { id: newUser.userId, userType: 'User' },
-      process.env.JWT_SECRET,
+      { id: newUser._id, userType: 'User' }, // Changed from userId to _id
+      process.env.JWT_SECRET, // Ensure this is set in .env
       { expiresIn: '1h' }
     );
 
@@ -84,14 +84,14 @@ exports.loginUser = async (req, res) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user.userId, userType: 'User' },
-      process.env.JWT_SECRET,
+      { id: user._id, userType: 'User' }, // Changed from userId to _id
+      process.env.JWT_SECRET, // Ensure this is set in .env
       { expiresIn: '1h' }
     );
 
     // Log the action
     await Log.create({
-      userId: user.userId,
+      userId: user._id, // Changed from userId to _id
       userType: 'User',
       action: 'Login',
       details: `User with email ${email} logged in.`,
