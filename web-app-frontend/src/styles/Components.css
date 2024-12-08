@@ -1,16 +1,184 @@
 /* frontend/src/styles/Components.css */
 
-/* General form container styling for login, signup, etc. */
-.login-container, .signup-container, .signup-therapist-container {
+/* Reset some default browser styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #FFFFFF;
+  color: #333333;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover {
+  color: #6FB9FF;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-size: 16px;
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #004080;
+}
+
+/* ============================= */
+/* Component Styles (Forms, Dashboard, etc.) */
+/* ============================= */
+
+/* Authentication Container */
+.auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
   background-color: #F4F4F4;
 }
 
-/* Styling for the forms in login/signup pages */
-.login-form, .signup-form {
+.auth-content {
+  display: flex;
+  flex-direction: row;
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.auth-image {
+  display: none; /* Hide on smaller screens */
+  flex: 1;
+  background-image: url('../assets/home_bg.png'); /* Update with your image */
+  background-size: cover;
+  background-position: center;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.auth-form-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.auth-form {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.auth-logo-image {
+  width: 100px;
+  margin-bottom: 10px;
+}
+
+.auth-logo-text {
+  color: #004080;
+}
+
+.auth-form .auth-heading {
+  margin-bottom: 10px;
+  color: #004080;
+}
+
+.auth-form .auth-subheading {
+  margin-bottom: 20px;
+  color: #666666;
+  text-align: center;
+}
+
+.auth-input-group {
+  width: 100%;
+}
+
+.forgot-password-container {
+  width: 100%;
+  text-align: right;
+  margin-bottom: 15px;
+}
+
+.forgot-password-text {
+  color: #1976d2;
+  text-decoration: none;
+}
+
+.forgot-password-text:hover {
+  text-decoration: underline;
+}
+
+.auth-button {
+  padding: 10px;
+  background-color: #004080;
+  color: #FFFFFF;
+  border-radius: 4px;
+  font-weight: bold;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+}
+
+.auth-button:hover {
+  background-color: #6FB9FF;
+}
+
+.redirect-text {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.redirect-text a {
+  color: #1976d2;
+  text-decoration: none;
+}
+
+.redirect-text a:hover {
+  text-decoration: underline;
+}
+
+/* Login and Signup Containers */
+.login-container,
+.signup-container,
+.signup-Pscyhologist-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #F4F4F4;
+}
+
+.login-form,
+.signup-form {
   display: flex;
   flex-direction: column;
   padding: 30px;
@@ -22,8 +190,8 @@
   max-width: 400px;
 }
 
-/* Form inputs and textarea styling */
-.form-input, .form-textarea {
+.form-input,
+.form-textarea {
   margin-bottom: 15px;
   padding: 10px;
   border: 1px solid #E0E0E0;
@@ -34,36 +202,33 @@
   transition: border-color 0.3s;
 }
 
-/* Highlight inputs on focus */
-.form-input:focus, .form-textarea:focus {
+.form-input:focus,
+.form-textarea:focus {
   border-color: #004080;
 }
 
-/* Form button styling */
 .form-button {
   padding: 10px;
   background-color: #004080;
   color: #FFFFFF;
   border-radius: 4px;
   font-weight: bold;
-  transition: background-color 0.3s;
   width: 100%;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-/* Form button hover effect */
 .form-button:hover {
   background-color: #6FB9FF;
 }
 
-/* Dashboard layout styling */
+/* Dashboard Layout */
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
   background-color: #F4F4F4;
 }
 
-/* Dashboard sidebar navigation styling */
 .dashboard-nav {
   background-color: #004080;
   padding: 20px;
@@ -72,7 +237,6 @@
   flex-direction: column;
 }
 
-/* Navigation links in dashboard */
 .nav-link {
   color: #FFFFFF;
   margin-bottom: 10px;
@@ -81,19 +245,17 @@
   transition: background-color 0.3s;
 }
 
-/* Navigation link hover effect */
 .nav-link:hover {
   background-color: #6FB9FF;
 }
 
-/* Dashboard content styling */
 .dashboard-content {
   flex: 1;
   padding: 20px;
   background-color: #F4F4F4;
 }
 
-/* Profiles container styling */
+/* Profiles */
 .profiles-container {
   padding: 20px;
   background-color: #FFFFFF;
@@ -102,7 +264,6 @@
   margin-bottom: 20px;
 }
 
-/* Section and subsection title styling */
 .section-title {
   font-size: 24px;
   margin-bottom: 20px;
@@ -114,13 +275,11 @@
   margin-bottom: 10px;
 }
 
-/* Profile list styling */
 .profile-list {
   list-style-type: none;
   padding: 0;
 }
 
-/* Individual profile item styling */
 .profile-item {
   background-color: #F4F4F4;
   padding: 10px;
@@ -130,29 +289,142 @@
   transition: background-color 0.3s, transform 0.2s ease;
 }
 
-/* Profile item hover effect */
 .profile-item:hover {
   background-color: #E0E0E0;
   transform: translateY(-2px);
 }
 
-/* Error messages for form validation */
-.error-message {
-  color: red;
-  font-size: 0.9em;
-  margin-bottom: 10px;
-}
-
-.error-input {
-  border-color: red;
-}
-/* Error message for incorrect login credentials */
+/* Error messages */
+.error-message,
 .login-error {
   color: red;
   font-size: 1em;
-  margin-bottom: 15px;
   text-align: center;
-  display: block; /* Make sure it's visible */
 }
 
+.login-error {
+  margin-bottom: 15px;
+}
 
+/* ============================= */
+/* Loader and Notifications */
+/* ============================= */
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(70, 70, 70, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100000;
+}
+
+.loader {
+  animation: rotate 1s infinite;
+  height: 50px;
+  width: 50px;
+}
+
+.loader:before,
+.loader:after {
+  border-radius: 50%;
+  content: "";
+  display: block;
+  height: 20px;
+  width: 20px;
+}
+
+.loader:before {
+  animation: ball1 1s infinite;
+  background-color: #A40F37;
+  box-shadow: 30px 0 0 #ffffff;
+  margin-bottom: 10px;
+}
+
+.loader:after {
+  animation: ball2 1s infinite;
+  background-color: #ffffff;
+  box-shadow: 30px 0 0 #A40F37;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg) scale(0.8);
+  }
+  50% {
+    transform: rotate(360deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(720deg) scale(0.8);
+  }
+}
+
+@keyframes ball1 {
+  0% {
+    box-shadow: 30px 0 0 #ffffff;
+  }
+  50% {
+    box-shadow: 0 0 0 #ffffff;
+    margin-bottom: 0;
+    transform: translate(15px, 15px);
+  }
+  100% {
+    box-shadow: 30px 0 0 #ffffff;
+    margin-bottom: 10px;
+  }
+}
+
+@keyframes ball2 {
+  0% {
+    box-shadow: 30px 0 0 #A40F37;
+  }
+  50% {
+    box-shadow: 0 0 0 #A40F37;
+    margin-top: -20px;
+    transform: translate(15px, 15px);
+  }
+  100% {
+    box-shadow: 30px 0 0 #A40F37;
+    margin-top: 0;
+  }
+}
+
+.verification-notification,
+.verification-notification-error {
+  position: fixed;
+  right: -200%;
+  top: 125px;
+  color: white;
+  padding: 23px;
+  box-sizing: border-box;
+  border-radius: 12px 0 0 12px;
+  transition: right 0.5s ease-in-out;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-family: "Roboto", arial, sans-serif;
+  font-weight: bold;
+  z-index: 1000;
+}
+
+.verification-notification {
+  background-color: #16C75D;
+}
+
+.verification-notification-error {
+  background-color: #cc0000;
+}
+
+.verification-notification.show,
+.verification-notification-error.show {
+  right: 0;
+}
+
+.verification-notification .check-icon {
+  line-height: 0;
+}

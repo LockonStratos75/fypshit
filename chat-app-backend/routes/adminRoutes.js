@@ -1,35 +1,161 @@
+// backend/routes/adminRoutes.js
+
 const express = require('express');
-const {
-  manageUserAccounts,
-  reviewPsychologistRegistrations,
-  approvePsychologist,
-  rejectPsychologist,
-  sendAnnouncement,
-  getLogs,
-  getAllUsers, // New controller function to get users by role
-} = require('../controllers/adminController');
-const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware');
-
 const router = express.Router();
+const adminController = require('../controllers/adminController');
+const { authenticateToken } = require('../middlewares/authMiddleware');
+const { body, param } = require('express-validator');
+const { validateRequest } = require('../middlewares/validateRequest');
 
+// =======================
+// Admin Authentication Routes
+// =======================
+
+/**
+ * @route   POST /api/admin/auth/login
+ * @desc    Login admin and return JWT token
+ * @access  Public
+ */
+router.post(
+  '/auth/login',
+  [
+    body('email').isEmail().withMessage('Valid email is required.'),
+    body('password').notEmpty().withMessage('Password is required.'),
+  ],
+  validateRequest,
+  adminController.adminLogin
+);
+
+// Note: Admin Registration Route Removed for Security Concerns
+// No route for /auth/register to prevent unauthorized admin registrations
+
+// =======================
+// Protected Admin Routes
+// =======================
+
+// Apply authentication middleware to all routes below
 router.use(authenticateToken);
-router.use(authorizeRoles('admin'));
 
-// User account management
-router.post('/users/manage', manageUserAccounts);
+/**
+ * @route   GET /api/admin/users
+ * @desc    Fetch all users
+ * @access  Private (Admin)
+ */
+router.get('/users', adminController.getAllUsers);
 
-// Get users by role
-router.get('/users', getAllUsers); // New endpoint to fetch users with a specific role
+/**
+ * @route   PUT /api/admin/users/:userId
+ * @desc    Modify a user's data
+ * @access  Private (Admin)
+ */
+router.put(
+  '/users/:userId',
+  [
+    param('userId').isMongoId().withMessage('Invalid User ID format.'),
+    body('email').optional().isEmail().withMessage('Valid email is required.'),
+    body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
+    body('gender').optional().isIn(['Male', 'Female', 'Other', 'Prefer not to say']).withMessage('Invalid gender option.'),
+    body('age').optional().isInt({ min: 0, max: 120 }).withMessage('Age must be a number between 0 and 120.'),
+    body('location').optional().isString().withMessage('Location must be a string.').trim().isLength({ max: 100 }).withMessage('Location cannot exceed 100 characters.'),
+    body('phoneNumber')
+      .optional()
+      .matches(/^\+?[1-9]\d{1,14}$/)
+      .withMessage('Please enter a valid phone number in E.164 format.'),
+    body('guardianPhoneNumber')
+      .optional()
+      .matches(/^\+?[1-9]\d{1,14}$/)
+      .withMessage('Please enter a valid guardian phone number in E.164 format.'),
+  ],
+  validateRequest,
+  adminController.modifyUser
+);
 
-// Review psychologist registrations
-router.get('/psychologists/pending', reviewPsychologistRegistrations);
-router.post('/psychologists/approve', approvePsychologist);
-router.post('/psychologists/reject', rejectPsychologist);
+/**
+ * @route   DELETE /api/admin/users/:userId
+ * @desc    Delete a user
+ * @access  Private (Admin)
+ */
+router.delete(
+  '/users/:userId',
+  [
+    param('userId').isMongoId().withMessage('Invalid User ID format.'),
+  ],
+  validateRequest,
+  adminController.deleteUser
+);
 
-// Send announcements
-router.post('/announcements', sendAnnouncement);
+/**
+ * @route   GET /api/admin/psychologists
+ * @desc    Fetch all psychologists
+ * @access  Private (Admin)
+ */
+router.get('/psychologists', adminController.getAllPsychologists);
 
-// Access logs
-router.get('/logs', getLogs);
+/**
+ * @route   PUT /api/admin/psychologists/:psychologistId
+ * @desc    Modify a psychologist's data
+ * @access  Private (Admin)
+ */
+router.put(
+  '/psychologists/:psychologistId',
+  [
+    param('psychologistId').isMongoId().withMessage('Invalid Psychologist ID format.'),
+    body('email').optional().isEmail().withMessage('Valid email is required.'),
+    body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
+    body('specialization').optional().isString().withMessage('Specialization must be a string.').trim().isLength({ max: 100 }).withMessage('Specialization cannot exceed 100 characters.'),
+    body('yearsOfExperience').optional().isInt({ min: 0, max: 100 }).withMessage('Years of experience must be between 0 and 100.'),
+    body('phoneNumber')
+      .optional()
+      .matches(/^\+?[1-9]\d{1,14}$/)
+      .withMessage('Please enter a valid phone number in E.164 format.'),
+    // Add more fields as necessary
+  ],
+  validateRequest,
+  adminController.modifyPsychologistProfile
+);
+
+/**
+ * @route   GET /api/admin/psychologists/pending
+ * @desc    Review pending psychologist applications
+ * @access  Private (Admin)
+ */
+router.get('/psychologists/pending', adminController.reviewPsychologistRegistrations);
+
+/**
+ * @route   POST /api/admin/psychologists/approve
+ * @desc    Approve a psychologist application
+ * @access  Private (Admin)
+ */
+router.post(
+  '/psychologists/approve',
+  [
+    body('psychologistId').notEmpty().withMessage('Psychologist ID is required.').isMongoId().withMessage('Invalid Psychologist ID format.'),
+  ],
+  validateRequest,
+  adminController.approvePsychologist
+);
+
+/**
+ * @route   POST /api/admin/psychologists/reject
+ * @desc    Reject a psychologist application
+ * @access  Private (Admin)
+ */
+router.post(
+  '/psychologists/reject',
+  [
+    body('psychologistId').notEmpty().withMessage('Psychologist ID is required.').isMongoId().withMessage('Invalid Psychologist ID format.'),
+    // Optionally add a rejection reason
+    // body('rejectionReason').optional().isString().withMessage('Rejection reason must be a string.'),
+  ],
+  validateRequest,
+  adminController.rejectPsychologist
+);
+
+/**
+ * @route   GET /api/admin/logs
+ * @desc    Fetch all logs
+ * @access  Private (Admin)
+ */
+router.get('/logs', adminController.getLogs);
 
 module.exports = router;

@@ -1,52 +1,70 @@
 // backend/middlewares/authMiddleware.js
 
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const AdminProfile = require('../models/AdminProfile');
+const PsychologistProfile = require('../models/PsychologistProfile');
 const User = require('../models/User');
 
-const authenticateToken = async (req, res, next) => {
+/**
+ * Middleware to authenticate JWT tokens for Admins, Psychologists, and Users.
+ */
+exports.authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Extract the token after 'Bearer '
-  console.log('Token received:', token);
+  
+  // Check if the authorization header is present
+  if (!authHeader) {
+    return res.status(401).json({ message: 'Access Token Required' });
+  }
+
+  const token = authHeader.split(' ')[1]; // Expecting 'Bearer <token>'
 
   if (!token) {
-    console.error('No token provided');
-    return res.status(401).json({ message: 'Access denied. No token provided.' });
+    return res.status(401).json({ message: 'Access Token Required' });
   }
 
   try {
-    if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET is not defined');
-    }
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Decoded token:', decoded);
 
-    // Find the user associated with the token
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      console.error('User not found');
-      return res.status(404).json({ message: 'User not found' });
+    const { id, userType } = decoded;
+
+    if (!id || !userType) {
+      return res.status(401).json({ message: 'Invalid Token Payload' });
     }
 
-    // Attach user to request object
+    let user;
+
+    if (userType === 'AdminProfile') {
+      user = await AdminProfile.findOne({ adminId: id });
+    } else if (userType === 'PsychologistProfile') {
+      user = await PsychologistProfile.findOne({ psychologistId: id });
+    } else if (userType === 'User') {
+      user = await User.findOne({ userId: id });
+    } else {
+      return res.status(401).json({ message: 'Invalid User Type' });
+    }
+
+    if (!user) {
+      return res.status(401).json({ message: 'User Not Found' });
+    }
+
+    // For Psychologists and Users, check if profile is approved
+    if (userType === 'PsychologistProfile' && user.status !== 'approved') {
+      return res.status(403).json({ message: 'Your profile is not approved yet.' });
+    }
+
+    if (userType === 'User' && !user.profileCompleted) {
+      return res.status(403).json({ message: 'Please complete your profile to access this resource.' });
+    }
+
+    // Attach user information and userType to the request object
     req.user = user;
+    req.userType = userType;
+
     next();
   } catch (err) {
-    console.error('Token verification failed:', err);
-    res.status(400).json({ message: 'Invalid token.' });
+    console.error('Token verification failed:', err.message);
+    return res.status(403).json({ message: 'Invalid or Expired Token' });
   }
 };
-
-// module.exports = { authenticateToken };
-
-
-const authorizeRoles = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Access forbidden: Insufficient rights' });
-    }
-    next();
-  };
-};
-
-module.exports = { authenticateToken, authorizeRoles };

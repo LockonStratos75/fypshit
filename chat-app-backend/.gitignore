@@ -2,3 +2,15 @@ node_modules/
 .env
 package-lock.json
 package.json
+chat-app-backend/logs/actions.log
+
+# Ignore video files
+*.mov
+*.mp4
+*.avi
+
+# Ignore large image files
+*.gif
+*.png
+
+public/uploads/profile_pictures/

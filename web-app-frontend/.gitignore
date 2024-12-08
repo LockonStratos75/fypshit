@@ -25,3 +25,17 @@ README.md
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+
+# Ignore video files
+*.mov
+*.mp4
+*.avi
+
+# Ignore large image files
+*.gif
+*.png
+
+
+src/assets/
+src/fonts/

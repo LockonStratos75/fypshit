@@ -1,45 +1,141 @@
-/* frontend/src/styles/App.css */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(70, 70, 70, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
 
-/* Reset some default browser styles */
-* {
-  margin: 0;
-  padding: 0;
+.loader {
+  animation: rotate 1s infinite;
+  height: 50px;
+  width: 50px;
+}
+
+.loader:before,
+.loader:after {
+  border-radius: 50%;
+  content: "";
+  display: block;
+  height: 20px;
+  width: 20px;
+}
+
+.loader:before {
+  animation: ball1 1s infinite;
+  background-color: #A40F37;
+  box-shadow: 30px 0 0 #ffffff;
+  margin-bottom: 10px;
+}
+
+.loader:after {
+  animation: ball2 1s infinite;
+  background-color: #ffffff;
+  box-shadow: 30px 0 0 #A40F37;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg) scale(0.8)
+  }
+
+  50% {
+    transform: rotate(360deg) scale(1.2)
+  }
+
+  100% {
+    transform: rotate(720deg) scale(0.8)
+  }
+}
+
+@keyframes ball1 {
+  0% {
+    box-shadow: 30px 0 0 #ffffff;
+  }
+
+  50% {
+    box-shadow: 0 0 0 #ffffff;
+    margin-bottom: 0;
+    transform: translate(15px, 15px);
+  }
+
+  100% {
+    box-shadow: 30px 0 0 #ffffff;
+    margin-bottom: 10px;
+  }
+}
+
+@keyframes ball2 {
+  0% {
+    box-shadow: 30px 0 0 #A40F37;
+  }
+
+  50% {
+    box-shadow: 0 0 0 #A40F37;
+    margin-top: -20px;
+    transform: translate(15px, 15px);
+  }
+
+  100% {
+    box-shadow: 30px 0 0 #A40F37;
+    margin-top: 0;
+  }
+}
+
+
+.verfication-notification {
+  position: fixed;
+  right: -200%;
+  top: 125px;
+  background-color: #16C75D;
+  color: white;
+  padding: 23px;
   box-sizing: border-box;
+  border-radius: 12px 0 0 12px;
+  transition: right 0.5s ease-in-out;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-family: "Roboto", arial, sans-serif;
+  font-weight: bold;
+  font-style: normal;
+  z-index: 1000;
 }
 
-body {
-  margin: 0;
-  font-family: 'Arial', sans-serif;
-  background-color: #FFFFFF;
-  color: #333333;
-  line-height: 1.6;
+.verfication-notification-error {
+  position: fixed;
+  right: -200%;
+  top: 125px;
+  background-color: #cc0000;
+  color: white;
+  padding: 23px;
+  box-sizing: border-box;
+  border-radius: 12px 0 0 12px;
+  transition: right 0.5s ease-in-out;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-family: "Roboto", arial, sans-serif;
+  font-weight: bold;
+  font-style: normal;
+  z-index: 1000;
 }
 
-a {
-  text-decoration: none;
-  color: inherit;
+.verfication-notification .check-icon {
+  line-height: 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  color: #004080;
+.verfication-notification.show {
+  right: 0;
 }
 
-button {
-  cursor: pointer;
-  border: none;
-  font-size: 16px;
-}
-
-.form-title, .section-title {
-  color: #004080;
-}
-
-input, textarea, select, button {
-  font-family: inherit;
-  font-size: inherit;
-}
-
-/* Adding some global link styles */
-a:hover {
-  color: #6FB9FF;
+.verfication-notification-error.show {
+  right: 0;
 }

@@ -1,11 +1,34 @@
 // backend/models/Log.js
+
 const mongoose = require('mongoose');
 
 const logSchema = new mongoose.Schema({
-  userId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  action:    { type: String, required: true },
-  details:   { type: String },
-  timestamp: { type: Date, default: Date.now },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    refPath: 'userType', // Dynamic reference based on userType
+  },
+  userType: {
+    type: String,
+    required: true,
+    enum: ['AdminProfile', 'PsychologistProfile'], // Allowed models
+  },
+  action: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  details: {
+    type: String,
+    trim: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
 });
+
+// Index for faster queries on userId and userType
+logSchema.index({ userId: 1, userType: 1 });
 
 module.exports = mongoose.model('Log', logSchema);
