@@ -1,7 +1,7 @@
 // backend/utils/pdfGenerator.js
 const fs = require('fs');
 const path = require('path');
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright'); // Replaces puppeteer
 
 exports.generatePDF = async (templateName, userData) => {
   try {
@@ -35,9 +35,10 @@ exports.generatePDF = async (templateName, userData) => {
 
     html = html.replace('{{chartBase64}}', userData.chartBase64 || '');
 
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    // 'networkidle' ensures all images/fonts are loaded
+    await page.setContent(html, { waitUntil: 'networkidle' });
 
     const reportsDir = path.join(__dirname, '..', 'public', 'reports');
     if (!fs.existsSync(reportsDir)) {

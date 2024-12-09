@@ -2,7 +2,7 @@
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 
 exports.generateChartBase64 = async (sanityLevels, sentiments, serResults) => {
-  const width = 800; 
+  const width = 800;
   const height = 400;
   const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height });
 
@@ -13,12 +13,12 @@ exports.generateChartBase64 = async (sanityLevels, sentiments, serResults) => {
   const configuration = {
     type: 'line',
     data: {
-      labels: labels,
+      labels,
       datasets: [{
         label: 'Sanity Level (%)',
-        data: data,
-        fill: false,
+        data,
         borderColor: 'rgba(75,192,192,1)',
+        fill: false,
         tension: 0.1
       }]
     },

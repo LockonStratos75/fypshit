@@ -36,6 +36,7 @@ const sanityLevelRoutes = require('./routes/sanityLevelRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const chatRoutes = require('./routes/chatSessionRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const crisisRoutes = require('./routes/crisisRoutes');
 
 // ========================
 // 4. Import Middlewares
@@ -72,7 +73,7 @@ app.use(morgan('combined'));
 // Define allowed origins based on environment variables for flexibility
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : ['http://192.168.1.8:3000', 'http://localhost:3000', 'http://192.168.100.92:3000'];
+  : ['http://192.168.1.10:3000', 'http://localhost:3000', 'http://192.168.100.92:3000'];
 
 // Configure CORS options
 const corsOptions = {
@@ -136,11 +137,7 @@ if (!MONGO_URI) {
 }
 
 mongoose
-  .connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    // useCreateIndex: true, // Note: mongoose >=6.0 no longer supports this option
-  })
+  .connect(MONGO_URI)
   .then(() => console.log('✅ MongoDB connected successfully'))
   .catch(err => {
     console.error('❌ MongoDB connection error:', err.message);
@@ -185,6 +182,7 @@ app.use('/api/ser', serRoutes);
 app.use('/api/sanity', sanityLevelRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/report', reportRoutes);
+app.use('/api/crisis', crisisRoutes);
 
 // Psychologist Protected Profile Routes (Profile Completion, Retrieval & Picture Upload)
 app.use('/api/psychologist/profile', psychologistRoutes.profileRouter);
