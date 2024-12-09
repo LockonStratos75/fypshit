@@ -1,0 +1,89 @@
+<!-- backend/templates/reportTemplate.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&family=Saira+Condensed:wght@100..900&display=swap" rel="stylesheet">
+</head>
+<style>
+  body {
+    font-family: "Roboto", sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+
+  h1 {
+    font-family: "Roboto";
+    font-size: 32px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 20px;
+  }
+
+  .section {
+    margin: 20px;
+  }
+
+  .header-info {
+    margin: 20px;
+  }
+
+  .chart-section {
+    margin: 20px;
+    text-align: center;
+  }
+
+  .data-section {
+    margin: 20px;
+  }
+
+  .label {
+    font-weight: 700;
+  }
+
+  .value {
+    font-weight: 400;
+    margin-left: 10px;
+  }
+
+  hr {
+    margin: 20px 0;
+    border: none;
+    height: 2px;
+    background-color: #A61E36;
+  }
+</style>
+<body>
+  <h1>User Mental Health Report for {{username}}</h1>
+
+  <div class="header-info">
+    <p><span class="label">User Info:</span><span class="value">{{user_info}}</span></p>
+  </div>
+
+  <hr>
+
+  <div class="section">
+    <h2>Recent Metrics</h2>
+    <p><span class="label">Most Recent Sanity Level:</span><span class="value">{{recentSanity}}%</span></p>
+    <p><span class="label">Average Sentiment Score:</span><span class="value">{{averageSentiment}}</span></p>
+    <p><span class="label">Dominant Emotion (SER):</span><span class="value">{{dominantEmotion}}</span></p>
+  </div>
+
+  <hr>
+
+  <div class="chart-section">
+    <h2>Sanity Level Over Time</h2>
+    <img src="{{chartBase64}}" alt="Sanity Chart" style="max-width:600px; width:100%; height:auto;" />
+  </div>
+
+  <hr>
+
+  <div class="data-section">
+    <h2>Additional Insights</h2>
+    <p>Your sanity levels and emotional states are tracked over time to provide personalized feedback and identify trends that could inform therapeutic interventions. Please discuss these results with a qualified professional for proper guidance.</p>
+  </div>
+
+</body>
+</html>
