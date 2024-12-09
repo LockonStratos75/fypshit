@@ -11,7 +11,7 @@ const logSchema = new mongoose.Schema({
   userType: {
     type: String,
     required: true,
-    enum: ['AdminProfile', 'PsychologistProfile'], // Allowed models
+    enum: ['AdminProfile', 'PsychologistProfile', 'User'], // Added 'User'
   },
   action: {
     type: String,

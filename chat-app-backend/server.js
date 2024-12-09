@@ -1,9 +1,13 @@
 // backend/server.js
 
-// Load environment variables from .env file
+// ========================
+// 1. Load Environment Variables
+// ========================
 require('dotenv').config();
 
-// Import necessary packages
+// ========================
+// 2. Import Necessary Packages
+// ========================
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -12,9 +16,14 @@ const helmet = require('helmet'); // Security middleware
 const morgan = require('morgan'); // HTTP request logger
 const rateLimit = require('express-rate-limit'); // Rate limiting
 const compression = require('compression'); // Compression middleware
-const multer = require('multer'); // For handling multipart/form-data
+const path = require('path'); // Path module for handling file paths
 
-// Import Routes
+// Note: If you're not using multer directly in server.js, consider removing it
+// const multer = require('multer'); // For handling multipart/form-data
+
+// ========================
+// 3. Import Routes
+// ========================
 const authRoutes = require('./routes/authRoutes');
 const psychologistRoutes = require('./routes/psychologistRoutes'); // Combined Psychologist Routes
 const assessmentRoutes = require('./routes/assessmentRoutes');
@@ -28,20 +37,26 @@ const adminRoutes = require('./routes/adminRoutes');
 const chatRoutes = require('./routes/chatSessionRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 
-// Import Middlewares
+// ========================
+// 4. Import Middlewares
+// ========================
 const { authenticateToken } = require('./middlewares/authMiddleware');
 const errorHandler = require('./middlewares/errorHandler');
 const logAction = require('./middlewares/logMiddleware');
 
-// Initialize Express app
+// ========================
+// 5. Initialize Express App
+// ========================
 const app = express();
 
-// Define Server Port and IP Address
+// ========================
+// 6. Define Server Port and IP Address
+// ========================
 const PORT = process.env.PORT || 5000;
 const IP_ADDRESS = process.env.IP_ADDRESS || '0.0.0.0'; // Listen on all network interfaces by default
 
 // ========================
-// Security Middleware Setup
+// 7. Security Middleware Setup
 // ========================
 
 // Use Helmet to secure HTTP headers
@@ -51,7 +66,7 @@ app.use(helmet());
 app.use(morgan('combined'));
 
 // ========================
-// CORS Configuration
+// 8. CORS Configuration
 // ========================
 
 // Define allowed origins based on environment variables for flexibility
@@ -78,7 +93,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // ========================
-// Rate Limiting Setup
+// 9. Rate Limiting Setup
 // ========================
 
 // Apply rate limiting to all requests under /api/
@@ -90,14 +105,14 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 
 // ========================
-// Compression Middleware
+// 10. Compression Middleware
 // ========================
 
 // Use compression to gzip responses
 app.use(compression());
 
 // ========================
-// Middleware Setup
+// 11. Middleware Setup
 // ========================
 
 // Parse incoming JSON requests
@@ -110,7 +125,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ========================
-// MongoDB Connection
+// 12. MongoDB Connection
 // ========================
 
 const MONGO_URI = process.env.MONGO_URI;
@@ -133,7 +148,7 @@ mongoose
   });
 
 // ========================
-// Static Files Setup
+// 13. Static Files Setup
 // ========================
 
 // Serve static files (profile pictures)
@@ -143,7 +158,7 @@ app.use(
 );
 
 // ========================
-// Routes Setup
+// 14. Routes Setup
 // ========================
 
 // Public Routes (do not require authentication)
@@ -175,7 +190,7 @@ app.use('/api/report', reportRoutes);
 app.use('/api/psychologist/profile', psychologistRoutes.profileRouter);
 
 // ========================
-// Error Handling Middleware
+// 15. Error Handling Middleware
 // ========================
 
 // Handle CORS Errors Explicitly
@@ -190,7 +205,7 @@ app.use((err, req, res, next) => {
 app.use(errorHandler);
 
 // ========================
-// Start the Server
+// 16. Start the Server
 // ========================
 
 app.listen(PORT, IP_ADDRESS, () => {
