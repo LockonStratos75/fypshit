@@ -13,9 +13,9 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import AuthService from '../../services/AuthService';
+import AuthService from '../../components/services/AuthService';
 import { toast } from 'react-toastify';
-import logo from '../assets/Eunoia.png';
+import logo from '../../assets/Eunoia.png';
 
 const schema = yup.object().shape({
   username: yup.string().required('Username is required').min(3, 'Minimum 3 characters'),

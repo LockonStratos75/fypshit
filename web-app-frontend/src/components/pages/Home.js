@@ -1,14 +1,16 @@
 // src/pages/Home.js
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Typography, Button, styled } from '@mui/material';
-import logo from '../assets/Eunoia.png'; 
-import backgroundImage from '../assets/home_bg.gif';
+import { Box, Typography, Button, styled, useTheme } from '@mui/material';
+import logo from '../../assets/Eunoia.png'; 
+import backgroundImage from '../../assets/home_bg.gif';
 
 const Background = styled(Box)(({ theme }) => ({
   position: 'relative',
   width: '100%',
-  height: '100vh'
+  height: '100vh',
+  fontFamily: "'Poppins', sans-serif", 
+  overflow: 'hidden',
 }));
 
 const BackgroundImage = styled('img')({
@@ -40,36 +42,77 @@ const ContentWrapper = styled(Box)(({ theme }) => ({
   color: theme.palette.text.primary,
   maxWidth: '500px',
   padding: theme.spacing(4),
-  backgroundColor: 'rgba(255,255,255,0.8)',
-  borderRadius: '8px',
+  backgroundColor: 'rgba(255,255,255,0.85)',
+  borderRadius: '16px',
+  backdropFilter: 'blur(10px)',
+  boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
 }));
 
 export default function Home() {
+  const theme = useTheme();
+  
   return (
     <Background>
       <BackgroundImage src={backgroundImage} alt="Background GIF" />
       <LogoWrapper>
-        <Link to="/">
-          <img alt="EUNOIA Logo" src={logo} style={{ maxWidth: '150px' }} />
+        <Link to="/" style={{ textDecoration: 'none' }}>
+          <img 
+            alt="EUNOIA Logo" 
+            src={logo} 
+            style={{ maxWidth: '150px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} 
+          />
         </Link>
       </LogoWrapper>
       <ContentWrapper>
-        <Typography variant="h3" fontWeight={700} gutterBottom color="primary">
+        <Typography 
+          variant="h3" 
+          fontWeight={700} 
+          gutterBottom 
+          sx={{
+            fontFamily: "'Poppins', sans-serif",
+            color: theme.palette.primary.main,
+          }}
+        >
           Welcome to EUNOIA
         </Typography>
-        <Typography variant="h6" gutterBottom>
+        <Typography 
+          variant="h6" 
+          gutterBottom 
+          sx={{
+            fontFamily: "'Poppins', sans-serif",
+            color: theme.palette.text.secondary
+          }}
+        >
           Empowering mental health professionals with advanced analytics
         </Typography>
-        <Typography variant="body1" paragraph>
-          EUNOIA provides cutting-edge tools to help professionals elevate mental health care.
-          Start now to explore the features!
+        <Typography 
+          variant="body1" 
+          paragraph
+          sx={{
+            fontFamily: "'Poppins', sans-serif",
+            color: theme.palette.text.primary,
+            fontSize: '1rem',
+          }}
+        >
+          Start now to help!
         </Typography>
         <Button
           variant="contained"
-          color="primary"
           component={Link}
           to="/login"
-          sx={{ borderRadius: '30px', px: 4, py: 1.5, fontSize: '1rem', textTransform: 'none' }}
+          sx={{
+            borderRadius: '50px',
+            px: 4,
+            py: 1.5,
+            fontSize: '1rem',
+            textTransform: 'none',
+            fontFamily: "'Poppins', sans-serif",
+            backgroundColor: theme.palette.primary.main,
+            '&:hover': {
+              backgroundColor: theme.palette.primary.dark,
+            },
+            boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+          }}
         >
           Get Started
         </Button>

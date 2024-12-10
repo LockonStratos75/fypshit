@@ -8,9 +8,9 @@ const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 
 /**
- * =======================
- * Psychologist Controller
- * =======================
+ * Psychologist registers with minimal data: username, email, password => status: 'pending'.
+ * They now must call /profile/complete to fill in required fields (specialization, phoneNumber, etc.).
+ * After completion, status remains 'pending' until admin approves.
  */
 
 /**
@@ -42,11 +42,13 @@ exports.registerPsychologist = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create psychologist profile with minimal data
+    // specialization, phoneNumber, etc. are not set yet.
+    // status = 'pending' by default, they must call /complete
     const newPsychologist = await PsychologistProfile.create({
       username,
       email,
       password: hashedPassword,
-      // status is 'pending' by default
+      // Initially no specialization, phoneNumber, yearsOfExperience set.
     });
 
     // Log the action
@@ -64,6 +66,8 @@ exports.registerPsychologist = async (req, res) => {
       { expiresIn: '1h' }
     );
 
+    // They must now call /api/psychologist/profile/complete to fill in details
+    // and remain pending until admin approves.
     res.status(201).json({ token, message: 'Registration successful. Please complete your profile.' });
   } catch (err) {
     console.error('Error during psychologist registration:', err.message);
@@ -97,10 +101,12 @@ exports.loginPsychologist = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
-    // Check if profile is approved
-    if (psychologist.status !== 'approved') {
-      return res.status(403).json({ message: 'Your profile is not approved yet.' });
-    }
+    // If they haven't completed their profile (missing specialization or phoneNumber?), 
+    // We rely on authMiddleware to restrict them to profile completion routes only.
+    // If profile is incomplete: They have minimal fields but no specialization/phoneNumber set.
+    // The `authMiddleware` checks `status`. If they are still 'pending' and haven't completed their profile,
+    // they can only access /complete route. 
+    // If they have completed profile but admin hasn't approved yet, still 'pending' means no main access.
 
     // Generate JWT
     const token = jwt.sign(
@@ -117,6 +123,9 @@ exports.loginPsychologist = async (req, res) => {
       details: `Psychologist with email ${email} logged in.`,
     });
 
+    // If status is approved, they'll get full access.
+    // If status is pending, only profile completion routes are accessible.
+    // If status is rejected, no access.
     res.status(200).json({ token, message: 'Login successful.' });
   } catch (err) {
     console.error('Error during psychologist login:', err.message);
@@ -138,14 +147,15 @@ exports.completePsychologistProfile = async (req, res) => {
 
     const { specialization, yearsOfExperience, phoneNumber } = req.body;
 
-    // Update psychologist's profile and set status to 'pending' for approval
+    // Update psychologist's profile and keep status as 'pending' (application needs admin approval)
     const updatedProfile = await PsychologistProfile.findOneAndUpdate(
       { psychologistId: req.user.id },
       { 
         specialization, 
         yearsOfExperience, 
         phoneNumber, 
-        status: 'pending' // Reset status to 'pending' after profile completion
+        // status remains 'pending' even after completion
+        // They must wait for admin approval to become 'approved'
       },
       { new: true, runValidators: true }
     );
@@ -154,7 +164,6 @@ exports.completePsychologistProfile = async (req, res) => {
       return res.status(404).json({ message: 'Psychologist profile not found.' });
     }
 
-    // Log the action
     await Log.create({
       userId: updatedProfile.psychologistId,
       userType: 'PsychologistProfile',
@@ -162,7 +171,7 @@ exports.completePsychologistProfile = async (req, res) => {
       details: `Psychologist completed their profile.`,
     });
 
-    res.status(200).json({ message: 'Profile completed successfully and submitted for approval.', profile: updatedProfile });
+    res.status(200).json({ message: 'Profile completed successfully and is pending admin approval.', profile: updatedProfile });
   } catch (err) {
     console.error('Error completing psychologist profile:', err.message);
     res.status(500).json({ message: 'Server Error' });
@@ -175,6 +184,8 @@ exports.completePsychologistProfile = async (req, res) => {
  */
 exports.getPsychologistProfile = async (req, res) => {
   try {
+    // The psychologist can view their profile to see if they're pending or approved.
+    // If pending, they know they must wait for admin approval.
     res.status(200).json({ profile: req.user });
   } catch (err) {
     console.error('Error fetching psychologist profile:', err.message);
@@ -190,31 +201,26 @@ exports.uploadProfilePicture = async (req, res) => {
   try {
     const psychologistId = req.params.id;
 
-    // Ensure the authenticated user is the same as the psychologist being updated
     if (req.user.id !== psychologistId) {
       return res.status(403).json({ message: 'Unauthorized to upload profile picture for this account.' });
     }
 
-    // Check if file is uploaded
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded.' });
     }
 
-    // Construct the file path (relative to the public directory)
     const profilePicturePath = `/uploads/profile_pictures/${req.file.filename}`;
 
-    // Update psychologist's profile with the profile picture path
     const updatedProfile = await PsychologistProfile.findOneAndUpdate(
       { psychologistId },
       { profilePicture: profilePicturePath },
       { new: true, runValidators: true }
-    ).select('-password'); // Exclude password from the response
+    ).select('-password');
 
     if (!updatedProfile) {
       return res.status(404).json({ success: false, message: 'Psychologist not found.' });
     }
 
-    // Log the action
     await Log.create({
       userId: updatedProfile.psychologistId,
       userType: 'PsychologistProfile',
@@ -236,7 +242,6 @@ exports.uploadProfilePicture = async (req, res) => {
 exports.getProfilePicture = async (req, res) => {
   try {
     const psychologistId = req.params.id;
-
     const psychologist = await PsychologistProfile.findOne({ psychologistId }).select('profilePicture');
 
     if (!psychologist) {
@@ -244,7 +249,6 @@ exports.getProfilePicture = async (req, res) => {
     }
 
     const profilePicturePath = path.join(__dirname, '../public', psychologist.profilePicture);
-
     res.sendFile(profilePicturePath);
   } catch (error) {
     console.error('Error retrieving profile picture:', error.message);

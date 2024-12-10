@@ -25,8 +25,6 @@ router.post(
     body('password')
       .isLength({ min: 6 })
       .withMessage('Password must be at least 6 characters'),
-    // Remove 'role' validation if not required for Users
-    // If 'role' is required, ensure your User model and controller handle it appropriately
   ],
   registerUser // Updated function name
 );

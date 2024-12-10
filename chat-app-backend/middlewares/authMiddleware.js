@@ -1,5 +1,4 @@
 // backend/middlewares/authMiddleware.js
-
 const jwt = require('jsonwebtoken');
 const AdminProfile = require('../models/AdminProfile');
 const PsychologistProfile = require('../models/PsychologistProfile');
@@ -33,7 +32,7 @@ exports.authenticateToken = async (req, res, next) => {
     } else if (userType === 'PsychologistProfile') {
       user = await PsychologistProfile.findOne({ psychologistId: id });
     } else if (userType === 'User') {
-      user = await User.findOne({ userId: id });
+      user = await User.findById(id); // Using findById for User
     } else {
       return res.status(401).json({ message: 'Invalid User Type' });
     }
@@ -42,12 +41,35 @@ exports.authenticateToken = async (req, res, next) => {
       return res.status(401).json({ message: 'User Not Found' });
     }
 
-    if (userType === 'PsychologistProfile' && user.status !== 'approved') {
-      return res.status(403).json({ message: 'Your profile is not approved yet.' });
+    // Handle Psychologist access restrictions based on status
+    if (userType === 'PsychologistProfile') {
+      // If psychologist has not completed profile (In this scenario, "completion" means filling required fields. 
+      // After register, they have minimal data but must call /complete route.)
+      // The initial register sets them as 'pending' but minimal data means they haven't completed their profile fields yet.
+      // Actually, on register, the minimal fields are set, but they must call /complete to fill in specialization, phoneNumber, etc.
+      // After calling /complete, they're still 'pending' but fully filled. They must wait for admin approval for 'approved' status.
+
+      if (user.status === 'pending') {
+        // Only allow /api/psychologist/profile/complete and /api/psychologist/profile/me routes
+        // to let them complete or view their profile. They cannot access main functionalities until 'approved'.
+        if (
+          !req.originalUrl.includes('/api/psychologist/profile/complete') &&
+          !req.originalUrl.includes('/api/psychologist/profile/me')
+        ) {
+          return res.status(403).json({ message: 'Your profile is not approved yet. Please complete your profile and wait for admin approval.' });
+        }
+      } else if (user.status === 'rejected') {
+        // If rejected, they can't access any protected resource
+        return res.status(403).json({ message: 'Your application has been rejected by the admin.' });
+      }
+      // If approved, no special restriction needed, proceed normally.
     }
 
+    // If user is a normal user and has not completed profile
     if (userType === 'User' && !user.profileCompleted) {
-      return res.status(403).json({ message: 'Please complete your profile to access this resource.' });
+      if (!req.originalUrl.includes('/api/profiles/complete')) {
+        return res.status(403).json({ message: 'Please complete your profile to access this resource.' });
+      }
     }
 
     req.user = user;

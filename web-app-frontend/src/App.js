@@ -7,10 +7,10 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Import Pages
-import Home from './pages/Home';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import NotFound from './pages/NotFound';
+import Home from './components/pages/Home';
+import LoginPage from './components/pages/LoginPage';
+import SignupPage from './components/pages/SignupPage';
+import NotFound from './components/pages/NotFound';
 
 // Import Components
 import AdminDashboard from './components/Dashboard/AdminDashboard';
@@ -19,10 +19,10 @@ import ReportGenerator from './components/Report/ReportGenerator';
 import Navbar from './components/Layout/Navbar';
 
 // Import Utilities
-import ProtectedRoute from './utils/ProtectedRoute';
+import ProtectedRoute from './components/utils/ProtectedRoute';
 
 // Import Theme
-import theme from './theme';
+import theme from './components/theme/theme';
 
 function App() {
   return (
@@ -88,3 +88,4 @@ function AppContent() {
 }
 
 export default App;
+

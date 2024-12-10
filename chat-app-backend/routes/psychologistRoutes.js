@@ -8,6 +8,7 @@ const multer = require('multer');
 const path = require('path');
 const { authenticateToken: authenticate } = require('../middlewares/authMiddleware');
 
+// Routers
 const authRouter = express.Router();
 const profileRouter = express.Router();
 
@@ -15,7 +16,7 @@ const profileRouter = express.Router();
 // Multer Configuration for Profile Pictures
 // ========================
 
-// Set up storage engine
+// Set up storage engine for profile pictures
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(__dirname, '../public/uploads/profile_pictures'));
@@ -34,13 +35,12 @@ const fileFilter = (req, file, cb) => {
   const mimetype = allowedTypes.test(file.mimetype);
 
   if (mimetype && extname) {
-    return cb(null, true);
+    cb(null, true);
   } else {
     cb(new Error('Only images are allowed (jpeg, jpg, png, gif).'));
   }
 };
 
-// Initialize multer
 const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
@@ -53,7 +53,7 @@ const upload = multer({
 
 /**
  * @route   POST /psychologist/auth/register
- * @desc    Register a new psychologist
+ * @desc    Register a new psychologist (status = pending)
  * @access  Public
  */
 authRouter.post(
@@ -85,6 +85,11 @@ authRouter.post(
  * @route   POST /psychologist/auth/login
  * @desc    Login psychologist and return JWT token
  * @access  Public
+ * 
+ * If the psychologist has not completed the profile, the middleware will only allow them 
+ * to access the /profile/complete route. If the profile is completed but not approved, 
+ * they cannot access admin functionalities. They can login and check their profile status 
+ * (e.g., via /profile/me) but cannot access other protected routes until approved.
  */
 authRouter.post(
   '/login',
@@ -109,6 +114,11 @@ authRouter.post(
  * @route   POST /psychologist/profile/complete
  * @desc    Complete or update psychologist profile
  * @access  Private (Authenticated Psychologist)
+ * 
+ * This route allows the psychologist to provide their specialization, 
+ * yearsOfExperience, and phoneNumber. Once completed, the profile status remains 'pending' 
+ * until admin approval. The psychologist can now be recognized as having a completed profile 
+ * but still not have full access until the admin approves them.
  */
 profileRouter.post(
   '/complete',
@@ -137,6 +147,10 @@ profileRouter.post(
  * @route   GET /psychologist/profile/me
  * @desc    Get current psychologist's profile
  * @access  Private (Authenticated Psychologist)
+ *
+ * The psychologist can check their status here. If status = 'pending', 
+ * they know they must wait for admin approval. If status = 'rejected', 
+ * they know they've been denied. If 'approved', they can access the admin web app functionalities.
  */
 profileRouter.get(
   '/me',
@@ -144,14 +158,15 @@ profileRouter.get(
   psychologistController.getPsychologistProfile
 );
 
-// ========================
-// Psychologist Profile Picture Routes
-// ========================
-
 /**
  * @route   POST /psychologist/profile/:id/profile-picture
  * @desc    Upload profile picture for psychologist
  * @access  Private (Authenticated Psychologist)
+ *
+ * They can update their profile picture after completing their profile. 
+ * If profile is pending, they might still be allowed to update their picture. 
+ * The middleware will ensure that they can access this route only if their profile is completed 
+ * (and at least pending).
  */
 profileRouter.post(
   '/:id/profile-picture',
@@ -163,7 +178,10 @@ profileRouter.post(
 /**
  * @route   GET /psychologist/profile/:id/profile-picture
  * @desc    Get profile picture for psychologist
- * @access  Public or Private based on requirements
+ * @access  Public
+ *
+ * Anyone can view the psychologist's profile picture if needed 
+ * (or this can be restricted based on requirements).
  */
 profileRouter.get(
   '/:id/profile-picture',

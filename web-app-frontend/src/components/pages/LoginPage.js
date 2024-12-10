@@ -1,4 +1,5 @@
 // src/pages/LoginPage.js
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -15,9 +16,9 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import AuthService from '../../services/AuthService';
+import AuthService from '../../components/services/AuthService';
 import { toast } from 'react-toastify';
-import logo from '../assets/Eunoia.png';
+import logo from '../../assets/Eunoia.png';
 
 const schema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -32,23 +33,36 @@ export default function LoginPage() {
   } = useForm({ resolver: yupResolver(schema) });
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // Switch for selecting role
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const role = isAdmin ? 'admin' : 'psychologist';
-      const response = await AuthService.login(data.email, data.password, role);
+      let response;
+      if (isAdmin) {
+        // Admin Login
+        response = await AuthService.loginAdmin(data.email, data.password);
+      } else {
+        // Psychologist Login
+        response = await AuthService.loginPsychologist(data.email, data.password);
+      }
+
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         toast.success('Login successful');
+
         const decoded = JSON.parse(atob(response.data.token.split('.')[1]));
-        if (decoded.role === 'admin') {
+        const userType = decoded.userType;
+
+        // Determine redirect based on userType
+        if (userType === 'AdminProfile') {
           navigate('/admin/dashboard');
-        } else if (decoded.role === 'psychologist') {
+        } else if (userType === 'PsychologistProfile') {
           navigate('/psychologist/dashboard');
         } else {
-          toast.error('Unknown user role');
+          // If any other type comes up, it's unexpected since we no longer handle User here
+          toast.error('Unknown user type');
+          localStorage.removeItem('token'); // Remove invalid token
           navigate('/');
         }
       }
@@ -69,18 +83,18 @@ export default function LoginPage() {
       justifyContent="center"
       p={2}
     >
-      <Card sx={{ maxWidth: 400, width: '100%', p: 2 }}>
+      <Card sx={{ maxWidth: 400, width: '100%', p: 2, borderRadius: '12px', boxShadow: '0 4px 14px rgba(0,0,0,0.1)' }}>
         <CardContent sx={{ textAlign: 'center' }}>
           <Box sx={{ mb: 2 }}>
             <img src={logo} alt="EUNOIA Logo" style={{ maxWidth: '100px' }} />
-            <Typography variant="h5" fontWeight={700} color="primary" mt={1}>
+            <Typography variant="h5" fontWeight={700} color="primary" mt={1} fontFamily="Poppins">
               EUNOIA
             </Typography>
           </Box>
-          <Typography variant="h4" fontWeight={500} gutterBottom>
+          <Typography variant="h4" fontWeight={500} gutterBottom fontFamily="Poppins">
             Sign In
           </Typography>
-          <Typography variant="subtitle1" gutterBottom>
+          <Typography variant="subtitle1" gutterBottom fontFamily="Poppins">
             Access your mental health management tools.
           </Typography>
 
@@ -94,6 +108,7 @@ export default function LoginPage() {
                 />
               }
               label={isAdmin ? 'Admin' : 'Psychologist'}
+              sx={{ fontFamily: 'Poppins' }}
             />
           </Box>
 
@@ -111,6 +126,10 @@ export default function LoginPage() {
                   helperText={errors.email ? errors.email.message : null}
                   fullWidth
                   variant="outlined"
+                  InputProps={{
+                    style: { fontFamily: 'Poppins' },
+                  }}
+                  InputLabelProps={{ style: { fontFamily: 'Poppins' } }}
                 />
               )}
             />
@@ -127,11 +146,15 @@ export default function LoginPage() {
                   helperText={errors.password ? errors.password.message : null}
                   fullWidth
                   variant="outlined"
+                  InputProps={{
+                    style: { fontFamily: 'Poppins' },
+                  }}
+                  InputLabelProps={{ style: { fontFamily: 'Poppins' } }}
                 />
               )}
             />
             <Box textAlign="right">
-              <Link to="/forgot-password" style={{ textDecoration: 'none', color: '#004080', fontSize: '0.9rem' }}>
+              <Link to="/forgot-password" style={{ textDecoration: 'none', color: '#004080', fontSize: '0.9rem', fontFamily: 'Poppins' }}>
                 Forgot password?
               </Link>
             </Box>
@@ -141,14 +164,21 @@ export default function LoginPage() {
               color="primary"
               fullWidth
               disabled={isLoading}
-              sx={{ textTransform: 'none', fontSize: '1rem', fontWeight: 500 }}
+              sx={{
+                textTransform: 'none', 
+                fontSize: '1rem', 
+                fontWeight: 500, 
+                borderRadius: '30px', 
+                py: 1.5,
+                fontFamily: 'Poppins'
+              }}
             >
               {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
             </Button>
             {!isAdmin && (
-              <Typography variant="body2" mt={2}>
+              <Typography variant="body2" mt={2} fontFamily="Poppins">
                 Don't have an account?{' '}
-                <Link to="/signup" style={{ color: '#004080', textDecoration: 'none' }}>
+                <Link to="/signup" style={{ color: '#004080', textDecoration: 'none', fontFamily: 'Poppins' }}>
                   Sign up
                 </Link>
               </Typography>
