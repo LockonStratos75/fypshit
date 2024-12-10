@@ -1,63 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, ScrollView } from 'react-native';
+import { View, Text, Alert, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Image } from 'react-native';
 import { ButtonComponent } from '../components/ButtonComponent';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { styles } from '../App';
 import { IP_ADDRESS } from '@env';
+import { useFonts, Poppins_700Bold, Poppins_400Regular, Poppins_600SemiBold, Poppins500Medium} from '@expo-google-fonts/poppins';
 
-// Example questions for Kessler-10 (simplified)
+const screenWidth = Dimensions.get('window').width;
+
 const QUESTIONS = [
-    "In the past 4 weeks, how often did you feel tired for no good reason?",
-    "In the past 4 weeks, how often did you feel nervous?",
-    "In the past 4 weeks, how often did you feel so nervous that nothing could calm you down?",
-    "In the past 4 weeks, how often did you feel hopeless?",
-    "In the past 4 weeks, how often did you feel restless or fidgety?",
-    "In the past 4 weeks, how often did you feel so restless you could not sit still?",
-    "In the past 4 weeks, how often did you feel depressed?",
-    "In the past 4 weeks, how often did you feel that everything was an effort?",
-    "In the past 4 weeks, how often did you feel so sad that nothing could cheer you up?",
-    "In the past 4 weeks, how often did you feel worthless?"
+    "How often did you feel tired out for no good reason?",
+    "How often did you feel nervous?",
+    "How often did you feel so nervous that nothing could calm you down?",
+    "How often did you feel hopeless?",
+    "How often did you feel restless or fidgety?",
+    "How often did you feel so restless you could not sit still?",
+    "How often did you feel depressed?",
+    "How often did you feel that everything was an effort?",
+    "How often did you feel so sad that nothing could cheer you up?",
+    "How often did you feel worthless?"
 ];
 
-// Example response options - each maps to a numeric score
 const OPTIONS = [
-    { label: "None of the time", value: 1 },
-    { label: "A little of the time", value: 2 },
-    { label: "Some of the time", value: 3 },
-    { label: "Most of the time", value: 4 },
-    { label: "All of the time", value: 5 }
+    { label: "Always", value: 5 },
+    { label: "", value: 4 },
+    { label: "", value: 3 },
+    { label: "", value: 2 },
+    { label: "Never", value: 1 }
 ];
 
-const RadioGroup = ({ selectedValue, onValueChange, options }) => {
-    return (
-        <View style={{ marginVertical: 10 }}>
-            {options.map(opt => (
-                <View key={opt.value} style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5 }}>
-                    <Text
-                        onPress={() => onValueChange(opt.value)}
-                        style={{
-                            marginRight: 10,
-                            width: 20,
-                            height: 20,
-                            borderRadius: 10,
-                            borderWidth: 1,
-                            borderColor: '#333',
-                            backgroundColor: selectedValue === opt.value ? '#333' : '#fff'
-                        }}
-                    />
-                    <Text onPress={() => onValueChange(opt.value)} style={{ color: '#333' }}>{opt.label}</Text>
-                </View>
-            ))}
-        </View>
-    );
-};
+const NUM_QUESTIONS_PER_PAGE = 5;
 
 export function KesslerAssessmentScreen({ navigation }) {
     const [responses, setResponses] = useState(QUESTIONS.map(() => null));
-    const [score, setScore] = useState(null); // store final score after submission
-    const [report, setReport] = useState(null); // store generated report summary
+    const [currentPage, setCurrentPage] = useState(0); // 0 for first page (questions 0-4), 1 for second page (questions 5-9)
     const [token, setToken] = useState(null);
+    const [completed, setCompleted] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -77,24 +55,31 @@ export function KesslerAssessmentScreen({ navigation }) {
         setResponses(newResponses);
     };
 
-    const handleSubmit = async () => {
-        // Check if all questions answered
-        if (responses.some(r => r === null)) {
-            Alert.alert('Error', 'Please answer all questions before submitting.');
-            return;
+    const handleNextPage = () => {
+        // If on first page, go to second page
+        // If on second page, submit
+        if (currentPage === 0) {
+            // Check if first 5 questions answered
+            const firstPageAnswered = responses.slice(0,5).every(r => r !== null);
+            if (!firstPageAnswered) {
+                Alert.alert('Error', 'Please answer all questions on this page before continuing.');
+                return;
+            }
+            setCurrentPage(1);
+        } else {
+            // Submitting the assessment
+            const allAnswered = responses.every(r => r !== null);
+            if (!allAnswered) {
+                Alert.alert('Error', 'Please answer all questions before submitting.');
+                return;
+            }
+            submitAssessment();
         }
+    };
 
-        // Calculate score
+    const submitAssessment = async () => {
         const totalScore = responses.reduce((sum, val) => sum + val, 0);
-        setScore(totalScore);
 
-        // Generate a basic report
-        const summary = `Your total Kessler-10 score is ${totalScore}. ` +
-            `A higher score suggests greater psychological distress. ` +
-            `Please consider reaching out to a professional if your score is high.`;
-        setReport(summary);
-
-        // Save assessment to backend
         try {
             if (!token) {
                 Alert.alert('Error', 'User not authenticated.');
@@ -102,60 +87,216 @@ export function KesslerAssessmentScreen({ navigation }) {
                 return;
             }
 
-            const assessmentData = {
-                assessmentType: "Kessler-10", // FE-1: specify assessment type
+            const data = {
+                assessmentType: "Kessler-10",
                 responses: responses,
                 score: totalScore
             };
 
-            // Create the assessment record (FE-4: store scores, FE-6: integrate with user data)
-            const response = await axios.post(
+            await axios.post(
                 `${IP_ADDRESS}/assessments`,
-                assessmentData,
+                data,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            console.log('Assessment saved:', response.data);
-            Alert.alert("Assessment Completed", "Your responses have been recorded.");
-
-            // Optionally, schedule next assessment (FE-2)
-            // await axios.post(`${IP_ADDRESS}/assessments/schedule`, { interval: '30days' }, {
-            //   headers: { Authorization: `Bearer ${token}` }
-            // });
-
-            // If needed, integrate with profile (FE-6) is done indirectly since `userId` is known in backend.
-            // The user is stored in the assessment via userId from the token.
-
+            setCompleted(true);
         } catch (error) {
             console.error('Error saving assessment:', error);
             Alert.alert("Error", "Failed to save assessment. Please try again.");
         }
     };
 
+    if (completed) {
+        // Congratulations Screen
+        return (
+            <View style={styles.congratsContainer}>
+                <Text style={styles.congratsTitle}>Congratulations!</Text>
+                <Image source={require('../../assets/super_hero.png')} style={styles.congratsImage} resizeMode="contain" />
+                <Text style={styles.congratsText}>
+                    You've successfully completed the K10 Emotional Well-being Assessment. Your insights are valuable in understanding your current emotional state.
+                </Text>
+                <Text style={styles.instructionText}>Please click the button below to continue to the main screen.</Text>
+                <ButtonComponent
+                    title="Chat with Eunoia"
+                    onPress={() => navigation.navigate("Home")}
+                />
+            </View>
+        );
+    }
+
+    const startIndex = currentPage * NUM_QUESTIONS_PER_PAGE;
+    const endIndex = startIndex + NUM_QUESTIONS_PER_PAGE;
+    const pageQuestions = QUESTIONS.slice(startIndex, endIndex);
+
     return (
-        <ScrollView style={styles.wrapper}>
-            <Text style={styles.h1}>Kessler-10 Assessment</Text>
-            <Text style={styles.h2}>Please answer the following questions based on the past 4 weeks.</Text>
+        <View style={styles.container}>
+            <Text style={styles.heading}>What's on your mind?</Text>
+            {currentPage === 0 && <Text style={styles.subheading}>In the past 4 weeks</Text>}
 
-            {QUESTIONS.map((q, index) => (
-                <View key={index} style={{ marginVertical: 20 }}>
-                    <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>{q}</Text>
-                    <RadioGroup
-                        selectedValue={responses[index]}
-                        onValueChange={(val) => handleValueChange(index, val)}
-                        options={OPTIONS}
-                    />
-                </View>
-            ))}
+            {currentPage === 1 && <Text style={styles.subheading}>In the past 4 weeks</Text>}
 
-            <ButtonComponent title="Submit" onPress={handleSubmit} />
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                {pageQuestions.map((q, index) => {
+                    const qIndex = startIndex + index;
+                    return (
+                        <View key={qIndex} style={styles.questionContainer}>
+                            <Text style={styles.questionText}>{q}</Text>
+                            <View style={styles.radioRow}>
+                                {OPTIONS.map((opt, i) => (
+                                    <TouchableOpacity
+                                        key={i}
+                                        style={[styles.radioCircle, responses[qIndex] === opt.value && styles.radioSelected]}
+                                        onPress={() => handleValueChange(qIndex, opt.value)}
+                                    >
+                                        {opt.label !== "" && (
+                                            <Text style={[styles.radioLabel, responses[qIndex] === opt.value && styles.radioLabelSelected]}>
+                                                {opt.label}
+                                            </Text>
+                                        )}
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    );
+                })}
+            </ScrollView>
 
-            {score !== null && (
-                <View style={{ marginTop: 30 }}>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Results:</Text>
-                    <Text style={{ marginTop: 10 }}>{report}</Text>
-                </View>
-            )}
-        </ScrollView>
+            <View style={styles.footer}>
+                <TouchableOpacity style={styles.nextButton} onPress={handleNextPage}>
+                    <Text style={styles.nextButtonText}>➜</Text>
+                </TouchableOpacity>
+                <Text style={styles.pageIndicator}>{currentPage + 1}/2</Text>
+            </View>
+        </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        paddingHorizontal: 20,
+        paddingTop: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    heading: {
+        fontFamily: 'Poppins_700Bold',
+        fontSize: 28,
+        // fontWeight: 'bold',
+        color: '#0D1F3C',
+        marginBottom: 10,
+        textAlign: 'center'
+    },
+    subheading: {
+        fontFamily: 'Poppins_600SemiBold',
+        backgroundColor: '#C5C9E6',
+        // alignSelf: 'flex-start',
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        borderRadius: 10,
+        color: '#0D1F3C',
+        marginBottom: 20,
+        // fontWeight: 'bold'
+
+    },
+    scrollContent: {
+        paddingBottom: 100
+    },
+    questionContainer: {
+        marginBottom: 30
+    },
+    questionText: {
+        fontFamily: 'Poppins500Medium',
+        fontSize: 16,
+        color: '#0D1F3C',
+        marginBottom: 10,
+        // fontWeight: '600'
+        textAlign: 'center'
+    },
+    radioRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    radioCircle: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    radioSelected: {
+        borderColor: '#0D1F3C',
+        backgroundColor: '#0D1F3C'
+    },
+    radioLabel: {
+        fontFamily: 'Poppins_400Regular',
+        fontSize: 12,
+        color: '#aaa'
+    },
+    radioLabelSelected: {
+        fontFamily: 'Poppins_400Regular',
+        color: '#fff',
+        // fontWeight: 'bold'
+    },
+    footer: {
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        right: 20,
+        alignItems: 'center'
+    },
+    nextButton: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#164D82',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10
+    },
+    nextButtonText: {
+        fontFamily: 'Poppins_400Regular',
+        color: '#fff',
+        fontSize: 24
+    },
+    pageIndicator: {
+        fontSize: 14,
+        color: '#333'
+    },
+    congratsContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20
+    },
+    congratsTitle: {
+        fontSize: 28,
+        fontFamily: 'Poppins_700Bold',
+        // fontWeight: 'bold',
+        color: '#0D1F3C',
+        marginBottom: 20
+    },
+    congratsImage: {
+        width: 400,
+        height: 400,
+        marginBottom: 20
+    },
+    congratsText: {
+        fontSize: 16,
+        fontFamily: 'Poppins_600SemiBold',
+        color: '#0D1F3C',
+        textAlign: 'center',
+        marginBottom: 20
+    },
+    instructionText: {
+        fontFamily: 'Poppins_400Regular',
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 20
+    }
+});
