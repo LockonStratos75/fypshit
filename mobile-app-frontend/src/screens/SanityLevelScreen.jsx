@@ -8,131 +8,38 @@ import {
     ActivityIndicator,
     Dimensions,
     Alert,
-    Switch,
+    TouchableOpacity,
 } from 'react-native';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { IP_ADDRESS } from '@env';
-import { TouchableOpacity } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { ArrowsClockwise } from 'phosphor-react-native';
-import CustomPicker from '../components/CustomPicker';
-import { getAvailableVoices } from '../services/textToSpeech';
 
-const BASE_URL = `${IP_ADDRESS}`; // Ensure the port matches your server's
+const BASE_URL = `${IP_ADDRESS}`;
 
 const { width } = Dimensions.get('window');
-const SIZE = width * 0.6; // Adjust the size as needed
+const SIZE = width * 0.6;
 const STROKE_WIDTH = 15;
 const RADIUS = (SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-const SanityLevelScreen = () => {
+const SanityLevelScreen = ({ navigation }) => {
     const [sanityLevel, setSanityLevel] = useState(null);
-    const [isLoading, setIsLoading] = useState(false); // State to manage loading indicator
-    const [isRefreshing, setIsRefreshing] = useState(false); // State to manage refresh button
-    const [dataMissingMessage, setDataMissingMessage] = useState(null); // State to handle missing data messages
+    const [isLoading, setIsLoading] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [dataMissingMessage, setDataMissingMessage] = useState(null);
 
-    // Voice Settings States
-    const [voices, setVoices] = useState([]);
-    const [selectedVoice, setSelectedVoice] = useState('');
-    const [audioEncoding, setAudioEncoding] = useState('LINEAR16'); // Default encoding
-    const [isTtsEnabled, setIsTtsEnabled] = useState(true);
-
-    // Fetch data when the component mounts
     useEffect(() => {
         fetchSanityData();
-        fetchVoices();
-        loadSettings();
     }, []);
-
-    // Function to fetch voices
-    const fetchVoices = async () => {
-        try {
-            const availableVoices = await getAvailableVoices();
-            setVoices(availableVoices);
-            console.log(voices);
-
-            // Check if 'en-US-Journey-D' is available
-            const defaultVoiceName = 'Journey';
-            const defaultVoice = availableVoices.find(
-                (voice) => voice.name === defaultVoiceName
-            );
-
-            if (defaultVoice) {
-                setSelectedVoice(defaultVoice.name);
-            } else if (availableVoices.length > 0) {
-                setSelectedVoice(availableVoices[0].name); // Default to first voice
-            }
-            console.log(selectedVoice);
-        } catch (error) {
-            Alert.alert('Error', 'Failed to load voices.');
-        }
-    };
-
-    // Function to load settings from SecureStore
-    const loadSettings = async () => {
-        try {
-            const storedVoice = await SecureStore.getItemAsync('selectedVoice');
-            const storedEncoding = await SecureStore.getItemAsync('audioEncoding');
-            const storedIsTtsEnabled = await SecureStore.getItemAsync('isTtsEnabled');
-            if (storedVoice !== null) setSelectedVoice(storedVoice);
-            if (storedEncoding !== null) setAudioEncoding(storedEncoding);
-            if (storedIsTtsEnabled !== null)
-                setIsTtsEnabled(storedIsTtsEnabled === 'true');
-        } catch (error) {
-            console.error('Error loading settings:', error);
-        }
-    };
-
-    // Function to save selected voice
-    const handleVoiceChange = async (voice) => {
-        setSelectedVoice(voice);
-        try {
-            await SecureStore.setItemAsync('selectedVoice', voice);
-        } catch (error) {
-            console.error('Error saving selected voice:', error);
-        }
-    };
-
-    // Function to save audio encoding
-    const handleEncodingChange = async (encoding) => {
-        setAudioEncoding(encoding);
-        try {
-            await SecureStore.setItemAsync('audioEncoding', encoding);
-        } catch (error) {
-            console.error('Error saving audio encoding:', error);
-        }
-    };
-
-    // Function to save TTS toggle state
-    const handleTtsToggle = async (value) => {
-        setIsTtsEnabled(value);
-        try {
-            await SecureStore.setItemAsync('isTtsEnabled', value.toString());
-        } catch (error) {
-            console.error('Error saving TTS enabled state:', error);
-        }
-    };
-
-    // Voice and Encoding Items for Picker
-    const voiceItems = voices.map((voice) => ({
-        label: `${voice.name} (${voice.ssmlGender})`,
-        value: voice.name,
-    }));
-
-    const encodingItems = [
-        { label: 'LINEAR16 (WAV)', value: 'LINEAR16' },
-        { label: 'MULAW', value: 'MULAW' },
-        // Add more encodings if needed
-    ];
 
     // Function to fetch sanity data and update backend
     const fetchSanityData = async () => {
         try {
             console.log("Starting fetchSanityData");
             setIsLoading(true);
-            setDataMissingMessage(null); // Reset any previous messages
+            setDataMissingMessage(null);
             const token = await SecureStore.getItemAsync('token');
             if (!token) {
                 console.error("No token found");
@@ -152,10 +59,9 @@ const SanityLevelScreen = () => {
             });
             console.log("Sentiment response status:", sentimentResponse.status);
             console.log("Sentiment response data structure:", JSON.stringify(sentimentResponse.data, null, 2));
-            // Adjust based on actual structure
             const sentimentScores = Array.isArray(sentimentResponse.data)
                 ? sentimentResponse.data
-                : sentimentResponse.data.scores || []; // Replace 'scores' with actual key
+                : sentimentResponse.data.scores || [];
 
             // Fetch SER results
             console.log("Fetching SER results...");
@@ -166,12 +72,11 @@ const SanityLevelScreen = () => {
             });
             console.log("SER response status:", serResponse.status);
             console.log("SER response data structure:", JSON.stringify(serResponse.data, null, 2));
-            // Adjust based on actual structure
             const serResults = Array.isArray(serResponse.data)
                 ? serResponse.data
-                : serResponse.data.results || []; // Replace 'results' with actual key
+                : serResponse.data.results || [];
 
-            // **Filter out SER results with 'unknown' emotions**
+            // Filter out SER results with 'unknown' emotions
             const validSerResults = serResults.filter(result => {
                 const label = result.highestEmotion?.label?.toLowerCase();
                 return label && label !== 'unknown';
@@ -327,7 +232,7 @@ const SanityLevelScreen = () => {
         }
     };
 
-// Function to fetch the stored sanity level from the backend
+    // Function to fetch the stored sanity level from the backend
     const fetchStoredSanityLevel = async (token) => {
         try {
             const response = await axios.get(`${BASE_URL}/sanity/user`, {
@@ -353,7 +258,6 @@ const SanityLevelScreen = () => {
             setSanityLevel(null);
         }
     };
-
 
     // Handler for the refresh button
     const handleRefresh = () => {
@@ -431,26 +335,6 @@ const SanityLevelScreen = () => {
                     <ArrowsClockwise size={28} weight="fill" />
                 )}
             </TouchableOpacity>
-
-            {/* Voice Settings and TTS Toggle */}
-            <View style={styles.settingsContainer}>
-                <CustomPicker
-                    label="Select Voice:"
-                    selectedValue={selectedVoice}
-                    onValueChange={handleVoiceChange}
-                    items={voiceItems}
-                />
-                <CustomPicker
-                    label="Select Audio Encoding:"
-                    selectedValue={audioEncoding}
-                    onValueChange={handleEncodingChange}
-                    items={encodingItems}
-                />
-                <View style={styles.toggleContainer}>
-                    <Text style={styles.toggleLabel}>Enable Text-to-Speech</Text>
-                    <Switch value={isTtsEnabled} onValueChange={handleTtsToggle} thumbColor={'#164D82'} trackColor={{ false: '#767577', true: '#256eaf' }} />
-                </View>
-            </View>
         </View>
     );
 };
@@ -459,9 +343,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        paddingTop: 40, // Adjust this to move the circle up
+        paddingTop: 40,
         backgroundColor: '#fff',
-        alignItems: 'center', // Center horizontally
+        alignItems: 'center',
     },
     title: {
         fontSize: 24,
@@ -473,7 +357,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginVertical: 16,
-        marginTop: 0, // Adjust this to move the circle up
+        marginTop: 0,
     },
     percentageContainer: {
         position: 'absolute',
@@ -494,23 +378,9 @@ const styles = StyleSheet.create({
         marginTop: 10,
         alignItems: 'center',
     },
-    settingsContainer: {
-        width: '80%',
-        marginTop: 20,
-    },
-    toggleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: 10,
-    },
-    toggleLabel: {
-        fontSize: 16,
-        color: '#555',
-    },
     missingDataText: {
         fontSize: 16,
-        color: '#f44336', // Red color to indicate alert
+        color: '#f44336',
         textAlign: 'center',
         marginVertical: 20,
     },

@@ -13,21 +13,23 @@ export const getAvailableVoices = async () => {
         const response = await axios.get(url);
         const allVoices = response.data.voices;
 
-        // Define the criteria for filtering
-        const filteredVoices = allVoices.filter(voice => {
-            // Check if the voice supports English
-            const isEnglish = voice.languageCodes.some(code => code.startsWith('en'));
+        // Define the language codes to include
+        const languageCodesToInclude = ['en-IN', 'en-GB', 'en-US'];
 
-            // Define keywords to match in the voice name or other properties
-            // const allowedKeywords = ['NEWS', 'standard', 'Wavenet', 'journey'];
-            const allowedKeywords = ['journey'];
+        // Define keywords to match in the voice name or other properties
+        const allowedKeywords = ['journey'];
+
+        // Filter the voices
+        const filteredVoices = allVoices.filter(voice => {
+            // Check if the voice supports desired language codes
+            const isDesiredLanguage = voice.languageCodes.some(code => languageCodesToInclude.includes(code));
 
             // Check if the voice name includes any of the allowed keywords
             const matchesKeyword = allowedKeywords.some(keyword =>
                 voice.name.toLowerCase().includes(keyword.toLowerCase())
             );
 
-            return isEnglish && matchesKeyword;
+            return isDesiredLanguage && matchesKeyword;
         });
 
         return filteredVoices; // returns the filtered array of voices
@@ -40,15 +42,18 @@ export const getAvailableVoices = async () => {
 export const getSpeech = async (text, selectedVoice, audioEncoding = 'LINEAR16') => {
     const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_CLOUD_API_KEY}`;
 
+    // Extract the first language code from the selected voice
+    const languageCode = selectedVoice.languageCodes[0];
+
     const data = {
         input: { text },
         voice: {
-            languageCode: 'en-US',
-            name: selectedVoice, // Use the selected voice
-            ssmlGender: 'NEUTRAL', // Optional, can be set based on the selected voice gender
+            languageCode: languageCode,
+            name: selectedVoice.name,
+            ssmlGender: selectedVoice.ssmlGender || 'NEUTRAL',
         },
         audioConfig: {
-            audioEncoding: audioEncoding, // Use the specified encoding
+            audioEncoding: audioEncoding,
         },
     };
 
@@ -60,3 +65,4 @@ export const getSpeech = async (text, selectedVoice, audioEncoding = 'LINEAR16')
         throw error;
     }
 };
+

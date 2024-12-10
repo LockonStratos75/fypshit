@@ -1,42 +1,46 @@
+// SpeechEmotionRecognition.js
+
 import * as FileSystem from 'expo-file-system';
-import { Buffer } from 'buffer';
-import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
-import {
-    HUGGING_FACE_API_KEY,
-} from '@env';
+import axios from 'axios';
+import { FASTIP } from '@env';
 
 const query = async (filename) => {
     try {
-        const data = await FileSystem.readAsStringAsync(filename, {
-            encoding: FileSystem.EncodingType.Base64,
-        }); // Read file as base64 string
-        const buffer = Buffer.from(data, 'base64'); // Convert base64 string to buffer
+        console.log('Reading file:', filename);
 
-        // Retrieve the JWT token from SecureStore
-        const token = await SecureStore.getItemAsync('token');  // Get the JWT token
+        const fileInfo = await FileSystem.getInfoAsync(filename);
+        console.log('File info:', fileInfo);
 
-        const response = await fetch(
-            'https://api-inference.huggingface.co/models/ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition',
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${HUGGING_FACE_API_KEY}`,  // Include JWT token in the Authorization header
-                    'Content-Type': 'audio/wav',
-                },
-                body: buffer,
-            }
-        );
-        const result = await response.json();
-        return result;
+        const formData = new FormData();
+        formData.append('file', {
+            uri: filename,
+            name: 'audio.wav',
+            type: 'audio/wav',
+        });
+
+        // // Log FormData entries
+        // formData.forEach((value, key) => {
+        //     console.log(`${key}: ${value}`);
+        // });
+
+        console.log('Sending request to FastAPI service at', `${FASTIP}/predict`);
+        const response = await axios.post(`${FASTIP}/predict`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            // Increase timeout if necessary
+            timeout: 60000, // 60 seconds
+        });
+
+
+
+        console.log('Received response from FastAPI:', response.data);
+        return response.data;
     } catch (error) {
         console.error('Error querying the API:', error);
-        if (error.response && error.response.status === 503) {
-            console.log('API service unavailable, retrying...');
-            await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 5 seconds before retrying
-            return query(filename); // Retry querying the API
-        }
-        throw error; // Re-throw the error if not a 503 error
+        throw error;
     }
 };
+
 
 export default query;

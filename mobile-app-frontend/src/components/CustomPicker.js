@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     pickerButton: {
         borderWidth: 1,
         borderColor: '#ccc',
-        borderRadius: 5,
+        borderRadius: 10,
         padding: 10,
         justifyContent: 'center',
     },

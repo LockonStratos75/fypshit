@@ -1,6 +1,8 @@
 // backend/controllers/profileController.js
 const PsychologistProfile = require('../models/PsychologistProfile');
 const User = require('../models/User');
+const { validationResult } = require('express-validator');
+
 
 // Manage User and Psychologist Profiles
 exports.manageProfiles = async (req, res) => {
@@ -74,3 +76,33 @@ exports.reviewPsychologistApplication = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+exports.completeUserProfile = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
+
+        const { gender, age, location, phoneNumber, guardianPhoneNumber } = req.body;
+        const user = req.user; // The authenticated user from authMiddleware
+
+        if (user.profileCompleted) {
+            return res.status(400).json({ message: 'Profile is already completed.' });
+        }
+
+        // Update user fields
+        if (gender) user.gender = gender;
+        if (age !== undefined) user.age = age;
+        if (location) user.location = location;
+        if (phoneNumber) user.phoneNumber = phoneNumber;
+        if (guardianPhoneNumber) user.guardianPhoneNumber = guardianPhoneNumber;
+
+        user.profileCompleted = true;
+        await user.save();
+
+        return res.status(200).json({ message: 'Profile completed successfully.', user });
+    } catch (err) {
+        console.error('Error completing user profile:', err.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
