@@ -23,7 +23,7 @@ export default function Dashboard({ navigation }) {
                 </TouchableOpacity>
             </View>
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={() => console.log('Profile pressed')}>
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("k10")}>
                     <Image
                         source={require('../../assets/profile-button.png')} // Your exported button image
                         style={styles.buttonImage}

@@ -13,6 +13,7 @@ import SanityLevelScreen from "../screens/SanityLevelScreen";
 import EmotionMenuScreen from "../screens/EmotionMenuScreen";
 import {ImageEmotionScreen} from "../screens/ImageEmotionScreen";
 import {ProfileScreen} from "../screens/ProfileScreen"
+import {KesslerAssessmentScreen} from "../screens/KesslerAssessmentScreen"
 
 import { useFonts, Poppins_700Bold} from '@expo-google-fonts/poppins';
 // import AppLoading from 'expo-app-loading';
@@ -60,6 +61,7 @@ export function AppNavigator() {
                 {/*<Stack.Screen name="Home" component={MyTabs} options={{title: 'Dashboard', headerShown: false}}/>*/}
                 <Stack.Screen name="EditProfile" component={ProfileScreen} options={{title: 'Complete Profile'}}/>
                 <Stack.Screen name="Chat" component={ChatScreen} options={{title: 'Chat'}}/>
+                <Stack.Screen name="k10" component={KesslerAssessmentScreen}/>
                 <Stack.Screen
                     name="Emotion Recognition"
                     component={SpeechEmotionScreen}
