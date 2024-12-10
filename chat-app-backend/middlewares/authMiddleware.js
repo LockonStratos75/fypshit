@@ -1,5 +1,6 @@
 // backend/middlewares/authMiddleware.js
 
+
 const jwt = require('jsonwebtoken');
 const AdminProfile = require('../models/AdminProfile');
 const PsychologistProfile = require('../models/PsychologistProfile');
@@ -7,7 +8,7 @@ const User = require('../models/User');
 
 exports.authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  
+
   if (!authHeader) {
     return res.status(401).json({ message: 'Access Token Required' });
   }
@@ -33,7 +34,7 @@ exports.authenticateToken = async (req, res, next) => {
     } else if (userType === 'PsychologistProfile') {
       user = await PsychologistProfile.findOne({ psychologistId: id });
     } else if (userType === 'User') {
-      user = await User.findOne({ userId: id });
+      user = await User.findById(id); // Using findById instead of findOne
     } else {
       return res.status(401).json({ message: 'Invalid User Type' });
     }
@@ -46,8 +47,12 @@ exports.authenticateToken = async (req, res, next) => {
       return res.status(403).json({ message: 'Your profile is not approved yet.' });
     }
 
+    // If user is a normal user and has not completed profile
+    // Allow only access to /api/profiles/complete endpoint
     if (userType === 'User' && !user.profileCompleted) {
-      return res.status(403).json({ message: 'Please complete your profile to access this resource.' });
+      if (!req.originalUrl.includes('/profiles/complete')) {
+        return res.status(403).json({ message: 'Please complete your profile to access this resource.' });
+      }
     }
 
     req.user = user;
@@ -59,6 +64,8 @@ exports.authenticateToken = async (req, res, next) => {
     return res.status(403).json({ message: 'Invalid or Expired Token' });
   }
 };
+
+
 
 // Additional helper middlewares
 exports.authorizeAdmin = (req, res, next) => {

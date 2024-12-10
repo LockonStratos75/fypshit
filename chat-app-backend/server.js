@@ -102,7 +102,7 @@ const apiLimiter = rateLimit({
   max: 100, // Limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again after 15 minutes',
 });
-app.use('/api/', apiLimiter);
+app.use('/', apiLimiter);
 
 // ========================
 // 10. Compression Middleware
@@ -162,7 +162,7 @@ app.use(
 // ========================
 
 // Public Routes (do not require authentication)
-app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
 
 // Psychologist Public Authentication Routes (Registration & Login)
 // Mount these routes before applying the authenticateToken middleware
@@ -175,19 +175,19 @@ app.use(authenticateToken);
 app.use(logAction);
 
 // Protected Routes (require authentication)
-app.use('/api/assessments', assessmentRoutes);
-app.use('/api/monitoring', monitoringRoutes);
-app.use('/api/profiles', profileRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/sessions', chatRoutes);
-app.use('/api/sentiment', sentimentRoutes);
-app.use('/api/ser', serRoutes);
-app.use('/api/sanity', sanityLevelRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/report', reportRoutes);
+app.use('/assessments', assessmentRoutes);
+app.use('/monitoring', monitoringRoutes);
+app.use('/profiles', profileRoutes);
+app.use('/analytics', analyticsRoutes);
+app.use('/sessions', chatRoutes);
+app.use('/sentiment', sentimentRoutes);
+app.use('/ser', serRoutes);
+app.use('/sanity', sanityLevelRoutes);
+app.use('/admin', adminRoutes);
+app.use('/report', reportRoutes);
 
 // Psychologist Protected Profile Routes (Profile Completion, Retrieval & Picture Upload)
-app.use('/api/psychologist/profile', psychologistRoutes.profileRouter);
+app.use('/psychologist/profile', psychologistRoutes.profileRouter);
 
 // ========================
 // 15. Error Handling Middleware

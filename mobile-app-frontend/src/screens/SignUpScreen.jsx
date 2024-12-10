@@ -3,61 +3,77 @@ import {
     Text,
     View,
     TextInput,
-    TouchableOpacity,
     Alert,
 } from "react-native";
 import { ButtonComponent } from "../components/ButtonComponent";
-import axios from 'axios';  // Import axios for API requests
-import * as SecureStore from 'expo-secure-store';  // Import SecureStore from Expo
+import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
 import { styles } from '../App';
-import {
-    IP_ADDRESS,
-} from '@env';
+import { IP_ADDRESS } from '@env';
 
 export function SignUpScreen({ navigation }) {
-    const [username, setUsername] = useState("");  // New state for username
+    const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [role, setRole] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [guardianPhoneNumber, setGuardianPhoneNumber] = useState("");
 
     const isValidEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     };
 
+    const isValidPhoneNumber = (number) => {
+        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+        return phoneRegex.test(number);
+    };
+
     const handleSubmit = async () => {
-        if (username && email && password) {  // Include username validation
+        if (username && email && password && phoneNumber) {
             if (!isValidEmail(email)) {
                 Alert.alert("Error", "Please enter a valid email address.");
                 return;
             }
 
-            try {
-                const response = await axios.post(`${IP_ADDRESS}/auth/signup`, { username, email, password}, {withCredentials: true});  // Include username in request
-                console.log('Server response:', response.data);  // Log the server response
-                const { token } = response.data;  // Extract JWT token from response
+            if (!isValidPhoneNumber(phoneNumber)) {
+                Alert.alert("Error", "Please enter a valid phone number in E.164 format (e.g., +1234567890).");
+                return;
+            }
 
-                // Store token securely with SecureStore
-                if (token && typeof token === 'string') {  // Ensure token is a valid string
-                    await SecureStore.setItemAsync('token', token);  // Store the token directly as it is already a string
-                } else {
-                    console.error('Invalid token format:', token);  // Log the invalid token
-                    throw new Error('Invalid token format received from server.');
+            try {
+                const response = await axios.post(
+                    `${IP_ADDRESS}/auth/register`,
+                    {
+                        username,
+                        email,
+                        password,
+                        phoneNumber,
+                        guardianPhoneNumber
+                    },
+                    { withCredentials: true }
+                );
+
+                console.log('Server response:', response.data);
+                const { token } = response.data;
+
+                if (!token || typeof token !== 'string') {
+                    console.error('Invalid response format. Token missing or not a string.');
+                    throw new Error('Invalid response format received from server.');
                 }
 
+                // Store token only
+                await SecureStore.setItemAsync('token', token);
+
                 Alert.alert("Signup", "Signup Successful!");
-                navigation.navigate("Home");  // Navigate to the next screen
+                navigation.navigate("EditProfile");
             } catch (error) {
-                console.error('Error during signup:', error);  // Log the error for debugging
-                Alert.alert("Error", error.response?.data?.message || "Signup failed. Please try again.");  // Show a relevant error message
+                console.error('Error during signup:', error);
+                Alert.alert("Error", error.response?.data?.message || "Signup failed. Please try again.");
             }
         } else {
-            Alert.alert("Error", "Please enter a username, valid email, and password.");
+            Alert.alert("Error", "Please fill in all required fields (Username, Email, Password, Phone Number).");
         }
     };
-
-
-
 
     return (
         <View style={styles.wrapper}>
@@ -87,6 +103,20 @@ export function SignUpScreen({ navigation }) {
                     value={password}
                     onChangeText={value => setPassword(value)}
                     textContentType={"password"}
+                />
+                <TextInput
+                    style={styles.textInput}
+                    placeholder="Phone Number (e.g., +1234567890)"
+                    placeholderTextColor={"rgba(33,37,41,0.12)"}
+                    value={phoneNumber}
+                    onChangeText={value => setPhoneNumber(value)}
+                />
+                <TextInput
+                    style={styles.textInput}
+                    placeholder="Guardian Phone Number (optional)"
+                    placeholderTextColor={"rgba(33,37,41,0.12)"}
+                    value={guardianPhoneNumber}
+                    onChangeText={value => setGuardianPhoneNumber(value)}
                 />
 
                 <ButtonComponent
