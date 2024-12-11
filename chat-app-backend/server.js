@@ -18,26 +18,23 @@ const rateLimit = require('express-rate-limit'); // Rate limiting
 const compression = require('compression'); // Compression middleware
 const path = require('path'); // Path module for handling file paths
 
-// Note: If you're not using multer directly in server.js, consider removing it
-// const multer = require('multer'); // For handling multipart/form-data
-
 // ========================
 // 3. Import Routes
 // ========================
 const authRoutes = require('./routes/authRoutes');
 const psychologistRoutes = require('./routes/psychologistRoutes'); // Combined Psychologist Routes
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const adminAuthRoutes = require('./routes/adminAuthRoutes'); // Public Admin Auth Routes
+const adminRoutes = require('./routes/adminRoutes'); // Protected Admin Routes
 const assessmentRoutes = require('./routes/assessmentRoutes');
 const monitoringRoutes = require('./routes/monitoringRoutes');
 const profileRoutes = require('./routes/profileRoutes');
-const analyticsRoutes = require('./routes/analyticsRoutes');
 const sentimentRoutes = require('./routes/sentimentRoutes');
 const serRoutes = require('./routes/serRoutes');
 const sanityLevelRoutes = require('./routes/sanityLevelRoutes');
-const adminRoutes = require('./routes/adminRoutes');
 const chatRoutes = require('./routes/chatSessionRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const crisisRoutes = require('./routes/crisisRoutes');
-
 
 // ========================
 // 4. Import Middlewares
@@ -89,6 +86,7 @@ const corsOptions = {
     }
   },
   credentials: true, // Allow cookies and other credentials
+  allowedHeaders: ['Content-Type', 'Authorization'], // Explicitly allow Authorization header
 };
 
 // Apply CORS middleware
@@ -145,6 +143,12 @@ mongoose
     process.exit(1); // Exit the application if unable to connect to MongoDB
   });
 
+// ========================
+// 13. Serve Static Files (if needed)
+// ========================
+
+// Example: Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ========================
 // 14. Routes Setup
@@ -154,8 +158,10 @@ mongoose
 app.use('/auth', authRoutes);
 
 // Psychologist Public Authentication Routes (Registration & Login)
-// Mount these routes before applying the authenticateToken middleware
 app.use('/psychologist/auth', psychologistRoutes.authRouter);
+
+// Admin Public Authentication Routes (Login)
+app.use('/admin/auth', adminAuthRoutes); // Mount before authentication middleware
 
 // Apply Authentication Middleware to Protect Subsequent Routes
 app.use(authenticateToken);
@@ -173,6 +179,7 @@ app.use('/sentiment', sentimentRoutes);
 app.use('/ser', serRoutes);
 app.use('/sanity', sanityLevelRoutes);
 app.use('/admin', adminRoutes);
+app.use('/report', reportRoutes);
 app.use('/crisis', crisisRoutes);
 
 // Psychologist Protected Profile Routes (Profile Completion and Retrieval)

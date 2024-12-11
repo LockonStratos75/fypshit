@@ -1,23 +1,23 @@
+// backend/routes/analyticsRoutes.js
+
 const express = require('express');
-const { getSystemMetrics, getUserBehaviorAnalytics } = require('../controllers/analyticsController');
-const { authenticateToken } = require('../middlewares/authMiddleware');
-
 const router = express.Router();
-
-router.use(authenticateToken);
+const analyticsController = require('../controllers/analyticsController');
+const { body, param } = require('express-validator');
+const { validateRequest } = require('../middlewares/validateRequest');
 
 /**
  * @route   GET /analytics/system-metrics
- * @desc    Get system-level metrics
+ * @desc    Fetch system metrics
  * @access  Private (Admin)
  */
-router.get('/system-metrics', getSystemMetrics);
+router.get('/system-metrics', analyticsController.getSystemMetrics);
 
 /**
- * @route   GET /analytics/user-behavior
- * @desc    Get user behavior analytics
+ * @route   GET /analytics/user-actions
+ * @desc    Fetch recent user actions
  * @access  Private (Admin)
  */
-router.get('/user-behavior', getUserBehaviorAnalytics);
+router.get('/user-behavior-analytics', analyticsController.getUserBehaviorAnalytics);
 
 module.exports = router;

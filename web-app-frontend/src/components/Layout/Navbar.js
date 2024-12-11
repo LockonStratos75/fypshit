@@ -1,34 +1,36 @@
 // src/components/Layout/Navbar.js
-import React, { useState } from 'react';
+
+import React from 'react';
 import {
   Typography,
   Box,
   Drawer,
   List,
-  ListItem,
+  ListItemButton,
+  ListItemIcon,
   ListItemText,
-  Divider,
-  Collapse,
-  Tooltip
+  Tooltip,
+  useTheme,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import {jwtDecode} from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode'; // Correct import
 import {
-  ExpandLess,
-  ExpandMore,
   Home,
   Report,
-  ExitToApp,
-  Warning as EmergencyIcon,
+  Logout,
+  Emergency as EmergencyIcon,
+  BarChart,
+  History, 
+  Settings// More appropriate icon for Logs
 } from '@mui/icons-material';
 import logo from '../../assets/Eunoia.png';
 
-const mainColor = '#004080';
-const highlightColor = '#caa3f7';
-const hoverBg = '#5b3586';
+const drawerWidthExpanded = 240;
+const drawerWidthCollapsed = 80;
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const theme = useTheme(); // Utilize MUI's theme for consistent styling
   const token = localStorage.getItem('token');
   let decoded = null;
   let role = null;
@@ -36,30 +38,29 @@ const Navbar = () => {
   if (token) {
     try {
       decoded = jwtDecode(token);
-      role = decoded.role;
+      role = decoded.userType;
     } catch (error) {
       console.error('Invalid token:', error);
     }
   }
 
-  const [openRecords, setOpenRecords] = useState(false);
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = React.useState(true); // Control drawer collapse
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/'); // Redirect to home screen after logout
   };
 
-  const toggleRecords = () => {
-    setOpenRecords(!openRecords);
-  };
-
   const handleLogoClick = () => {
     // Based on role, redirect:
-    // If role === 'admin' or 'psychologist', go to respective dashboards
-    // If role is new psychologist (not approved or no profile?), handle that logic
-    // For simplicity, just navigate to /dashboard:
-    navigate('/dashboard');
+    if (role === 'AdminProfile') {
+      navigate('/admin/dashboard');
+    } else if (role === 'PsychologistProfile') {
+      navigate('/psychologist/dashboard');
+    } else {
+      // Default to home
+      navigate('/');
+    }
   };
 
   const handleMouseEnter = () => {
@@ -77,41 +78,39 @@ const Navbar = () => {
     marginY: '5px',
     marginX: collapsed ? '5px' : '10px',
     paddingY: '8px',
-    paddingX: '8px',
-    transition: 'background-color 0.3s',
+    paddingX: '12px',
+    transition: 'background-color 0.3s, padding 0.3s',
     '&:hover': {
-      backgroundColor: hoverBg,
+      backgroundColor: theme.palette.action.hover,
     },
-    color: '#fff',
+    color: 'inherit', // Inherit color from Drawer
   };
 
   const iconStyle = {
-    marginRight: collapsed ? 0 : 2,
-    marginLeft: collapsed ? '5px' : 0,
-    transition: 'margin 0.3s',
-    color: '#fff'
+    minWidth: '35px',
+    color: 'inherit', // Inherit color from Drawer
   };
 
   const textStyle = {
     fontWeight: 500,
     fontSize: '1rem',
-    color: '#fff',
     marginLeft: collapsed ? '0px' : '10px',
     transition: 'margin 0.3s',
+    whiteSpace: 'nowrap',
   };
 
   return (
     <Drawer
       variant="permanent"
       sx={{
-        width: collapsed ? 80 : 240,
+        width: collapsed ? drawerWidthCollapsed : drawerWidthExpanded,
         flexShrink: 0,
         '& .MuiDrawer-paper': {
-          width: collapsed ? 80 : 240,
+          width: collapsed ? drawerWidthCollapsed : drawerWidthExpanded,
           boxSizing: 'border-box',
-          backgroundColor: mainColor,
-          color: '#fff',
-          border: 0,
+          backgroundColor: '#0D1B2A', // Very dark blue for the drawer
+          color: '#ffffff', // White text for drawer items
+          border: 'none',
           transition: 'width 0.5s',
           overflowX: 'hidden',
         },
@@ -126,7 +125,7 @@ const Navbar = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          paddingTop: 2,
+          paddingTop: 3,
           paddingBottom: 2,
           cursor: 'pointer',
           transition: 'all 0.3s',
@@ -135,17 +134,20 @@ const Navbar = () => {
         <img
           src={logo}
           alt="Eunoia Logo"
-          style={{ width: collapsed ? 50 : 100, transition: 'width 0.3s' }}
+          style={{
+            width: collapsed ? 50 : 100,
+            transition: 'width 0.3s',
+            marginBottom: collapsed ? 0 : 8,
+          }}
         />
         {!collapsed && (
           <Typography
-            variant="h6"
+            variant="h5"
             sx={{
               textAlign: 'center',
-              color: highlightColor,
+              color: theme.palette.secondary.main, // Use secondary color for contrast
               fontWeight: 700,
-              marginTop: 1,
-              fontSize: '1.2rem',
+              fontSize: '1.3rem',
             }}
           >
             EUNOIA
@@ -156,100 +158,97 @@ const Navbar = () => {
       <List sx={{ paddingTop: 0 }}>
         {/* Home */}
         <Tooltip title="Home" placement="right" arrow disableHoverListener={!collapsed}>
-          <ListItem
-            button
+          <ListItemButton
             component={Link}
-            to="/dashboard"
+            to="/admin/dashboard" // Admin's home route
             sx={navItemStyle}
           >
-            <Home sx={iconStyle} />
+            <ListItemIcon sx={iconStyle}>
+              <Home />
+            </ListItemIcon>
             {!collapsed && <ListItemText primary="Home" sx={textStyle} />}
-          </ListItem>
+          </ListItemButton>
         </Tooltip>
 
-        <Divider sx={{ backgroundColor: '#34495e', marginY: 1 }} />
+        {/* Records */}
+        <Tooltip title="Records" placement="right" arrow disableHoverListener={!collapsed}>
+          <ListItemButton
+            component={Link}
+            to="/admin/records" // Direct link without dropdown
+            sx={navItemStyle}
+          >
+            <ListItemIcon sx={iconStyle}>
+              <Report />
+            </ListItemIcon>
+            {!collapsed && <ListItemText primary="Records" sx={textStyle} />}
+          </ListItemButton>
+        </Tooltip>
 
-        {/* Records Section */}
-        {role === 'admin' && (
-          !collapsed ? (
-            <>
-              <ListItem button onClick={toggleRecords} sx={navItemStyle}>
-                <Report sx={iconStyle} />
-                <ListItemText primary="Records" sx={textStyle} />
-                {openRecords ? <ExpandLess /> : <ExpandMore />}
-              </ListItem>
-              <Collapse in={openRecords} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  <ListItem
-                    button
-                    component={Link}
-                    to="/admin/records"
-                    sx={{ ...navItemStyle, paddingLeft: collapsed ? '15px' : '30px' }}
-                  >
-                    <ListItemText primary="View Records" sx={textStyle} />
-                  </ListItem>
-                  <ListItem
-                    button
-                    component={Link}
-                    to="/admin/add-record"
-                    sx={{ ...navItemStyle, paddingLeft: collapsed ? '15px' : '30px' }}
-                  >
-                    <ListItemText primary="Add Record" sx={textStyle} />
-                  </ListItem>
-                </List>
-              </Collapse>
-            </>
-          ) : (
-            <Tooltip title="Records" placement="right" arrow disableHoverListener={!collapsed}>
-              <ListItem
-                button
-                component={Link}
-                to="/admin/records"
-                sx={navItemStyle}
-              >
-                <Report sx={iconStyle} />
-              </ListItem>
-            </Tooltip>
-          )
-        )}
+        {/* Reports */}
+        <Tooltip title="Reports" placement="right" arrow disableHoverListener={!collapsed}>
+          <ListItemButton
+            component={Link}
+            to="/admin/report"
+            sx={navItemStyle}
+          >
+            <ListItemIcon sx={iconStyle}>
+              <BarChart />
+            </ListItemIcon>
+            {!collapsed && <ListItemText primary="Reports" sx={textStyle} />}
+          </ListItemButton>
+        </Tooltip>
 
-        {/* Generate Report (Admin Only) */}
-        {role === 'admin' && (
-          <Tooltip title="Generate Report" placement="right" arrow disableHoverListener={!collapsed}>
-            <ListItem
-              button
-              component={Link}
-              to="/admin/report"
-              sx={navItemStyle}
-            >
-              <Report sx={iconStyle} />
-              {!collapsed && <ListItemText primary="Generate Report" sx={textStyle} />}
-            </ListItem>
-          </Tooltip>
-        )}
+        {/* Applications */}
+        <Tooltip title="Applications" placement="right" arrow disableHoverListener={!collapsed}>
+          <ListItemButton
+            component={Link}
+            to="/admin/applications"
+            sx={navItemStyle}
+          >
+            <ListItemIcon sx={iconStyle}>
+              <Settings />
+            </ListItemIcon>
+            {!collapsed && <ListItemText primary="Applications" sx={textStyle} />}
+          </ListItemButton>
+        </Tooltip>
 
-        {/* Emergency (Admin Only) */}
-        {role === 'admin' && (
-          <Tooltip title="Emergency" placement="right" arrow disableHoverListener={!collapsed}>
-            <ListItem
-              button
-              component={Link}
-              to="/admin/emergency"
-              sx={navItemStyle}
-            >
-              <EmergencyIcon sx={iconStyle} />
-              {!collapsed && <ListItemText primary="Emergency" sx={textStyle} />}
-            </ListItem>
-          </Tooltip>
-        )}
+        {/* Emergency */}
+        <Tooltip title="Emergency" placement="right" arrow disableHoverListener={!collapsed}>
+          <ListItemButton
+            component={Link}
+            to="/admin/emergency"
+            sx={navItemStyle}
+          >
+            <ListItemIcon sx={iconStyle}>
+              <EmergencyIcon />
+            </ListItemIcon>
+            {!collapsed && <ListItemText primary="Emergency" sx={textStyle} />}
+          </ListItemButton>
+        </Tooltip>
+
+        {/* Logs */}
+        <Tooltip title="Logs" placement="right" arrow disableHoverListener={!collapsed}>
+          <ListItemButton
+            component={Link}
+            to="/admin/logs"
+            sx={navItemStyle}
+          >
+            <ListItemIcon sx={iconStyle}>
+              <History /> {/* More appropriate icon for Logs */}
+            </ListItemIcon>
+            {!collapsed && <ListItemText primary="Logs" sx={textStyle} />}
+          </ListItemButton>
+        </Tooltip>
 
         {/* Logout Button */}
         {token && (
           <Tooltip title="Logout" placement="right" arrow disableHoverListener={!collapsed}>
-            <ListItem button onClick={handleLogout} sx={navItemStyle}>
-              <ExitToApp sx={iconStyle} />
+            <ListItemButton onClick={handleLogout} sx={navItemStyle}>
+              <ListItemIcon sx={iconStyle}>
+                <Logout />
+              </ListItemIcon>
               {!collapsed && <ListItemText primary="Logout" sx={textStyle} />}
-            </ListItem>
+            </ListItemButton>
           </Tooltip>
         )}
       </List>

@@ -19,9 +19,9 @@ const createAdmin = async () => {
       useUnifiedTopology: true,
     });
 
-    const username = 'admin2'; // Replace with desired username
-    const email = 'admin2@gmail.com'; // Replace with desired email
-    const password = '123'; // Replace with desired password
+    const username = 'admin2'; 
+    const email = 'admin2@gmail.com'; 
+    const password = '123'; 
 
     // Check if admin already exists
     const existingAdmin = await AdminProfile.findOne({ email });

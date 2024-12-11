@@ -1,57 +1,68 @@
-
-
 // backend/utils/chartGenerator.js
-const axios = require('axios');
 
-exports.generateChartBase64 = async (sanityLevels, sentiments, serResults) => {
-  // Extract data for sanity over time
-  const labels = sanityLevels.map(sl => new Date(sl.createdAt).toLocaleDateString());
-  const data = sanityLevels.map(sl => sl.sanityPercentage);
+const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 
-  // Construct the chart configuration for QuickChart
-  const chartConfig = {
+const width = 600; // px
+const height = 400; // px
+const chartCallback = (ChartJS) => {
+  // Global config for ChartJS can be added here
+};
+
+const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height, chartCallback });
+
+exports.generateChartBase64 = async (sanityLevels, sentimentScores, serResults) => {
+  // Example: Generate a line chart for sanity levels over time
+
+  const labels = sanityLevels
+    .slice()
+    .reverse()
+    .map((level) => new Date(level.createdAt).toLocaleDateString());
+
+  const data = sanityLevels
+    .slice()
+    .reverse()
+    .map((level) => level.sanityPercentage);
+
+  const configuration = {
     type: 'line',
     data: {
       labels,
-      datasets: [{
-        label: 'Sanity Level (%)',
-        data: data,
-        borderColor: 'rgba(75,192,192,1)',
-        fill: false,
-        tension: 0.1
-      }]
+      datasets: [
+        {
+          label: 'Sanity Level (%)',
+          data,
+          borderColor: '#36A2EB',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          fill: true,
+          tension: 0.4,
+        },
+      ],
     },
     options: {
       plugins: {
-        title: {
-          display: true,
-          text: 'User Sanity Level Over Time'
-        }
-      }
-    }
+        legend: {
+          display: false,
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Sanity Level (%)',
+          },
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Date',
+          },
+        },
+      },
+    },
   };
 
-  try {
-    // Use QuickChart's API to generate the chart image
-    const response = await axios({
-      method: 'post',
-      url: 'https://quickchart.io/chart',
-      responseType: 'arraybuffer',
-      data: {
-        chart: chartConfig,
-        width: 800,
-        height: 400,
-        format: 'png',
-        backgroundColor: 'white'
-      }
-    });
-
-    // Convert binary data to base64
-    const imageBuffer = Buffer.from(response.data, 'binary');
-    const imageBase64 = imageBuffer.toString('base64');
-    return `data:image/png;base64,${imageBase64}`;
-  } catch (error) {
-    console.error('Error generating chart:', error.message);
-    return null;
-  }
+  const image = await chartJSNodeCanvas.renderToDataURL(configuration);
+  return image;
 };

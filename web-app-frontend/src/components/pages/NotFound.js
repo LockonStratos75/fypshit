@@ -1,4 +1,4 @@
-// src/pages/NotFound.js
+// src/components/pages/NotFound.js
 
 import React from 'react';
 import { Container, Typography, Button, Box } from '@mui/material';

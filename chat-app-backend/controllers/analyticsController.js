@@ -8,7 +8,7 @@ const ChatSession = require('../models/ChatSession');
 
 exports.getSystemMetrics = async (req, res, next) => {
   try {
-    // Only Admin can access
+    // Ensure only Admins can access
     if (req.userType !== 'AdminProfile') {
       return res.status(403).json({ message: 'Admin access required.' });
     }
@@ -29,13 +29,13 @@ exports.getSystemMetrics = async (req, res, next) => {
 
     // Recent sessions in last 24 hours
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const recentSessionsCount = await ChatSession.countDocuments({ date: { $gte: since24h.toISOString() } });
+    const recentSessionsCount = await ChatSession.countDocuments({ date: { $gte: since24h } });
 
     // Average sentiment across all sentiment scores
     const sentimentScores = await SentimentScore.find({});
     let averageSentiment = 'N/A';
     if (sentimentScores.length > 0) {
-      const sumSent = sentimentScores.reduce((acc, s) => acc + s.averageSentiment, 0);
+      const sumSent = sentimentScores.reduce((acc, s) => acc + parseFloat(s.averageSentiment), 0);
       averageSentiment = (sumSent / sentimentScores.length).toFixed(2);
     }
 
@@ -45,6 +45,19 @@ exports.getSystemMetrics = async (req, res, next) => {
     // Recent logs count in last 24 hours
     const recentLogsCount = await Log.countDocuments({ timestamp: { $gte: since24h } });
 
+    // Sanity Distribution
+    const sanityDistribution = {
+      low: 0,
+      medium: 0,
+      high: 0
+    };
+
+    sanityLevels.forEach(sl => {
+      if (sl.sanityPercentage < 33) sanityDistribution.low++;
+      else if (sl.sanityPercentage < 66) sanityDistribution.medium++;
+      else sanityDistribution.high++;
+    });
+
     res.status(200).json({
       totalUsers,
       totalPsychologists,
@@ -52,14 +65,14 @@ exports.getSystemMetrics = async (req, res, next) => {
       recentSessionsCount,
       averageSentiment,
       serResultsCount: serCount,
-      recentLogsCount
+      recentLogsCount,
+      sanityDistribution
     });
   } catch (error) {
     console.error('Error fetching system metrics:', error);
     next(error);
   }
 };
-
 exports.getUserBehaviorAnalytics = async (req, res, next) => {
   try {
     // Only Admin can access

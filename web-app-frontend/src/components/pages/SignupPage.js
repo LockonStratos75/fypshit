@@ -1,4 +1,5 @@
-// src/pages/SignupPage.js
+// src/components/pages/SignupPage.js
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -16,6 +17,7 @@ import * as yup from 'yup';
 import AuthService from '../../components/services/AuthService';
 import { toast } from 'react-toastify';
 import logo from '../../assets/Eunoia.png';
+import { jwtDecode } from 'jwt-decode';
 
 const schema = yup.object().shape({
   username: yup.string().required('Username is required').min(3, 'Minimum 3 characters'),
@@ -36,13 +38,13 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       const role = 'psychologist';
-      const response = await AuthService.signup(data.username, data.email, data.password, role);
+      const response = await AuthService.registerPsychologist(data.username, data.email, data.password, role);
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         toast.success('Signup successful');
-        const decoded = JSON.parse(atob(response.data.token.split('.')[1]));
-        if (decoded.role === 'psychologist') {
-          navigate('/psychologist/dashboard');
+        const decoded = jwtDecode(response.data.token);
+        if (decoded.userType === 'PsychologistProfile') {
+          navigate('/psychologist/profile');
         } else {
           toast.error('Unknown user role');
           navigate('/');
@@ -65,18 +67,18 @@ export default function SignupPage() {
       justifyContent="center"
       p={2}
     >
-      <Card sx={{ maxWidth: 400, width: '100%', p: 2 }}>
+      <Card sx={{ maxWidth: 400, width: '100%', p: 2, borderRadius: '12px', boxShadow: '0 4px 14px rgba(0,0,0,0.1)' }}>
         <CardContent sx={{ textAlign: 'center' }}>
           <Box sx={{ mb: 2 }}>
             <img src={logo} alt="EUNOIA Logo" style={{ maxWidth: '100px' }} />
-            <Typography variant="h5" fontWeight={700} color="primary" mt={1}>
+            <Typography variant="h5" fontWeight={700} color="primary" mt={1} fontFamily="Poppins">
               EUNOIA
             </Typography>
           </Box>
-          <Typography variant="h4" fontWeight={500} gutterBottom>
+          <Typography variant="h4" fontWeight={500} gutterBottom fontFamily="Poppins">
             Sign Up
           </Typography>
-          <Typography variant="subtitle1" gutterBottom>
+          <Typography variant="subtitle1" gutterBottom fontFamily="Poppins">
             Create your account to access mental health management tools.
           </Typography>
 
@@ -93,6 +95,10 @@ export default function SignupPage() {
                   helperText={errors.username ? errors.username.message : null}
                   fullWidth
                   variant="outlined"
+                  InputProps={{
+                    style: { fontFamily: 'Poppins' },
+                  }}
+                  InputLabelProps={{ style: { fontFamily: 'Poppins' } }}
                 />
               )}
             />
@@ -109,6 +115,10 @@ export default function SignupPage() {
                   helperText={errors.email ? errors.email.message : null}
                   fullWidth
                   variant="outlined"
+                  InputProps={{
+                    style: { fontFamily: 'Poppins' },
+                  }}
+                  InputLabelProps={{ style: { fontFamily: 'Poppins' } }}
                 />
               )}
             />
@@ -125,6 +135,10 @@ export default function SignupPage() {
                   helperText={errors.password ? errors.password.message : null}
                   fullWidth
                   variant="outlined"
+                  InputProps={{
+                    style: { fontFamily: 'Poppins' },
+                  }}
+                  InputLabelProps={{ style: { fontFamily: 'Poppins' } }}
                 />
               )}
             />
@@ -135,13 +149,13 @@ export default function SignupPage() {
               color="primary"
               fullWidth
               disabled={isLoading}
-              sx={{ textTransform: 'none', fontSize: '1rem', fontWeight: 500 }}
+              sx={{ textTransform: 'none', fontSize: '1rem', fontWeight: 500, borderRadius: '30px', py: 1.5, fontFamily: 'Poppins' }}
             >
               {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
             </Button>
             <Typography variant="body2" mt={2}>
               Already have an account?{' '}
-              <Link to="/login" style={{ color: '#004080', textDecoration: 'none' }}>
+              <Link to="/login" style={{ color: '#004080', textDecoration: 'none', fontFamily: 'Poppins' }}>
                 Sign in
               </Link>
             </Typography>

@@ -1,3 +1,5 @@
+// src/components/utils/ProtectedRoute.js
+
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import {jwtDecode} from 'jwt-decode';
@@ -21,9 +23,24 @@ const ProtectedRoute = ({ children, roles }) => {
             localStorage.removeItem('token');
             toast.error('Session expired. Please log in again.');
             setIsAuthorized(false);
-          } else if (roles && !roles.includes(decoded.role)) {
+          } else if (roles && !roles.includes(decoded.userType)) {
             toast.error('You do not have permission to access this page.');
             setIsAuthorized(false);
+          } else if (decoded.userType === 'PsychologistProfile') {
+            // Check application status
+            if (decoded.status === 'pending') {
+              toast.info('Your application is pending approval.');
+              setIsAuthorized(false); // Redirect to application pending page
+            } else if (decoded.status === 'rejected') {
+              toast.error('Your application has been rejected.');
+              setIsAuthorized(false); // Redirect to profile rejected page
+            } else if (decoded.status === 'approved') {
+              setIsAuthorized(true);
+            } else {
+              // Handle other statuses if any
+              toast.error('Unknown profile status.');
+              setIsAuthorized(false);
+            }
           } else {
             setIsAuthorized(true);
           }
@@ -38,7 +55,7 @@ const ProtectedRoute = ({ children, roles }) => {
   }, [roles, token]);
 
   if (isAuthorized === null) return null; // Render nothing until the auth check is complete
-  return isAuthorized ? children : <Navigate to="/login" replace />;
+  return isAuthorized ? children : <Navigate to="/" replace />;
 };
 
 export default ProtectedRoute;

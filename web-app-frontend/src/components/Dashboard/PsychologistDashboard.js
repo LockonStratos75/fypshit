@@ -1,8 +1,10 @@
-// src/pages/Dashboard/PsychologistDashboard.js
+// src/components/Dashboard/PsychologistDashboard.js
+
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Grid, Paper, List, ListItem, ListItemText } from '@mui/material';
+import { Container, Typography, Grid,Box, Paper, List, ListItem, ListItemText, Button } from '@mui/material';
 import { toast } from 'react-toastify';
-import api from '../../components/services/ApiService'; // Ensure correct path to ApiService
+import api from '../../components/services/ApiService';
+import { Link } from 'react-router-dom';
 
 const PsychologistDashboard = () => {
   const [stats, setStats] = useState({
@@ -95,6 +97,39 @@ const PsychologistDashboard = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Additional Links */}
+      <Box mt={5}>
+        <Grid container spacing={3}>
+          {/* View Users */}
+          <Grid item xs={12} md={6}>
+            <Button
+              variant="contained"
+              color="primary"
+              component={Link}
+              to="/psychologist/users"
+              fullWidth
+              sx={{ borderRadius: '30px', py: 2 }}
+            >
+              View Users
+            </Button>
+          </Grid>
+
+          {/* Generate Alerts */}
+          <Grid item xs={12} md={6}>
+            <Button
+              variant="contained"
+              color="secondary"
+              component={Link}
+              to="/psychologist/alerts"
+              fullWidth
+              sx={{ borderRadius: '30px', py: 2 }}
+            >
+              Generate Alerts
+            </Button>
+          </Grid>
+        </Grid>
+      </Box>
     </Container>
   );
 };

@@ -8,30 +8,9 @@ const { body, param } = require('express-validator');
 const { validateRequest } = require('../middlewares/validateRequest');
 
 // =======================
-// Admin Authentication Routes
-// =======================
-
-/**
- * @route   POST /admin/auth/login
- * @desc    Login admin and return JWT token
- * @access  Public
- */
-router.post(
-  '/auth/login',
-  [
-    body('email').isEmail().withMessage('Valid email is required.'),
-    body('password').notEmpty().withMessage('Password is required.'),
-  ],
-  validateRequest,
-  adminController.adminLogin
-);
-
-// Note: Admin Registration Route Removed for Security Concerns
-// No route for /auth/register to prevent unauthorized admin registrations
-
-// =======================
 // Protected Admin Routes
 // =======================
+
 
 // Apply authentication middleware to all routes below
 router.use(authenticateToken);
@@ -42,6 +21,9 @@ router.use(authenticateToken);
  * @access  Private (Admin)
  */
 router.get('/users', adminController.getAllUsers);
+
+
+router.get('/sanity-levels', adminController.getAllSanityLevels);
 
 /**
  * @route   PUT /admin/users/:userId

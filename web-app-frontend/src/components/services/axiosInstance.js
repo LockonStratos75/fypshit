@@ -1,4 +1,4 @@
-// src/services/axiosInstance.js
+// src/components/services/axiosInstance.js
 
 import axios from 'axios';
 

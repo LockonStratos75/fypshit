@@ -1,4 +1,4 @@
-// frontend/src/pages/Dashboard.js
+// frontend/src//components/pages/Dashboard.js
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 //import DashboardLayout from '../components/DashboardLayout';

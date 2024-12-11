@@ -4,19 +4,68 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://192.168.1.10:5000'; // Adjust if needed
 
-// Admin login endpoint: POST /admin/auth/login
-const loginAdmin = (email, password) => {
-  return axios.post(`${API_BASE_URL}/admin/auth/login`, { email, password });
-};
+const api = axios.create({
+  baseURL: API_BASE_URL,
+});
 
-// Psychologist login endpoint: POST /psychologist/auth/login
-const loginPsychologist = (email, password) => {
-  return axios.post(`${API_BASE_URL}/psychologist/auth/login`, { email, password });
-};
+// Define public routes that do not require Authorization header
+const PUBLIC_ROUTES = ['/admin/auth/login', '/psychologist/auth/login'];
 
+/**
+ * Request Interceptor
+ * Adds Authorization header to requests except for public routes
+ */
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    const isPublicRoute = PUBLIC_ROUTES.some(route => config.url.startsWith(route));
+    if (token && !isPublicRoute) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// AuthService functions
 const AuthService = {
-  loginAdmin,
-  loginPsychologist,
+  // Admin Login
+  loginAdmin: (email, password) => {
+    return api.post('/admin/auth/login', { email, password });
+  },
+
+  // Psychologist Login
+  loginPsychologist: (email, password) => {
+    return api.post('/psychologist/auth/login', { email, password });
+  },
+
+  // Psychologist Registration
+  registerPsychologist: (username, email, password) => {
+    return api.post('/psychologist/auth/register', { username, email, password });
+  },
+
+  // Complete Psychologist Profile
+  completePsychologistProfile: (formData) => {
+    return api.post('/psychologist/profile/complete', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Fetch System Metrics
+  getSystemMetrics: () => {
+    return api.get('/analytics/system-metrics');
+  },
+
+  // Fetch User Behavior Analytics
+  getUserBehaviorAnalytics: () => {
+    return api.get('/analytics/user-behavior-analytics');
+  },
+
+  // Add other auth-related functions as needed
 };
 
 export default AuthService;

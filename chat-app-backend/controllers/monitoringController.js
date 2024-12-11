@@ -1,8 +1,11 @@
 // backend/controllers/monitoringController.js
+
 const MonitoringAlert = require('../models/MonitoringAlert');
 const User = require('../models/User');
 
-// Psychologist or system creates alert
+/**
+ * Psychologist or system creates an alert
+ */
 exports.createAlert = async (req, res) => {
   try {
     const { userId, alertType, alertMessage } = req.body;
@@ -23,7 +26,9 @@ exports.createAlert = async (req, res) => {
   }
 };
 
-// Psychologist or User can view alerts related to their context
+/**
+ * Psychologist or User can view alerts related to their context
+ */
 exports.getAlerts = async (req, res) => {
   try {
     let query = {};
@@ -46,14 +51,18 @@ exports.getAlerts = async (req, res) => {
   }
 };
 
-// Admin: view all alerts with optional filters
+/**
+ * Admin: view all alerts with optional filters
+ */
 exports.getAllAlertsForAdmin = async (req, res) => {
   try {
     let query = {};
     if (req.query.status) query.status = req.query.status;
     if (req.query.userId) query.userId = req.query.userId;
 
-    const alerts = await MonitoringAlert.find(query).sort({ createdAt: -1 }).populate('userId', 'username email');
+    const alerts = await MonitoringAlert.find(query)
+      .sort({ createdAt: -1 })
+      .populate('userId', 'username email'); // Populate user details
     res.status(200).json({ alerts });
   } catch (err) {
     console.error('Error fetching alerts for admin:', err);
@@ -61,7 +70,9 @@ exports.getAllAlertsForAdmin = async (req, res) => {
   }
 };
 
-// Admin: update alert (e.g., mark as resolved, add response)
+/**
+ * Admin: update alert (e.g., mark as resolved, add response)
+ */
 exports.updateAlertByAdmin = async (req, res) => {
   try {
     const { status, adminResponse } = req.body;

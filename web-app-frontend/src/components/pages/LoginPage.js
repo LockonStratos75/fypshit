@@ -1,4 +1,4 @@
-// src/pages/LoginPage.js
+// src/components/pages/LoginPage.js
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -19,6 +19,7 @@ import * as yup from 'yup';
 import AuthService from '../../components/services/AuthService';
 import { toast } from 'react-toastify';
 import logo from '../../assets/Eunoia.png';
+import {jwtDecode} from 'jwt-decode'; // Correct import for jwt-decode
 
 const schema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -51,16 +52,27 @@ export default function LoginPage() {
         localStorage.setItem('token', response.data.token);
         toast.success('Login successful');
 
-        const decoded = JSON.parse(atob(response.data.token.split('.')[1]));
+        const decoded = jwtDecode(response.data.token);
         const userType = decoded.userType;
 
         // Determine redirect based on userType
         if (userType === 'AdminProfile') {
           navigate('/admin/dashboard');
         } else if (userType === 'PsychologistProfile') {
-          navigate('/psychologist/dashboard');
+          if (decoded.status === 'approved') {
+            navigate('/psychologist/dashboard');
+          } else if (decoded.status === 'pending') {
+            navigate('/psychologist/application-pending');
+          } else if (decoded.status === 'rejected') {
+            navigate('/psychologist/profile-rejected');
+          } else {
+            // Handle other statuses if any
+            toast.error('Unknown profile status');
+            localStorage.removeItem('token'); // Remove invalid token
+            navigate('/');
+          }
         } else {
-          // If any other type comes up, it's unexpected since we no longer handle User here
+          // If any other type comes up, it's unexpected
           toast.error('Unknown user type');
           localStorage.removeItem('token'); // Remove invalid token
           navigate('/');

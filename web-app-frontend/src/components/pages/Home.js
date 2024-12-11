@@ -1,4 +1,4 @@
-// src/pages/Home.js
+// src/components/pages/Home.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Typography, Button, styled, useTheme } from '@mui/material';

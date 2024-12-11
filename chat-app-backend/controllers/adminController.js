@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const PsychologistProfile = require('../models/PsychologistProfile');
 const AdminProfile = require('../models/AdminProfile');
+const SanityLevel = require('../models/SanityLevel');
 const Log = require('../models/Log');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -40,19 +41,19 @@ exports.adminLogin = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
-    // Generate JWT with userType
+    // Generate JWT token with correct payload
     const token = jwt.sign(
-      { id: admin.adminId, userType: 'AdminProfile' },
+      { id: admin._id.toString(), userType: 'AdminProfile' }, // Use _id instead of adminId
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    // Log the action
+    // Log the action using admin._id (ObjectId)
     await Log.create({
-      userId: admin.adminId,
+      userId: admin._id, // Use admin._id which is an ObjectId
       userType: 'AdminProfile',
       action: 'Login',
-      details: `Admin ${admin.adminId} logged in.`,
+      details: `Admin ${admin.username} logged in.`,
     });
 
     // Respond with token
@@ -62,7 +63,6 @@ exports.adminLogin = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
-
 /**
  * Fetch all regular users.
  */
@@ -102,7 +102,7 @@ exports.modifyUser = async (req, res) => {
 
     // Log the action
     await Log.create({
-      userId: req.user.adminId,
+      userId: req.user.id, // Corrected field
       userType: 'AdminProfile',
       action: 'Modify User',
       details: `Modified user with ID: ${userId}`,
@@ -141,7 +141,7 @@ exports.modifyPsychologistProfile = async (req, res) => {
 
     // Log the action
     await Log.create({
-      userId: req.user.adminId,
+      userId: req.user.id, // Corrected field
       userType: 'AdminProfile',
       action: 'Modify Psychologist Profile',
       details: `Modified psychologist profile with ID: ${psychologistId}`,
@@ -174,7 +174,7 @@ exports.deleteUser = async (req, res) => {
 
     // Log the action
     await Log.create({
-      userId: req.user.adminId,
+      userId: req.user.id, // Corrected field
       userType: 'AdminProfile',
       action: 'Delete User',
       details: `Deleted user with ID: ${userId}`,
@@ -230,7 +230,7 @@ exports.approvePsychologist = async (req, res) => {
   }
 
   try {
-    const profile = await PsychologistProfile.findOne({ psychologistId });
+    const profile = await PsychologistProfile.findById(psychologistId);
 
     if (!profile) {
       return res.status(404).json({ message: 'Psychologist profile not found.' });
@@ -246,7 +246,7 @@ exports.approvePsychologist = async (req, res) => {
 
     // Log the action
     await Log.create({
-      userId: req.user.adminId,
+      userId: req.user.id, // Corrected field
       userType: 'AdminProfile',
       action: 'Approve Psychologist',
       details: `Approved psychologist with ID: ${psychologistId}`,
@@ -275,7 +275,7 @@ exports.rejectPsychologist = async (req, res) => {
   }
 
   try {
-    const profile = await PsychologistProfile.findOne({ psychologistId });
+    const profile = await PsychologistProfile.findById(psychologistId);
 
     if (!profile) {
       return res.status(404).json({ message: 'Psychologist profile not found.' });
@@ -291,7 +291,7 @@ exports.rejectPsychologist = async (req, res) => {
 
     // Log the action
     await Log.create({
-      userId: req.user.adminId,
+      userId: req.user.id, // Corrected field
       userType: 'AdminProfile',
       action: 'Reject Psychologist',
       details: `Rejected psychologist with ID: ${psychologistId}`,
@@ -316,5 +316,20 @@ exports.getLogs = async (req, res) => {
   } catch (err) {
     console.error('Error fetching logs:', err.message);
     res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+
+exports.getAllSanityLevels = async (req, res, next) => {
+  try {
+    // Fetch all SanityLevel documents and populate the associated user information
+    const sanityLevels = await SanityLevel.find()
+      .populate('user', 'username email') // Populate user with selected fields
+      .exec();
+
+    res.status(200).json({ sanityLevels });
+  } catch (error) {
+    console.error('Error fetching sanity levels:', error);
+    next(error);
   }
 };
