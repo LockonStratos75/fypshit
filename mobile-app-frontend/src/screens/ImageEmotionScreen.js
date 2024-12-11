@@ -205,6 +205,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#fff',
+        width: '80%',
     },
     emotionText: {
         fontSize: 24,

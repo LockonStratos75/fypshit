@@ -117,7 +117,7 @@ export function KesslerAssessmentScreen({ navigation }) {
                 </Text>
                 <Text style={styles.instructionText}>Please click the button below to continue to the main screen.</Text>
                 <ButtonComponent
-                    title="Chat with Eunoia"
+                    title="Home"
                     onPress={() => navigation.navigate("Home")}
                 />
             </View>

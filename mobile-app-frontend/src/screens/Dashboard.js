@@ -5,6 +5,10 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 export default function Dashboard({ navigation }) {
     return (
         <View style={styles.container}>
+            <Image
+                source={require('../../assets/dash.png')} // Your exported button image
+                style={styles.dashImage}
+            />
             <View style={styles.buttonContainer}>
                 <TouchableOpacity
                     style={styles.button}
@@ -25,17 +29,17 @@ export default function Dashboard({ navigation }) {
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("k10")}>
                     <Image
-                        source={require('../../assets/profile-button.png')} // Your exported button image
-                        style={styles.buttonImage}
+                        source={require('../../assets/k10.png')} // Your exported button image
+                        style={styles.buttonbigImage}
                     />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.button} onPress={() => console.log('Settings pressed')}>
-                    <Image
-                        source={require('../../assets/settings-button.png')} // Your exported button image
-                        style={styles.buttonImage}
-                    />
-                </TouchableOpacity>
+                {/*<TouchableOpacity style={styles.button} onPress={() => console.log('Settings pressed')}>*/}
+                {/*    <Image*/}
+                {/*        source={require('../../assets/settings-button.png')} // Your exported button image*/}
+                {/*        style={styles.buttonImage}*/}
+                {/*    />*/}
+                {/*</TouchableOpacity>*/}
             </View>
         </View>
     );
@@ -66,4 +70,13 @@ const styles = StyleSheet.create({
         height: 150,
         resizeMode: 'contain',
     },
+    dashImage: {
+        width: 340,
+        height: 335,
+        // marginBottom: 100,
+    },
+    buttonbigImage: {
+        width: 333,
+        height: 150,
+    }
 });

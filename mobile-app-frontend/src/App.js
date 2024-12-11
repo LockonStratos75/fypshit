@@ -280,6 +280,54 @@ export const styles = StyleSheet.create({
   },
   bottomMarg: {
     marginBottom: 40,
+  },
+
+  dropdown: {
+    // borderWidth: 1,
+    borderColor: '#ccc',
+    // borderRadius: 5,
+    padding: 10,
+    marginVertical: 5,
+    backgroundColor: '#fff'
+  },
+  dropdownText: {
+    fontFamily: 'Poppins_600SemiBold',
+
+    // backgroundColor: "#485096",
+    // borderColor: 'rgba(33,37,41,0.12)',
+    // borderWidth: 2,
+    // width: "90%",
+    // borderRadius: 12,
+    // height: 52,
+    // paddingLeft: 20,
+    // marginBottom: 16,
+    color: "#212529",
+
+  },
+  dropdownList: {
+    borderColor: '#ccc',
+    maxHeight: 150,
+    fontFamily: 'Poppins_600SemiBold',
+
+    // backgroundColor: "#485096",
+    // borderColor: 'rgba(33,37,41,0.12)',
+    borderWidth: 2,
+    width: "90%",
+    borderRadius: 12,
+    paddingLeft: 20,
+    marginBottom: 16,
+    color: "#212529",
+    fontSize: 16,
+  },
+  dropdownItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee'
+  },
+  label: {
+    fontFamily: 'Poppins_600SemiBold',
+    alignSelf: 'flex-start',
+    marginLeft: 30,
   }
 
 

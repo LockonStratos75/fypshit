@@ -15,28 +15,27 @@ export function SignUpScreen({ navigation }) {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState("");
-    const [guardianPhoneNumber, setGuardianPhoneNumber] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
     const isValidEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     };
 
-    const isValidPhoneNumber = (number) => {
-        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-        return phoneRegex.test(number);
-    };
-
     const handleSubmit = async () => {
-        if (username && email && password && phoneNumber) {
+        if (username && email && password && confirmPassword) {
             if (!isValidEmail(email)) {
                 Alert.alert("Error", "Please enter a valid email address.");
                 return;
             }
 
-            if (!isValidPhoneNumber(phoneNumber)) {
-                Alert.alert("Error", "Please enter a valid phone number in E.164 format (e.g., +1234567890).");
+            if (password !== confirmPassword) {
+                Alert.alert("Error", "Passwords do not match.");
+                return;
+            }
+
+            if (password.length < 6) {
+                Alert.alert("Error", "Password must be at least 6 characters long.");
                 return;
             }
 
@@ -46,9 +45,7 @@ export function SignUpScreen({ navigation }) {
                     {
                         username,
                         email,
-                        password,
-                        phoneNumber,
-                        guardianPhoneNumber
+                        password
                     },
                     { withCredentials: true }
                 );
@@ -71,7 +68,7 @@ export function SignUpScreen({ navigation }) {
                 Alert.alert("Error", error.response?.data?.message || "Signup failed. Please try again.");
             }
         } else {
-            Alert.alert("Error", "Please fill in all required fields (Username, Email, Password, Phone Number).");
+            Alert.alert("Error", "Please fill in all required fields (Username, Email, Password, Confirm Password).");
         }
     };
 
@@ -106,17 +103,11 @@ export function SignUpScreen({ navigation }) {
                 />
                 <TextInput
                     style={styles.textInput}
-                    placeholder="Phone Number (e.g., +1234567890)"
+                    placeholder="Confirm Password"
                     placeholderTextColor={"rgba(33,37,41,0.12)"}
-                    value={phoneNumber}
-                    onChangeText={value => setPhoneNumber(value)}
-                />
-                <TextInput
-                    style={styles.textInput}
-                    placeholder="Guardian Phone Number (optional)"
-                    placeholderTextColor={"rgba(33,37,41,0.12)"}
-                    value={guardianPhoneNumber}
-                    onChangeText={value => setGuardianPhoneNumber(value)}
+                    secureTextEntry={true}
+                    value={confirmPassword}
+                    onChangeText={value => setConfirmPassword(value)}
                 />
 
                 <ButtonComponent

@@ -3,7 +3,9 @@ import {
     View,
     Text,
     TextInput,
-    Alert
+    Alert,
+    TouchableOpacity,
+    FlatList
 } from 'react-native';
 import { ButtonComponent } from '../components/ButtonComponent';
 import axios from 'axios';
@@ -17,6 +19,8 @@ export function ProfileScreen({ navigation }) {
     const [location, setLocation] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [guardianPhoneNumber, setGuardianPhoneNumber] = useState('');
+    const [showDropdown, setShowDropdown] = useState(false);
+    const genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
     useEffect(() => {
         (async () => {
@@ -35,8 +39,8 @@ export function ProfileScreen({ navigation }) {
     };
 
     const handleSaveProfile = async () => {
-        if (age && isNaN(age)) {
-            Alert.alert('Error', 'Age must be a number.');
+        if (age && (isNaN(age) || age <= 0 || age > 120)) {
+            Alert.alert('Error', 'Age must be a number between 1 and 120.');
             return;
         }
 
@@ -64,7 +68,7 @@ export function ProfileScreen({ navigation }) {
                 location,
                 phoneNumber,
                 guardianPhoneNumber,
-                profileCompleted: true  // Explicitly send profileCompleted as true
+                profileCompleted: true // Explicitly send profileCompleted as true
             };
 
             const response = await axios.post(
@@ -89,22 +93,38 @@ export function ProfileScreen({ navigation }) {
         }
     };
 
+    const renderDropdownItem = ({ item }) => (
+        <TouchableOpacity
+            style={styles.dropdownItem}
+            onPress={() => {
+                setGender(item);
+                setShowDropdown(false);
+            }}
+        >
+            <Text style={styles.dropdownText}>{item}</Text>
+        </TouchableOpacity>
+    );
+
     return (
         <View style={styles.wrapper}>
-            <Text style={styles.h1}>Complete Your Profile</Text>
-            <Text style={styles.h2}>Provide additional details to access the whole application</Text>
-
             <View style={styles.inputForm}>
-                <Text style={styles.label}>Gender (Male, Female, Other, Prefer not to say)</Text>
-                <TextInput
-                    style={styles.textInput}
-                    placeholder="Gender"
-                    placeholderTextColor={"rgba(33,37,41,0.12)"}
-                    value={gender}
-                    onChangeText={value => setGender(value)}
-                />
+                <Text style={styles.label}>Gender</Text>
+                <TouchableOpacity
+                    style={[styles.textInput, styles.dropdown]}
+                    onPress={() => setShowDropdown(!showDropdown)}
+                >
+                    <Text style={styles.dropdownText}>{gender}</Text>
+                </TouchableOpacity>
+                {showDropdown && (
+                    <FlatList
+                        data={genderOptions}
+                        renderItem={renderDropdownItem}
+                        keyExtractor={(item, index) => index.toString()}
+                        style={styles.dropdownList}
+                    />
+                )}
 
-                <Text style={styles.label}>Age</Text>
+                {/*<Text style={styles.label}>Age</Text>*/}
                 <TextInput
                     style={styles.textInput}
                     placeholder="Age"
@@ -114,7 +134,7 @@ export function ProfileScreen({ navigation }) {
                     onChangeText={value => setAge(value)}
                 />
 
-                <Text style={styles.label}>Location</Text>
+                {/*<Text style={styles.label}>Location</Text>*/}
                 <TextInput
                     style={styles.textInput}
                     placeholder="Location"
@@ -123,7 +143,7 @@ export function ProfileScreen({ navigation }) {
                     onChangeText={value => setLocation(value)}
                 />
 
-                <Text style={styles.label}>Phone Number (optional)</Text>
+                {/*<Text style={styles.label}>Phone Number (optional)</Text>*/}
                 <TextInput
                     style={styles.textInput}
                     placeholder="Phone Number"
@@ -132,7 +152,7 @@ export function ProfileScreen({ navigation }) {
                     onChangeText={value => setPhoneNumber(value)}
                 />
 
-                <Text style={styles.label}>Guardian Phone Number (optional)</Text>
+                {/*<Text style={styles.label}>Guardian Phone Number (optional)</Text>*/}
                 <TextInput
                     style={styles.textInput}
                     placeholder="Guardian Phone Number"

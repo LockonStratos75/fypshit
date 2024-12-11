@@ -137,8 +137,8 @@ if (!MONGO_URI) {
 
 mongoose
   .connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+    // useNewUrlParser: true,
+    // useUnifiedTopology: true,
     // useCreateIndex: true, // Note: mongoose >=6.0 no longer supports this option
   })
   .then(() => console.log('✅ MongoDB connected successfully'))

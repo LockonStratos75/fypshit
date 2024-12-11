@@ -57,11 +57,11 @@ export function AppNavigator() {
                 <Stack.Screen name="Sign Up" component={SignUpScreen} options={{headerShown: false}}/>
                 {/*<Stack.Screen name="Sign Up T" component={SignUpTherapist} options={{ headerShown: false }} />*/}
 
-                <Stack.Screen name="Home" component={Dashboard} options={{title: 'Dashboard'}}/>
+                <Stack.Screen name="Home" component={Dashboard} options={{headerShown: false}}/>
                 {/*<Stack.Screen name="Home" component={MyTabs} options={{title: 'Dashboard', headerShown: false}}/>*/}
                 <Stack.Screen name="EditProfile" component={ProfileScreen} options={{title: 'Complete Profile'}}/>
                 <Stack.Screen name="Chat" component={ChatScreen} options={{title: 'Chat'}}/>
-                <Stack.Screen name="k10" component={KesslerAssessmentScreen}/>
+                <Stack.Screen name="k10" component={KesslerAssessmentScreen} options={{headerShown: false}}/>
                 <Stack.Screen
                     name="Emotion Recognition"
                     component={SpeechEmotionScreen}
