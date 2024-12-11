@@ -8,7 +8,7 @@ const router = express.Router();
 
 // User Registration Route with Validation
 /**
- * @route   POST /api/auth/register
+ * @route   POST /auth/register
  * @desc    Register a new user
  * @access  Public
  */
@@ -31,7 +31,7 @@ router.post(
 
 // User Login Route with Validation
 /**
- * @route   POST /api/auth/login
+ * @route   POST /auth/login
  * @desc    Login a user and return a JWT
  * @access  Public
  */

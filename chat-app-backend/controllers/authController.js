@@ -8,7 +8,7 @@ const { validationResult } = require('express-validator');
 
 /**
  * User Registration
- * POST /api/auth/register
+ * POST /auth/register
  */
 exports.registerUser = async (req, res) => {
   try {
@@ -58,7 +58,7 @@ exports.registerUser = async (req, res) => {
 
 /**
  * User Login
- * POST /api/auth/login
+ * POST /auth/login
  */
 exports.loginUser = async (req, res) => {
   try {

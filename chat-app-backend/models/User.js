@@ -43,10 +43,7 @@ const userSchema = new mongoose.Schema({
   // Contact Information
   phoneNumber: {
     type: String,
-<<<<<<< HEAD
-=======
     // required: [true, 'Phone number is required.'],
->>>>>>> d818fe1b0729a599a43f69031665a5b916a62ba6
     trim: true,
     match: [
       /^\+?[1-9]\d{1,14}$/,

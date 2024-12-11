@@ -48,7 +48,7 @@ exports.authenticateToken = async (req, res, next) => {
     }
 
     // If user is a normal user and has not completed profile
-    // Allow only access to /api/profiles/complete endpoint
+    // Allow only access to /profiles/complete endpoint
     if (userType === 'User' && !user.profileCompleted) {
       if (!req.originalUrl.includes('/profiles/complete')) {
         return res.status(403).json({ message: 'Please complete your profile to access this resource.' });

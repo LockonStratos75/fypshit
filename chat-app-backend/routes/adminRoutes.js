@@ -12,7 +12,7 @@ const { validateRequest } = require('../middlewares/validateRequest');
 // =======================
 
 /**
- * @route   POST /api/admin/auth/login
+ * @route   POST /admin/auth/login
  * @desc    Login admin and return JWT token
  * @access  Public
  */
@@ -37,14 +37,14 @@ router.post(
 router.use(authenticateToken);
 
 /**
- * @route   GET /api/admin/users
+ * @route   GET /admin/users
  * @desc    Fetch all users
  * @access  Private (Admin)
  */
 router.get('/users', adminController.getAllUsers);
 
 /**
- * @route   PUT /api/admin/users/:userId
+ * @route   PUT /admin/users/:userId
  * @desc    Modify a user's data
  * @access  Private (Admin)
  */
@@ -71,7 +71,7 @@ router.put(
 );
 
 /**
- * @route   DELETE /api/admin/users/:userId
+ * @route   DELETE /admin/users/:userId
  * @desc    Delete a user
  * @access  Private (Admin)
  */
@@ -85,14 +85,14 @@ router.delete(
 );
 
 /**
- * @route   GET /api/admin/psychologists
+ * @route   GET /admin/psychologists
  * @desc    Fetch all psychologists
  * @access  Private (Admin)
  */
 router.get('/psychologists', adminController.getAllPsychologists);
 
 /**
- * @route   PUT /api/admin/psychologists/:psychologistId
+ * @route   PUT /admin/psychologists/:psychologistId
  * @desc    Modify a psychologist's data
  * @access  Private (Admin)
  */
@@ -115,14 +115,14 @@ router.put(
 );
 
 /**
- * @route   GET /api/admin/psychologists/pending
+ * @route   GET /admin/psychologists/pending
  * @desc    Review pending psychologist applications
  * @access  Private (Admin)
  */
 router.get('/psychologists/pending', adminController.reviewPsychologistRegistrations);
 
 /**
- * @route   POST /api/admin/psychologists/approve
+ * @route   POST /admin/psychologists/approve
  * @desc    Approve a psychologist application
  * @access  Private (Admin)
  */
@@ -136,7 +136,7 @@ router.post(
 );
 
 /**
- * @route   POST /api/admin/psychologists/reject
+ * @route   POST /admin/psychologists/reject
  * @desc    Reject a psychologist application
  * @access  Private (Admin)
  */
@@ -152,7 +152,7 @@ router.post(
 );
 
 /**
- * @route   GET /api/admin/logs
+ * @route   GET /admin/logs
  * @desc    Fetch all logs
  * @access  Private (Admin)
  */

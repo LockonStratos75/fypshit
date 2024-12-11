@@ -98,7 +98,7 @@ app.use(cors(corsOptions));
 // 9. Rate Limiting Setup
 // ========================
 
-// Apply rate limiting to all requests under /api/
+// Apply rate limiting to all requests under /
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
@@ -145,15 +145,6 @@ mongoose
     process.exit(1); // Exit the application if unable to connect to MongoDB
   });
 
-// ========================
-// 13. Static Files Setup
-// ========================
-
-// Serve static files (profile pictures)
-app.use(
-  '/uploads/profile_pictures',
-  express.static(path.join(__dirname, 'public/uploads/profile_pictures'))
-);
 
 // ========================
 // 14. Routes Setup
@@ -164,7 +155,7 @@ app.use('/auth', authRoutes);
 
 // Psychologist Public Authentication Routes (Registration & Login)
 // Mount these routes before applying the authenticateToken middleware
-app.use('/api/psychologist/auth', psychologistRoutes.authRouter);
+app.use('/psychologist/auth', psychologistRoutes.authRouter);
 
 // Apply Authentication Middleware to Protect Subsequent Routes
 app.use(authenticateToken);
@@ -173,19 +164,6 @@ app.use(authenticateToken);
 app.use(logAction);
 
 // Protected Routes (require authentication)
-<<<<<<< HEAD
-app.use('/api/assessments', assessmentRoutes);
-app.use('/api/monitoring', monitoringRoutes);
-app.use('/api/profiles', profileRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/sessions', chatRoutes);
-app.use('/api/sentiment', sentimentRoutes);
-app.use('/api/ser', serRoutes);
-app.use('/api/sanity', sanityLevelRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/report', reportRoutes);
-app.use('/api/crisis', crisisRoutes);
-=======
 app.use('/assessments', assessmentRoutes);
 app.use('/monitoring', monitoringRoutes);
 app.use('/profiles', profileRoutes);
@@ -195,10 +173,9 @@ app.use('/sentiment', sentimentRoutes);
 app.use('/ser', serRoutes);
 app.use('/sanity', sanityLevelRoutes);
 app.use('/admin', adminRoutes);
-app.use('/report', reportRoutes);
->>>>>>> d818fe1b0729a599a43f69031665a5b916a62ba6
+app.use('/crisis', crisisRoutes);
 
-// Psychologist Protected Profile Routes (Profile Completion, Retrieval & Picture Upload)
+// Psychologist Protected Profile Routes (Profile Completion and Retrieval)
 app.use('/psychologist/profile', psychologistRoutes.profileRouter);
 
 // ========================

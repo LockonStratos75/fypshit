@@ -4,7 +4,7 @@ const Emergency = require('../models/Emergency');
 const Log = require('../models/Log');
 
 // @desc    Get all emergencies
-// @route   GET /api/emergencies
+// @route   GET /emergencies
 // @access  Private (Admins)
 exports.getEmergencies = async (req, res) => {
   try {
@@ -17,7 +17,7 @@ exports.getEmergencies = async (req, res) => {
 };
 
 // @desc    Create a new emergency
-// @route   POST /api/emergencies
+// @route   POST /emergencies
 // @access  Private (Admins and Psychologists)
 exports.createEmergency = async (req, res) => {
   try {
@@ -44,7 +44,7 @@ exports.createEmergency = async (req, res) => {
 };
 
 // @desc    Update an emergency
-// @route   PUT /api/emergencies/:id
+// @route   PUT /emergencies/:id
 // @access  Private (Admins)
 exports.updateEmergency = async (req, res) => {
   try {
@@ -82,7 +82,7 @@ exports.updateEmergency = async (req, res) => {
 };
 
 // @desc    Delete an emergency
-// @route   DELETE /api/emergencies/:id
+// @route   DELETE /emergencies/:id
 // @access  Private (Admins)
 exports.deleteEmergency = async (req, res) => {
   try {

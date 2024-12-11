@@ -7,14 +7,14 @@ const router = express.Router();
 router.use(authenticateToken);
 
 /**
- * @route   GET /api/analytics/system-metrics
+ * @route   GET /analytics/system-metrics
  * @desc    Get system-level metrics
  * @access  Private (Admin)
  */
 router.get('/system-metrics', getSystemMetrics);
 
 /**
- * @route   GET /api/analytics/user-behavior
+ * @route   GET /analytics/user-behavior
  * @desc    Get user behavior analytics
  * @access  Private (Admin)
  */

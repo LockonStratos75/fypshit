@@ -4,7 +4,7 @@ const Record = require('../models/Record');
 const Log = require('../models/Log');
 
 // @desc    Get all records
-// @route   GET /api/records
+// @route   GET /records
 // @access  Private (Admins and Psychologists)
 exports.getRecords = async (req, res) => {
   try {
@@ -17,7 +17,7 @@ exports.getRecords = async (req, res) => {
 };
 
 // @desc    Create a new record
-// @route   POST /api/records
+// @route   POST /records
 // @access  Private (Admins and Psychologists)
 exports.createRecord = async (req, res) => {
   try {
@@ -44,7 +44,7 @@ exports.createRecord = async (req, res) => {
 };
 
 // @desc    Update a record
-// @route   PUT /api/records/:id
+// @route   PUT /records/:id
 // @access  Private (Admins and Psychologists)
 exports.updateRecord = async (req, res) => {
   try {
@@ -80,7 +80,7 @@ exports.updateRecord = async (req, res) => {
 };
 
 // @desc    Delete a record
-// @route   DELETE /api/records/:id
+// @route   DELETE /records/:id
 // @access  Private (Admins and Psychologists)
 exports.deleteRecord = async (req, res) => {
   try {

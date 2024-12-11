@@ -51,11 +51,7 @@ const psychologistProfileSchema = new mongoose.Schema({
       'Please enter a valid phone number in E.164 format.',
     ],
   },
-  // Profile Picture
-  profilePicture: {
-    type: String,
-    default: 'uploads/profile_pictures/default-profile.png', // Path to default profile picture
-  },
+
   // Application Status
   status: {
     type: String,

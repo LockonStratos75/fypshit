@@ -13,41 +13,6 @@ const authRouter = express.Router();
 const profileRouter = express.Router();
 
 // ========================
-// Multer Configuration for Profile Pictures
-// ========================
-
-// Set up storage engine for profile pictures
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../public/uploads/profile_pictures'));
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
-  }
-});
-
-// File filter to accept only images
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only images are allowed (jpeg, jpg, png, gif).'));
-  }
-};
-
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
-  fileFilter: fileFilter
-});
-
-// ========================
 // Psychologist Authentication Routes
 // ========================
 
@@ -158,35 +123,6 @@ profileRouter.get(
   psychologistController.getPsychologistProfile
 );
 
-/**
- * @route   POST /psychologist/profile/:id/profile-picture
- * @desc    Upload profile picture for psychologist
- * @access  Private (Authenticated Psychologist)
- *
- * They can update their profile picture after completing their profile. 
- * If profile is pending, they might still be allowed to update their picture. 
- * The middleware will ensure that they can access this route only if their profile is completed 
- * (and at least pending).
- */
-profileRouter.post(
-  '/:id/profile-picture',
-  authenticate,
-  upload.single('profilePicture'),
-  psychologistController.uploadProfilePicture
-);
-
-/**
- * @route   GET /psychologist/profile/:id/profile-picture
- * @desc    Get profile picture for psychologist
- * @access  Public
- *
- * Anyone can view the psychologist's profile picture if needed 
- * (or this can be restricted based on requirements).
- */
-profileRouter.get(
-  '/:id/profile-picture',
-  psychologistController.getProfilePicture
-);
 
 // Export both routers
 module.exports = {

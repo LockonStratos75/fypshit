@@ -15,7 +15,7 @@ const { validationResult } = require('express-validator');
 
 /**
  * Register a new psychologist
- * POST /api/psychologist/auth/register
+ * POST /psychologist/auth/register
  */
 exports.registerPsychologist = async (req, res) => {
   try {
@@ -66,7 +66,7 @@ exports.registerPsychologist = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    // They must now call /api/psychologist/profile/complete to fill in details
+    // They must now call /psychologist/profile/complete to fill in details
     // and remain pending until admin approves.
     res.status(201).json({ token, message: 'Registration successful. Please complete your profile.' });
   } catch (err) {
@@ -77,7 +77,7 @@ exports.registerPsychologist = async (req, res) => {
 
 /**
  * Login psychologist and return JWT token
- * POST /api/psychologist/auth/login
+ * POST /psychologist/auth/login
  */
 exports.loginPsychologist = async (req, res) => {
   try {
@@ -135,7 +135,7 @@ exports.loginPsychologist = async (req, res) => {
 
 /**
  * Complete or Update Psychologist Profile
- * POST /api/psychologist/profile/complete
+ * POST /psychologist/profile/complete
  */
 exports.completePsychologistProfile = async (req, res) => {
   try {
@@ -180,7 +180,7 @@ exports.completePsychologistProfile = async (req, res) => {
 
 /**
  * Get Current Psychologist Profile
- * GET /api/psychologist/profile/me
+ * GET /psychologist/profile/me
  */
 exports.getPsychologistProfile = async (req, res) => {
   try {
@@ -193,65 +193,3 @@ exports.getPsychologistProfile = async (req, res) => {
   }
 };
 
-/**
- * Upload Profile Picture
- * POST /api/psychologist/:id/profile-picture
- */
-exports.uploadProfilePicture = async (req, res) => {
-  try {
-    const psychologistId = req.params.id;
-
-    if (req.user.id !== psychologistId) {
-      return res.status(403).json({ message: 'Unauthorized to upload profile picture for this account.' });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file uploaded.' });
-    }
-
-    const profilePicturePath = `/uploads/profile_pictures/${req.file.filename}`;
-
-    const updatedProfile = await PsychologistProfile.findOneAndUpdate(
-      { psychologistId },
-      { profilePicture: profilePicturePath },
-      { new: true, runValidators: true }
-    ).select('-password');
-
-    if (!updatedProfile) {
-      return res.status(404).json({ success: false, message: 'Psychologist not found.' });
-    }
-
-    await Log.create({
-      userId: updatedProfile.psychologistId,
-      userType: 'PsychologistProfile',
-      action: 'Upload Profile Picture',
-      details: `Psychologist uploaded a new profile picture.`,
-    });
-
-    res.status(200).json({ success: true, data: updatedProfile, message: 'Profile picture uploaded successfully.' });
-  } catch (error) {
-    console.error('Error uploading profile picture:', error.message);
-    res.status(500).json({ success: false, message: 'Server Error' });
-  }
-};
-
-/**
- * Get Psychologist's Profile Picture
- * GET /api/psychologist/:id/profile-picture
- */
-exports.getProfilePicture = async (req, res) => {
-  try {
-    const psychologistId = req.params.id;
-    const psychologist = await PsychologistProfile.findOne({ psychologistId }).select('profilePicture');
-
-    if (!psychologist) {
-      return res.status(404).json({ success: false, message: 'Psychologist not found.' });
-    }
-
-    const profilePicturePath = path.join(__dirname, '../public', psychologist.profilePicture);
-    res.sendFile(profilePicturePath);
-  } catch (error) {
-    console.error('Error retrieving profile picture:', error.message);
-    res.status(500).json({ success: false, message: 'Server Error' });
-  }
-};

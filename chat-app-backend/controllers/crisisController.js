@@ -10,6 +10,8 @@ const fromNumber = process.env.TWILIO_PHONE_NUMBER ;
 
 const client = twilio(accountSid, authToken);
 
+const DANGEROUS_SANITY_THRESHOLD = 20;
+
 /**
  * Send Crisis Alerts via Twilio
  * This function can be called when a user's sanity level crosses a dangerous threshold
