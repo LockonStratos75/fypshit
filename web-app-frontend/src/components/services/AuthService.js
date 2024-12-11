@@ -9,7 +9,11 @@ const api = axios.create({
 });
 
 // Define public routes that do not require Authorization header
-const PUBLIC_ROUTES = ['/admin/auth/login', '/psychologist/auth/login'];
+const PUBLIC_ROUTES = [
+  '/admin/auth/login',
+  '/psychologist/auth/login',
+  '/psychologist/auth/register', // Added register route
+];
 
 /**
  * Request Interceptor
@@ -42,8 +46,8 @@ const AuthService = {
   },
 
   // Psychologist Registration
-  registerPsychologist: (username, email, password) => {
-    return api.post('/psychologist/auth/register', { username, email, password });
+  registerPsychologist: (psychologistData) => {
+    return api.post('/psychologist/auth/register', psychologistData);
   },
 
   // Complete Psychologist Profile

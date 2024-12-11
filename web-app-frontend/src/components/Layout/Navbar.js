@@ -13,17 +13,18 @@ import {
   useTheme,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import {jwtDecode} from 'jwt-decode'; // Correct import
+import {jwtDecode} from 'jwt-decode'; // Correct default import
 import {
-  Home,
-  Report,
-  Logout,
+  Home as HomeIcon,
+  Report as ReportIcon,
+  Logout as LogoutIcon,
   Emergency as EmergencyIcon,
-  BarChart,
-  History, 
-  Settings// More appropriate icon for Logs
+  BarChart as BarChartIcon,
+  History as HistoryIcon, 
+  Settings as SettingsIcon, // More appropriate icon for Logs
 } from '@mui/icons-material';
 import logo from '../../assets/Eunoia.png';
+import { toast } from 'react-toastify';
 
 const drawerWidthExpanded = 240;
 const drawerWidthCollapsed = 80;
@@ -49,6 +50,7 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/'); // Redirect to home screen after logout
+    toast.success('Logged out successfully.');
   };
 
   const handleLogoClick = () => {
@@ -98,6 +100,30 @@ const Navbar = () => {
     transition: 'margin 0.3s',
     whiteSpace: 'nowrap',
   };
+
+  // Define navigation items based on role
+  const adminNavItems = [
+    { label: 'Home', icon: <HomeIcon />, path: '/admin/dashboard' },
+    { label: 'Records', icon: <ReportIcon />, path: '/admin/records' },
+    { label: 'Reports', icon: <BarChartIcon />, path: '/admin/report' },
+    { label: 'Applications', icon: <SettingsIcon />, path: '/admin/applications' },
+    { label: 'Emergency', icon: <EmergencyIcon />, path: '/admin/emergency' },
+    { label: 'Logs', icon: <HistoryIcon />, path: '/admin/logs' },
+  ];
+
+  const psychologistNavItems = [
+    { label: 'Home', icon: <HomeIcon />, path: '/psychologist/dashboard' },
+    { label: 'Users', icon: <ReportIcon />, path: '/psychologist/users' },
+    { label: 'License', icon: <SettingsIcon />, path: '/psychologist/license' },
+  ];
+
+  let navItems = [];
+
+  if (role === 'AdminProfile') {
+    navItems = adminNavItems;
+  } else if (role === 'PsychologistProfile') {
+    navItems = psychologistNavItems;
+  }
 
   return (
     <Drawer
@@ -156,96 +182,27 @@ const Navbar = () => {
       </Box>
 
       <List sx={{ paddingTop: 0 }}>
-        {/* Home */}
-        <Tooltip title="Home" placement="right" arrow disableHoverListener={!collapsed}>
-          <ListItemButton
-            component={Link}
-            to="/admin/dashboard" // Admin's home route
-            sx={navItemStyle}
-          >
-            <ListItemIcon sx={iconStyle}>
-              <Home />
-            </ListItemIcon>
-            {!collapsed && <ListItemText primary="Home" sx={textStyle} />}
-          </ListItemButton>
-        </Tooltip>
-
-        {/* Records */}
-        <Tooltip title="Records" placement="right" arrow disableHoverListener={!collapsed}>
-          <ListItemButton
-            component={Link}
-            to="/admin/records" // Direct link without dropdown
-            sx={navItemStyle}
-          >
-            <ListItemIcon sx={iconStyle}>
-              <Report />
-            </ListItemIcon>
-            {!collapsed && <ListItemText primary="Records" sx={textStyle} />}
-          </ListItemButton>
-        </Tooltip>
-
-        {/* Reports */}
-        <Tooltip title="Reports" placement="right" arrow disableHoverListener={!collapsed}>
-          <ListItemButton
-            component={Link}
-            to="/admin/report"
-            sx={navItemStyle}
-          >
-            <ListItemIcon sx={iconStyle}>
-              <BarChart />
-            </ListItemIcon>
-            {!collapsed && <ListItemText primary="Reports" sx={textStyle} />}
-          </ListItemButton>
-        </Tooltip>
-
-        {/* Applications */}
-        <Tooltip title="Applications" placement="right" arrow disableHoverListener={!collapsed}>
-          <ListItemButton
-            component={Link}
-            to="/admin/applications"
-            sx={navItemStyle}
-          >
-            <ListItemIcon sx={iconStyle}>
-              <Settings />
-            </ListItemIcon>
-            {!collapsed && <ListItemText primary="Applications" sx={textStyle} />}
-          </ListItemButton>
-        </Tooltip>
-
-        {/* Emergency */}
-        <Tooltip title="Emergency" placement="right" arrow disableHoverListener={!collapsed}>
-          <ListItemButton
-            component={Link}
-            to="/admin/emergency"
-            sx={navItemStyle}
-          >
-            <ListItemIcon sx={iconStyle}>
-              <EmergencyIcon />
-            </ListItemIcon>
-            {!collapsed && <ListItemText primary="Emergency" sx={textStyle} />}
-          </ListItemButton>
-        </Tooltip>
-
-        {/* Logs */}
-        <Tooltip title="Logs" placement="right" arrow disableHoverListener={!collapsed}>
-          <ListItemButton
-            component={Link}
-            to="/admin/logs"
-            sx={navItemStyle}
-          >
-            <ListItemIcon sx={iconStyle}>
-              <History /> {/* More appropriate icon for Logs */}
-            </ListItemIcon>
-            {!collapsed && <ListItemText primary="Logs" sx={textStyle} />}
-          </ListItemButton>
-        </Tooltip>
+        {navItems.map((item, index) => (
+          <Tooltip key={index} title={item.label} placement="right" arrow disableHoverListener={!collapsed}>
+            <ListItemButton
+              component={Link}
+              to={item.path}
+              sx={navItemStyle}
+            >
+              <ListItemIcon sx={iconStyle}>
+                {item.icon}
+              </ListItemIcon>
+              {!collapsed && <ListItemText primary={item.label} sx={textStyle} />}
+            </ListItemButton>
+          </Tooltip>
+        ))}
 
         {/* Logout Button */}
         {token && (
           <Tooltip title="Logout" placement="right" arrow disableHoverListener={!collapsed}>
             <ListItemButton onClick={handleLogout} sx={navItemStyle}>
               <ListItemIcon sx={iconStyle}>
-                <Logout />
+                <LogoutIcon />
               </ListItemIcon>
               {!collapsed && <ListItemText primary="Logout" sx={textStyle} />}
             </ListItemButton>

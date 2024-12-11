@@ -319,15 +319,19 @@ exports.getLogs = async (req, res) => {
   }
 };
 
-
 exports.getAllSanityLevels = async (req, res, next) => {
   try {
-    // Fetch all SanityLevel documents and populate the associated user information
     const sanityLevels = await SanityLevel.find()
-      .populate('user', 'username email') // Populate user with selected fields
+      .populate('user', 'username email phoneNumber guardianPhoneNumber') // Populate user details
       .exec();
 
-    res.status(200).json({ sanityLevels });
+    // Filter out any sanityLevels where user is null (in case of orphaned records)
+    const validSanityLevels = sanityLevels.filter(sanity => sanity.user !== null);
+
+    // Optional: Log the count of valid and invalid sanity levels
+    console.log(`Fetched ${validSanityLevels.length} valid sanity levels out of ${sanityLevels.length}`);
+
+    res.status(200).json({ sanityLevels: validSanityLevels });
   } catch (error) {
     console.error('Error fetching sanity levels:', error);
     next(error);

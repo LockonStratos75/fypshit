@@ -82,6 +82,12 @@ const EmergencyPage = () => {
   // Handle confirming the alert action
   const handleAlertConfirm = async () => {
     try {
+      if (!selectedSanityLevel || !selectedSanityLevel.user) {
+        toast.error('Invalid user data.');
+        handleAlertClose();
+        return;
+      }
+
       const userId = selectedSanityLevel.user._id;
 
       // Send POST request to /crisis/check with userId
@@ -132,8 +138,8 @@ const EmergencyPage = () => {
                 /* Map through the sanity levels and display each in a table row */
                 sanityLevels.map((sanityLevel) => (
                   <TableRow key={sanityLevel._id}>
-                    <TableCell>{sanityLevel.user.username}</TableCell>
-                    <TableCell>{sanityLevel.user.email}</TableCell>
+                    <TableCell>{sanityLevel.user ? sanityLevel.user.username : 'Unknown'}</TableCell>
+                    <TableCell>{sanityLevel.user ? sanityLevel.user.email : 'Unknown'}</TableCell>
                     <TableCell>
                       {/* Sanity Level with color coding */}
                       <Typography
@@ -157,7 +163,8 @@ const EmergencyPage = () => {
                             disabled={
                               sanityLevel.sanityPercentage === undefined ||
                               sanityLevel.sanityPercentage === null ||
-                              sanityLevel.sanityPercentage >= 50
+                              sanityLevel.sanityPercentage >= 50 ||
+                              !sanityLevel.user
                             }
                           >
                             <Send />
@@ -179,7 +186,7 @@ const EmergencyPage = () => {
         <DialogContent>
           <Typography>
             Are you sure you want to send an alert to{' '}
-            <strong>{selectedSanityLevel?.user.username || 'this user'}</strong>?
+            <strong>{selectedSanityLevel?.user?.username || 'this user'}</strong>?
           </Typography>
         </DialogContent>
         <DialogActions>

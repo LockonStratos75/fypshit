@@ -51,6 +51,7 @@ exports.authenticateToken = async (req, res, next) => {
       return res.status(401).json({ message: 'User Not Found' });
     }
 
+    // If psychologist, ensure they are approved
     if (userType === 'PsychologistProfile' && user.status !== 'approved') {
       console.log('Psychologist Profile Not Approved');
       return res.status(403).json({ message: 'Your profile is not approved yet.' });

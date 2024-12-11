@@ -1,5 +1,3 @@
-// src/App.js
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -20,6 +18,8 @@ import PsychologistUserDetails from './components/pages/PsychologistUserDetails'
 import RecordsPage from './components/pages/RecordsPage'; // Existing Page
 import EmergencyPage from './components/pages/EmergencyPage'; // New Page
 import LogsPage from './components/pages/LogsPage'; // Existing Page
+import PsychologistLicense from './components/pages/PsychologistLicense'; // New Page for Viewing License
+import ApplicationStatusPage from './components/pages/ApplicationStatusPage';
 
 // Import Components
 import AdminDashboard from './components/Dashboard/AdminDashboard';
@@ -57,13 +57,13 @@ function AppContent() {
     <>
       {!shouldHideNavbar && <Navbar />}
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
-
-        {/* Authentication Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/psychologist/application-status" element={<ApplicationStatusPage />} />
 
-        {/* Profile Completion Route */}
+        {/* Protected Routes for Psychologists */}
         <Route
           path="/psychologist/profile"
           element={
@@ -72,8 +72,6 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
-        {/* Application Pending Route */}
         <Route
           path="/psychologist/application-pending"
           element={
@@ -82,8 +80,6 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
-        {/* Profile Rejected Route */}
         <Route
           path="/psychologist/profile-rejected"
           element={
@@ -92,28 +88,6 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
-        {/* Admin Applications Management Route */}
-        <Route
-          path="/admin/applications"
-          element={
-            <ProtectedRoute roles={['AdminProfile']}>
-              <AdminApplicationsPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Admin Dashboard */}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute roles={['AdminProfile']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Psychologist Dashboard */}
         <Route
           path="/psychologist/dashboard"
           element={
@@ -122,18 +96,6 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
-        {/* Report Generator (Admin Only) */}
-        <Route
-          path="/admin/report"
-          element={
-            <ProtectedRoute roles={['AdminProfile']}>
-              <ReportGenerator />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Users List (Psychologist Only) */}
         <Route
           path="/psychologist/users"
           element={
@@ -142,8 +104,6 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
-        {/* User Details (Psychologist Only) */}
         <Route
           path="/psychologist/user/:id"
           element={
@@ -152,8 +112,40 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/psychologist/license"
+          element={
+            <ProtectedRoute roles={['PsychologistProfile']}>
+              <PsychologistLicense />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* New Routes */}
+        {/* Protected Routes for Admins */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute roles={['AdminProfile']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/applications"
+          element={
+            <ProtectedRoute roles={['AdminProfile']}>
+              <AdminApplicationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/report"
+          element={
+            <ProtectedRoute roles={['AdminProfile']}>
+              <ReportGenerator />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin/records"
           element={

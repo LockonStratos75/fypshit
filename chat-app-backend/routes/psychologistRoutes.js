@@ -4,8 +4,6 @@ const express = require('express');
 const psychologistController = require('../controllers/psychologistController');
 const { body } = require('express-validator');
 const { validateRequest } = require('../middlewares/validateRequest');
-const multer = require('multer');
-const path = require('path');
 const { authenticateToken: authenticate } = require('../middlewares/authMiddleware');
 
 // Routers
@@ -75,38 +73,6 @@ authRouter.post(
 // Psychologist Profile Routes
 // ========================
 
-/**
- * @route   POST /psychologist/profile/complete
- * @desc    Complete or update psychologist profile
- * @access  Private (Authenticated Psychologist)
- * 
- * This route allows the psychologist to provide their specialization, 
- * yearsOfExperience, and phoneNumber. Once completed, the profile status remains 'pending' 
- * until admin approval. The psychologist can now be recognized as having a completed profile 
- * but still not have full access until the admin approves them.
- */
-profileRouter.post(
-  '/complete',
-  authenticate,
-  [
-    body('specialization')
-      .notEmpty()
-      .withMessage('Specialization is required.')
-      .isLength({ max: 100 })
-      .withMessage('Specialization cannot exceed 100 characters.'),
-    body('yearsOfExperience')
-      .optional()
-      .isInt({ min: 0, max: 100 })
-      .withMessage('Years of experience must be between 0 and 100.'),
-    body('phoneNumber')
-      .notEmpty()
-      .withMessage('Phone number is required.')
-      .matches(/^\+?[1-9]\d{1,14}$/)
-      .withMessage('Please enter a valid phone number in E.164 format.'),
-  ],
-  validateRequest,
-  psychologistController.completePsychologistProfile
-);
 
 /**
  * @route   GET /psychologist/profile/me

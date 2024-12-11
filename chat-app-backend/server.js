@@ -22,6 +22,7 @@ const path = require('path'); // Path module for handling file paths
 // 3. Import Routes
 // ========================
 const authRoutes = require('./routes/authRoutes');
+const psychologistAuthRoutes = require('./routes/psychologistAuthRoutes');
 const psychologistRoutes = require('./routes/psychologistRoutes'); // Combined Psychologist Routes
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const adminAuthRoutes = require('./routes/adminAuthRoutes'); // Public Admin Auth Routes
@@ -148,7 +149,7 @@ mongoose
 // ========================
 
 // Example: Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // ========================
 // 14. Routes Setup
@@ -162,6 +163,7 @@ app.use('/psychologist/auth', psychologistRoutes.authRouter);
 
 // Admin Public Authentication Routes (Login)
 app.use('/admin/auth', adminAuthRoutes); // Mount before authentication middleware
+
 
 // Apply Authentication Middleware to Protect Subsequent Routes
 app.use(authenticateToken);

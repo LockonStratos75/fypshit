@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import {jwtDecode} from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode'; // Correct default import
 import { toast } from 'react-toastify';
 
 const ProtectedRoute = ({ children, roles }) => {
@@ -19,33 +19,41 @@ const ProtectedRoute = ({ children, roles }) => {
           const decoded = jwtDecode(token);
           const currentTime = Date.now() / 1000;
 
+          // Check if token is expired
           if (decoded.exp < currentTime) {
             localStorage.removeItem('token');
             toast.error('Session expired. Please log in again.');
             setIsAuthorized(false);
-          } else if (roles && !roles.includes(decoded.userType)) {
-            toast.error('You do not have permission to access this page.');
-            setIsAuthorized(false);
-          } else if (decoded.userType === 'PsychologistProfile') {
-            // Check application status
-            if (decoded.status === 'pending') {
-              toast.info('Your application is pending approval.');
-              setIsAuthorized(false); // Redirect to application pending page
-            } else if (decoded.status === 'rejected') {
-              toast.error('Your application has been rejected.');
-              setIsAuthorized(false); // Redirect to profile rejected page
-            } else if (decoded.status === 'approved') {
-              setIsAuthorized(true);
-            } else {
-              // Handle other statuses if any
-              toast.error('Unknown profile status.');
-              setIsAuthorized(false);
-            }
           } else {
-            setIsAuthorized(true);
+            // Check for required roles
+            if (roles && !roles.includes(decoded.userType)) {
+              toast.error('You do not have permission to access this page.');
+              setIsAuthorized(false);
+            } else {
+              // Additional checks for PsychologistProfile
+              if (decoded.userType === 'PsychologistProfile') {
+                if (decoded.status === 'pending') {
+                  toast.info('Your application is pending approval.');
+                  setIsAuthorized(false); // Redirect to application pending page
+                } else if (decoded.status === 'rejected') {
+                  toast.error('Your application has been rejected.');
+                  setIsAuthorized(false); // Redirect to profile rejected page
+                } else if (decoded.status === 'approved') {
+                  setIsAuthorized(true);
+                } else {
+                  // Handle other statuses if any
+                  toast.error('Unknown profile status.');
+                  setIsAuthorized(false);
+                }
+              } else {
+                // For AdminProfile or other roles
+                setIsAuthorized(true);
+              }
+            }
           }
         } catch (error) {
           console.error('Error decoding token:', error);
+          toast.error('Invalid authentication token.');
           setIsAuthorized(false);
         }
       }
@@ -54,8 +62,16 @@ const ProtectedRoute = ({ children, roles }) => {
     checkAuthorization();
   }, [roles, token]);
 
-  if (isAuthorized === null) return null; // Render nothing until the auth check is complete
-  return isAuthorized ? children : <Navigate to="/" replace />;
+  if (isAuthorized === null) return null; // Optionally, show a loading indicator here
+
+  // Determine redirection based on userType and status
+  if (isAuthorized) {
+    return children;
+  } else {
+    // Redirect based on userType and status if needed
+    // For simplicity, redirect to home
+    return <Navigate to="/" replace />;
+  }
 };
 
 export default ProtectedRoute;

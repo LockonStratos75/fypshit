@@ -6,7 +6,7 @@ const bcrypt = require('bcrypt');
 const psychologistProfileSchema = new mongoose.Schema({
   psychologistId: {
     type: mongoose.Schema.Types.ObjectId,
-    default: mongoose.Types.ObjectId,
+    default: () => new mongoose.Types.ObjectId(), // Correct instantiation
     unique: true,
   },
   username: {
@@ -29,34 +29,30 @@ const psychologistProfileSchema = new mongoose.Schema({
     select: false, // Exclude password field by default
     minlength: [6, 'Password must be at least 6 characters'],
   },
-  // Additional Profile Data
   specialization: {
     type: String,
-    required: [true, 'Specialization is required.'],
     trim: true,
     maxlength: [100, 'Specialization cannot exceed 100 characters'],
+    // Removed required: true to make it optional during registration
   },
   yearsOfExperience: {
     type: Number,
     min: [0, 'Years of experience cannot be negative.'],
     max: [100, 'Years of experience seems unrealistic.'],
   },
-  // Contact Information
   phoneNumber: {
     type: String,
-    required: [true, 'Phone number is required.'],
     trim: true,
     match: [
       /^\+?[1-9]\d{1,14}$/,
       'Please enter a valid phone number in E.164 format.',
     ],
+    // Removed required: true to make it optional during registration
   },
-
-  // Application Status
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
-    default: 'pending',
+    default: 'approved',
   },
   createdAt: {
     type: Date,

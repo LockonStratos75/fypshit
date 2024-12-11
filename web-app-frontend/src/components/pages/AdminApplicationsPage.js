@@ -1,5 +1,3 @@
-// src/components/pages/AdminApplicationsPage.js
-
 import React, { useEffect, useState } from 'react';
 import {
   Container,
@@ -16,11 +14,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import api from '../../components/services/ApiService';
-import { Link } from 'react-router-dom';
 
 const AdminApplicationsPage = () => {
   const [applications, setApplications] = useState([]);
@@ -30,6 +27,7 @@ const AdminApplicationsPage = () => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
+  // Fetch pending applications
   useEffect(() => {
     const fetchApplications = async () => {
       setIsLoading(true);
@@ -38,7 +36,7 @@ const AdminApplicationsPage = () => {
         setApplications(response.data.pendingPsychologists || []);
       } catch (error) {
         console.error('Error fetching applications:', error);
-        toast.error('Failed to fetch applications');
+        toast.error('Failed to fetch applications. Please check the console for details.');
       } finally {
         setIsLoading(false);
       }
@@ -47,13 +45,13 @@ const AdminApplicationsPage = () => {
     fetchApplications();
   }, []);
 
+  // Approve Application
   const handleApprove = async (applicationId) => {
     setActionLoading(true);
     try {
       await api.post('/admin/psychologists/approve', { psychologistId: applicationId });
       toast.success('Psychologist approved successfully');
-      // Remove approved application from the list
-      setApplications(applications.filter(app => app._id !== applicationId));
+      setApplications((prev) => prev.filter((app) => app._id !== applicationId));
     } catch (error) {
       console.error('Error approving psychologist:', error);
       toast.error('Failed to approve psychologist');
@@ -62,21 +60,27 @@ const AdminApplicationsPage = () => {
     }
   };
 
+  // Reject Application
   const handleReject = (application) => {
     setSelectedApplication(application);
     setOpenDialog(true);
   };
 
   const confirmReject = async () => {
+    if (!rejectionReason) {
+      toast.error('Please enter a reason for rejection.');
+      return;
+    }
     setActionLoading(true);
     try {
-      await api.post('/admin/psychologists/reject', { psychologistId: selectedApplication._id, rejectionReason });
+      await api.post('/admin/psychologists/reject', {
+        psychologistId: selectedApplication._id,
+        rejectionReason,
+      });
       toast.success('Psychologist rejected successfully');
-      // Remove rejected application from the list
-      setApplications(applications.filter(app => app._id !== selectedApplication._id));
+      setApplications((prev) => prev.filter((app) => app._id !== selectedApplication._id));
       setOpenDialog(false);
       setRejectionReason('');
-      setSelectedApplication(null);
     } catch (error) {
       console.error('Error rejecting psychologist:', error);
       toast.error('Failed to reject psychologist');
@@ -110,45 +114,53 @@ const AdminApplicationsPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {applications.map((app) => (
-                <TableRow key={app._id}>
-                  <TableCell>{app.username}</TableCell>
-                  <TableCell>{app.email}</TableCell>
-                  <TableCell>{app.specialization || 'N/A'}</TableCell>
-                  <TableCell>{app.yearsOfExperience || 'N/A'}</TableCell>
-                  <TableCell>{app.phoneNumber}</TableCell>
-                  <TableCell>
-                    {app.licenseImageUrl ? (
-                      <a href={app.licenseImageUrl} target="_blank" rel="noopener noreferrer">
-                        View License
-                      </a>
-                    ) : (
-                      'N/A'
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="contained"
-                      color="success"
-                      size="small"
-                      sx={{ mr: 1 }}
-                      onClick={() => handleApprove(app._id)}
-                      disabled={actionLoading}
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      size="small"
-                      onClick={() => handleReject(app)}
-                      disabled={actionLoading}
-                    >
-                      Reject
-                    </Button>
+              {applications.length > 0 ? (
+                applications.map((app) => (
+                  <TableRow key={app._id}>
+                    <TableCell>{app.username}</TableCell>
+                    <TableCell>{app.email}</TableCell>
+                    <TableCell>{app.specialization || 'N/A'}</TableCell>
+                    <TableCell>{app.yearsOfExperience || 'N/A'}</TableCell>
+                    <TableCell>{app.phoneNumber}</TableCell>
+                    <TableCell>
+                      {app.licenseImageUrl ? (
+                        <a href={app.licenseImageUrl} target="_blank" rel="noopener noreferrer">
+                          View License
+                        </a>
+                      ) : (
+                        'N/A'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="contained"
+                        color="success"
+                        size="small"
+                        sx={{ mr: 1 }}
+                        onClick={() => handleApprove(app._id)}
+                        disabled={actionLoading}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        size="small"
+                        onClick={() => handleReject(app)}
+                        disabled={actionLoading}
+                      >
+                        Reject
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    There are currently no psychologist applications to review.
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </Box>
@@ -158,7 +170,7 @@ const AdminApplicationsPage = () => {
         </Typography>
       )}
 
-      {/* Rejection Reason Dialog */}
+      {/* Rejection Dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Reject Psychologist Application</DialogTitle>
         <DialogContent>
@@ -177,7 +189,11 @@ const AdminApplicationsPage = () => {
           <Button onClick={() => setOpenDialog(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={confirmReject} color="error" disabled={!rejectionReason || actionLoading}>
+          <Button
+            onClick={confirmReject}
+            color="error"
+            disabled={!rejectionReason || actionLoading}
+          >
             {actionLoading ? <CircularProgress size={24} color="inherit" /> : 'Reject'}
           </Button>
         </DialogActions>
