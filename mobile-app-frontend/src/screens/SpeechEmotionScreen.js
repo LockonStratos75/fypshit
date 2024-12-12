@@ -88,6 +88,16 @@ export const SpeechEmotionScreen = ({ navigation }) => {
         console.log('Recording stopped and stored at', uri);
 
         try {
+            // Check file size to ensure it's not empty
+            const fileInfo = await FileSystem.getInfoAsync(uri);
+            console.log('File info:', fileInfo);
+
+            if (!fileInfo.exists || fileInfo.size < 4000) { // Adjust size threshold based on expected audio
+                setError('Recording is empty. Please try again.');
+                setLoading(false); // Stop loading
+                return;
+            }
+
             console.log('Calling query function with URI:', uri);
             const response = await query(uri);
             console.log('Response from query:', response);
@@ -119,6 +129,7 @@ export const SpeechEmotionScreen = ({ navigation }) => {
             setLoading(false); // Stop loading after processing
         }
     };
+
 
     const processResponse = (response) => {
         if (!response || !response.emotions || !response.highestEmotion) {
