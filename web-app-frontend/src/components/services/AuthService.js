@@ -2,27 +2,28 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://192.168.1.10:5000'; // Adjust if needed
+const API_BASE_URL = 'http://192.168.115.142:5000'; // Use this format, no localhost here
 
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Define public routes that do not require Authorization header
 const PUBLIC_ROUTES = [
   '/admin/auth/login',
+  '/admin/auth/register',
   '/psychologist/auth/login',
-  '/psychologist/auth/register', // Added register route
+  '/psychologist/auth/register',
 ];
 
-/**
- * Request Interceptor
- * Adds Authorization header to requests except for public routes
- */
+// Request Interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    const isPublicRoute = PUBLIC_ROUTES.some(route => config.url.startsWith(route));
+    const isPublicRoute = PUBLIC_ROUTES.some(route => 
+      config.url.endsWith(route) || config.url.includes(route)
+    );
+
+    // Only add token for non-public routes
     if (token && !isPublicRoute) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -33,21 +34,23 @@ api.interceptors.request.use(
   }
 );
 
-// AuthService functions
 const AuthService = {
-  // Admin Login
-  loginAdmin: (email, password) => {
-    return api.post('/admin/auth/login', { email, password });
+  // Modify registration method to explicitly remove Authorization header
+  registerPsychologist: (psychologistData) => {
+    return api.post('/psychologist/auth/register', psychologistData, {
+      headers: {
+        'Content-Type': 'application/json',
+        // Explicitly remove Authorization header
+        'Authorization': undefined
+      }
+    });
   },
 
-  // Psychologist Login
+  loginAdmin: (email, password) => {
+    return api.post('/admin/auth/login', { email, password }); // No extra URL parts
+  },
   loginPsychologist: (email, password) => {
     return api.post('/psychologist/auth/login', { email, password });
-  },
-
-  // Psychologist Registration
-  registerPsychologist: (psychologistData) => {
-    return api.post('/psychologist/auth/register', psychologistData);
   },
 
   // Complete Psychologist Profile
@@ -69,7 +72,15 @@ const AuthService = {
     return api.get('/analytics/user-behavior-analytics');
   },
 
-  // Add other auth-related functions as needed
+  changePassword: async (newPassword) => {
+    const token = localStorage.getItem('token'); // Assume the user is authenticated and has a token
+    return await axios.put(`${API_BASE_URL}/auth/change-password`, { password: newPassword }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
 };
+
 
 export default AuthService;

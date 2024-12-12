@@ -1,6 +1,4 @@
 // backend/controllers/adminController.js
-
-const mongoose = require('mongoose');
 const User = require('../models/User');
 const PsychologistProfile = require('../models/PsychologistProfile');
 const AdminProfile = require('../models/AdminProfile');
@@ -32,13 +30,13 @@ exports.adminLogin = async (req, res) => {
     // Check if admin exists
     const admin = await AdminProfile.findOne({ email }).select('+password');
     if (!admin) {
-      return res.status(400).json({ message: 'Invalid credentials.' });
+      return res.status(400).json({ message: 'Invalid credentials. Hello ' });
     }
 
     // Check if password matches
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials.' });
+      return res.status(400).json({ message: 'Invalid credentials. Maa ki chut' });
     }
 
     // Generate JWT token with correct payload
@@ -200,110 +198,6 @@ exports.getAllPsychologists = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
-
-/**
- * Review pending psychologist applications.
- */
-exports.reviewPsychologistRegistrations = async (req, res) => {
-  try {
-    const pendingProfiles = await PsychologistProfile.find({ status: 'pending' });
-    res.status(200).json({ pendingProfiles });
-  } catch (err) {
-    console.error('Error fetching pending psychologist profiles:', err.message);
-    res.status(500).json({ message: 'Server Error' });
-  }
-};
-
-/**
- * Approve a psychologist application.
- */
-exports.approvePsychologist = async (req, res) => {
-  const { psychologistId } = req.body; // Assuming psychologistId is provided in the request body
-
-  if (!psychologistId) {
-    return res.status(400).json({ message: 'Psychologist ID is required.' });
-  }
-
-  // Validate psychologistId as a valid ObjectId
-  if (!mongoose.Types.ObjectId.isValid(psychologistId)) {
-    return res.status(400).json({ message: 'Invalid Psychologist ID format.' });
-  }
-
-  try {
-    const profile = await PsychologistProfile.findById(psychologistId);
-
-    if (!profile) {
-      return res.status(404).json({ message: 'Psychologist profile not found.' });
-    }
-
-    if (profile.status !== 'pending') {
-      return res.status(400).json({ message: `Cannot approve a profile with status '${profile.status}'.` });
-    }
-
-    // Update profile status
-    profile.status = 'approved';
-    await profile.save();
-
-    // Log the action
-    await Log.create({
-      userId: req.user.id, // Corrected field
-      userType: 'AdminProfile',
-      action: 'Approve Psychologist',
-      details: `Approved psychologist with ID: ${psychologistId}`,
-    });
-
-    res.status(200).json({ message: 'Psychologist approved successfully.', profile });
-  } catch (err) {
-    console.error('Error approving psychologist:', err.message);
-    res.status(500).json({ message: 'Server Error' });
-  }
-};
-
-/**
- * Reject a psychologist application.
- */
-exports.rejectPsychologist = async (req, res) => {
-  const { psychologistId } = req.body; // Assuming psychologistId is provided in the request body
-
-  if (!psychologistId) {
-    return res.status(400).json({ message: 'Psychologist ID is required.' });
-  }
-
-  // Validate psychologistId as a valid ObjectId
-  if (!mongoose.Types.ObjectId.isValid(psychologistId)) {
-    return res.status(400).json({ message: 'Invalid Psychologist ID format.' });
-  }
-
-  try {
-    const profile = await PsychologistProfile.findById(psychologistId);
-
-    if (!profile) {
-      return res.status(404).json({ message: 'Psychologist profile not found.' });
-    }
-
-    if (profile.status !== 'pending') {
-      return res.status(400).json({ message: `Cannot reject a profile with status '${profile.status}'.` });
-    }
-
-    // Update profile status
-    profile.status = 'rejected';
-    await profile.save();
-
-    // Log the action
-    await Log.create({
-      userId: req.user.id, // Corrected field
-      userType: 'AdminProfile',
-      action: 'Reject Psychologist',
-      details: `Rejected psychologist with ID: ${psychologistId}`,
-    });
-
-    res.status(200).json({ message: 'Psychologist rejected successfully.', profile });
-  } catch (err) {
-    console.error('Error rejecting psychologist:', err.message);
-    res.status(500).json({ message: 'Server Error' });
-  }
-};
-
 /**
  * Fetch all logs.
  */

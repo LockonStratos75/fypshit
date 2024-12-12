@@ -11,7 +11,7 @@ import {
   FormControlLabel,
   Card,
   CardContent,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -19,7 +19,7 @@ import * as yup from 'yup';
 import AuthService from '../../components/services/AuthService';
 import { toast } from 'react-toastify';
 import logo from '../../assets/Eunoia.png';
-import {jwtDecode} from 'jwt-decode'; // Correct import for jwt-decode
+import { jwtDecode } from 'jwt-decode'; // Correct import for jwt-decode
 
 const schema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -59,18 +59,7 @@ export default function LoginPage() {
         if (userType === 'AdminProfile') {
           navigate('/admin/dashboard');
         } else if (userType === 'PsychologistProfile') {
-          if (decoded.status === 'approved') {
-            navigate('/psychologist/dashboard');
-          } else if (decoded.status === 'pending') {
-            navigate('/psychologist/application-pending');
-          } else if (decoded.status === 'rejected') {
-            navigate('/psychologist/profile-rejected');
-          } else {
-            // Handle other statuses if any
-            toast.error('Unknown profile status');
-            localStorage.removeItem('token'); // Remove invalid token
-            navigate('/');
-          }
+          navigate('/psychologist/dashboard');
         } else {
           // If any other type comes up, it's unexpected
           toast.error('Unknown user type');
@@ -177,10 +166,10 @@ export default function LoginPage() {
               fullWidth
               disabled={isLoading}
               sx={{
-                textTransform: 'none', 
-                fontSize: '1rem', 
-                fontWeight: 500, 
-                borderRadius: '30px', 
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 500,
+                borderRadius: '30px',
                 py: 1.5,
                 fontFamily: 'Poppins'
               }}

@@ -22,8 +22,8 @@ const path = require('path'); // Path module for handling file paths
 // 3. Import Routes
 // ========================
 const authRoutes = require('./routes/authRoutes');
-const psychologistAuthRoutes = require('./routes/psychologistAuthRoutes');
-const psychologistRoutes = require('./routes/psychologistRoutes'); // Combined Psychologist Routes
+const psychologistAuthRoutes = require('./routes/psychologistAuthRoutes'); // Combined Psychologist Routes
+const psychologistRoutes = require('./routes/psychologistRoutes'); // Protected Psychologist Routes
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const adminAuthRoutes = require('./routes/adminAuthRoutes'); // Public Admin Auth Routes
 const adminRoutes = require('./routes/adminRoutes'); // Protected Admin Routes
@@ -72,7 +72,7 @@ app.use(morgan('combined'));
 // Define allowed origins based on environment variables for flexibility
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : ['http://192.168.1.10:3000', 'http://localhost:3000', 'http://192.168.100.92:3000'];
+  : ['http://192.168.115.142:3000', 'http://localhost:3000', 'http://192.168.100.92:3000'];
 
 // Configure CORS options
 const corsOptions = {
@@ -144,26 +144,10 @@ mongoose
     process.exit(1); // Exit the application if unable to connect to MongoDB
   });
 
-// ========================
-// 13. Serve Static Files (if needed)
-// ========================
-
-// Example: Serve uploaded files
-app.use('/public', express.static(path.join(__dirname, 'public')));
-
-// ========================
-// 14. Routes Setup
-// ========================
-
 // Public Routes (do not require authentication)
 app.use('/auth', authRoutes);
-
-// Psychologist Public Authentication Routes (Registration & Login)
-app.use('/psychologist/auth', psychologistRoutes.authRouter);
-
-// Admin Public Authentication Routes (Login)
-app.use('/admin/auth', adminAuthRoutes); // Mount before authentication middleware
-
+app.use('/psychologist/auth', psychologistAuthRoutes); // Place this BEFORE authenticateToken
+app.use('/admin/auth', adminAuthRoutes);
 
 // Apply Authentication Middleware to Protect Subsequent Routes
 app.use(authenticateToken);
@@ -183,9 +167,7 @@ app.use('/sanity', sanityLevelRoutes);
 app.use('/admin', adminRoutes);
 app.use('/report', reportRoutes);
 app.use('/crisis', crisisRoutes);
-
-// Psychologist Protected Profile Routes (Profile Completion and Retrieval)
-app.use('/psychologist/profile', psychologistRoutes.profileRouter);
+app.use('/psychologist', psychologistRoutes);
 
 // ========================
 // 15. Error Handling Middleware

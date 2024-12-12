@@ -20,8 +20,7 @@ import {
   Logout as LogoutIcon,
   Emergency as EmergencyIcon,
   BarChart as BarChartIcon,
-  History as HistoryIcon, 
-  Settings as SettingsIcon, // More appropriate icon for Logs
+  History as HistoryIcon // More appropriate icon for Logs
 } from '@mui/icons-material';
 import logo from '../../assets/Eunoia.png';
 import { toast } from 'react-toastify';
@@ -106,15 +105,13 @@ const Navbar = () => {
     { label: 'Home', icon: <HomeIcon />, path: '/admin/dashboard' },
     { label: 'Records', icon: <ReportIcon />, path: '/admin/records' },
     { label: 'Reports', icon: <BarChartIcon />, path: '/admin/report' },
-    { label: 'Applications', icon: <SettingsIcon />, path: '/admin/applications' },
-    { label: 'Emergency', icon: <EmergencyIcon />, path: '/admin/emergency' },
+    { label: 'Alerts', icon: <EmergencyIcon />, path: '/admin/emergency' },
     { label: 'Logs', icon: <HistoryIcon />, path: '/admin/logs' },
   ];
 
   const psychologistNavItems = [
     { label: 'Home', icon: <HomeIcon />, path: '/psychologist/dashboard' },
     { label: 'Users', icon: <ReportIcon />, path: '/psychologist/users' },
-    { label: 'License', icon: <SettingsIcon />, path: '/psychologist/license' },
   ];
 
   let navItems = [];

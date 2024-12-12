@@ -1,3 +1,5 @@
+// App.js
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -10,16 +12,14 @@ import LoginPage from './components/pages/LoginPage';
 import SignupPage from './components/pages/SignupPage';
 import NotFound from './components/pages/NotFound';
 import ProfilePage from './components/pages/ProfilePage';
-import ApplicationPendingPage from './components/pages/ApplicationPendingPage';
-import ProfileRejectedPage from './components/pages/ProfileRejectedPage';
-import AdminApplicationsPage from './components/pages/AdminApplicationsPage';
 import UsersList from './components/pages/UsersList';
 import PsychologistUserDetails from './components/pages/PsychologistUserDetails';
 import RecordsPage from './components/pages/RecordsPage'; // Existing Page
 import EmergencyPage from './components/pages/EmergencyPage'; // New Page
+import PsychologistEmergencyPage from './components/pages/psychologistEmergencyPage'; // New Psychologist Page
 import LogsPage from './components/pages/LogsPage'; // Existing Page
-import PsychologistLicense from './components/pages/PsychologistLicense'; // New Page for Viewing License
-import ApplicationStatusPage from './components/pages/ApplicationStatusPage';
+import ForgotPasswordPage from './components/pages/forgotPassword';
+import AssessmentsPage from './components/pages/AssessmentsPage';
 
 // Import Components
 import AdminDashboard from './components/Dashboard/AdminDashboard';
@@ -61,7 +61,7 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/psychologist/application-status" element={<ApplicationStatusPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         {/* Protected Routes for Psychologists */}
         <Route
@@ -71,23 +71,7 @@ function AppContent() {
               <ProfilePage />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/psychologist/application-pending"
-          element={
-            <ProtectedRoute roles={['PsychologistProfile']}>
-              <ApplicationPendingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/psychologist/profile-rejected"
-          element={
-            <ProtectedRoute roles={['PsychologistProfile']}>
-              <ProfileRejectedPage />
-            </ProtectedRoute>
-          }
-        />
+        />        
         <Route
           path="/psychologist/dashboard"
           element={
@@ -95,6 +79,13 @@ function AppContent() {
               <PsychologistDashboard />
             </ProtectedRoute>
           }
+        />
+        <Route 
+        path="/psychologist/assessments" 
+        element={ <ProtectedRoute roles={['PsychologistProfile']}>
+          <AssessmentsPage />
+          </ProtectedRoute>
+          } 
         />
         <Route
           path="/psychologist/users"
@@ -113,10 +104,10 @@ function AppContent() {
           }
         />
         <Route
-          path="/psychologist/license"
+          path="/psychologist/emergency"
           element={
             <ProtectedRoute roles={['PsychologistProfile']}>
-              <PsychologistLicense />
+              <PsychologistEmergencyPage />
             </ProtectedRoute>
           }
         />
@@ -127,14 +118,6 @@ function AppContent() {
           element={
             <ProtectedRoute roles={['AdminProfile']}>
               <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/applications"
-          element={
-            <ProtectedRoute roles={['AdminProfile']}>
-              <AdminApplicationsPage />
             </ProtectedRoute>
           }
         />

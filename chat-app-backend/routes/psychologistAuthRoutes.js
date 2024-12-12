@@ -5,14 +5,14 @@ const psychologistController = require('../controllers/psychologistController');
 const { body } = require('express-validator');
 const { validateRequest } = require('../middlewares/validateRequest');
 
-const authRouter = express.Router();
+const router = express.Router();
 
 /**
  * @route   POST /psychologist/auth/register
  * @desc    Register a new psychologist with complete profile
  * @access  Public
  */
-authRouter.post(
+router.post(
   '/register',
   [
     body('username')
@@ -43,12 +43,19 @@ authRouter.post(
   psychologistController.registerPsychologist
 );
 
+router.options('/register', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
+  res.status(204).json({});
+});
+
 /**
  * @route   POST /psychologist/auth/login
  * @desc    Login psychologist and return JWT token
  * @access  Public
  */
-authRouter.post(
+router.post(
   '/login',
   [
     body('email')
@@ -63,4 +70,4 @@ authRouter.post(
   psychologistController.loginPsychologist
 );
 
-module.exports = { authRouter };
+module.exports = router;

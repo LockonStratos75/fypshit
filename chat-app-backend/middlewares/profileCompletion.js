@@ -9,10 +9,6 @@ exports.checkProfileCompletion = (req, res, next) => {
     if (!req.user.profileCompleted && !req.originalUrl.includes('/profiles/complete')) {
       return res.status(403).json({ message: 'Please complete your profile to access this resource.' });
     }
-  } else if (req.userType === 'PsychologistProfile') {
-    if (req.user.status !== 'approved') {
-      return res.status(403).json({ message: 'Your profile is not approved yet.' });
-    }
   }
   // For AdminProfile or if profile conditions are met, proceed
   next();

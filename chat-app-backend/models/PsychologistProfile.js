@@ -49,11 +49,6 @@ const psychologistProfileSchema = new mongoose.Schema({
     ],
     // Removed required: true to make it optional during registration
   },
-  status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'approved',
-  },
   createdAt: {
     type: Date,
     default: Date.now,

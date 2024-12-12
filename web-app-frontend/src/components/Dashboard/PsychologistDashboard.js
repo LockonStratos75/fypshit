@@ -1,7 +1,7 @@
 // src/components/Dashboard/PsychologistDashboard.js
 
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Grid,Box, Paper, List, ListItem, ListItemText, Button } from '@mui/material';
+import { Container, Typography, Grid, Box, Paper, List, ListItem, ListItemText, Button, Tooltip } from '@mui/material';
 import { toast } from 'react-toastify';
 import api from '../../components/services/ApiService';
 import { Link } from 'react-router-dom';
@@ -17,9 +17,9 @@ const PsychologistDashboard = () => {
     const fetchPsychologistData = async () => {
       try {
         const [assessmentsRes, sanityRes, sessionsRes] = await Promise.all([
-          api.get('/assessments/total'),     // Endpoint for total assessments
-          api.get('/sanity'),                // Endpoint for average sanity level
-          api.get('/sessions/recent'),       // Endpoint for recent sessions
+          api.get('/assessments/total'),
+          api.get('/sanity'),
+          api.get('/sessions/recent'),
         ]);
 
         setStats({
@@ -40,62 +40,65 @@ const PsychologistDashboard = () => {
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#004080' }}>
         Psychologist Dashboard
       </Typography>
+      <Typography variant="subtitle1" sx={{ mb: 4, color: '#555' }}>
+        Stay updated with your assessments and sessions.
+      </Typography>
       <Grid container spacing={3}>
         {/* Total Assessments */}
         <Grid item xs={12} md={4}>
-          <Paper 
-            elevation={3} 
-            sx={{ p: 3, borderRadius: '8px', textAlign: 'center', backgroundColor: '#f9f9f9' }}
-          >
-            <Typography variant="h6" sx={{ color: '#5b3586', fontWeight: 600 }}>
-              Total Assessments
-            </Typography>
-            <Typography variant="h3" sx={{ color: '#004080', fontWeight: 700 }}>
-              {stats.totalAssessments}
-            </Typography>
-          </Paper>
+          <Tooltip title="Total number of assessments completed" arrow>
+            <Paper elevation={3} sx={{ p: 3, borderRadius: '8px', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
+              <Typography variant="h6" sx={{ color: '#5b3586', fontWeight: 600 }}>
+                Total Assessments
+              </Typography>
+              <Typography variant="h3" sx={{ color: '#004080', fontWeight: 700 }}>
+                {stats.totalAssessments}
+              </Typography>
+            </Paper>
+          </Tooltip>
         </Grid>
 
         {/* Average Sanity Level */}
         <Grid item xs={12} md={4}>
-          <Paper 
-            elevation={3} 
-            sx={{ p: 3, borderRadius: '8px', textAlign: 'center', backgroundColor: '#f9f9f9' }}
-          >
-            <Typography variant="h6" sx={{ color: '#5b3586', fontWeight: 600 }}>
-              Average Sanity Level
-            </Typography>
-            <Typography variant="h3" sx={{ color: '#004080', fontWeight: 700 }}>
-              {stats.averageSanityLevel}%
-            </Typography>
-          </Paper>
+          <Tooltip title="Average sanity level of your clients" arrow>
+            <Paper elevation={3} sx={{ p: 3, borderRadius: '8px', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
+              <Typography variant="h6" sx={{ color: '#5b3586', fontWeight: 600 }}>
+                Average Sanity Level
+              </Typography>
+              <Typography variant="h3" sx={{ color: '#004080', fontWeight: 700 }}>
+                {stats.averageSanityLevel}%
+              </Typography>
+            </Paper>
+          </Tooltip>
         </Grid>
 
         {/* Latest Sessions */}
         <Grid item xs={12} md={4}>
-          <Paper 
-            elevation={3} 
-            sx={{ p: 3, borderRadius: '8px', backgroundColor: '#f9f9f9' }}
-          >
-            <Typography variant="h6" sx={{ color: '#5b3586', fontWeight: 600, textAlign: 'center', mb: 2 }}>
-              Latest Sessions
-            </Typography>
-            {stats.latestSessions.length > 0 ? (
-              <List dense>
-                {stats.latestSessions.map((session) => (
-                  <ListItem key={session._id} disableGutters>
-                    <ListItemText 
-                      primary={`Session ID: ${session._id}`} 
-                      primaryTypographyProps={{ fontSize: '0.9rem', color: '#004080' }} 
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            ) : (
-              <Typography variant="body2" sx={{ textAlign: 'center', color: '#555' }}>No recent sessions.</Typography>
-            )}
-          </Paper>
-        </Grid>
+  <Paper elevation={3} sx={{ p: 3, borderRadius: '8px', backgroundColor: '#e0e0e0' }}> {/* Darker Background */}
+    <Typography variant="h6" sx={{ color: '#5b3586', fontWeight: 600, textAlign: 'center', mb: 2 }}>
+      Latest Sessions
+    </Typography>
+    {stats.latestSessions.length > 0 ? (
+      <List dense>
+        {stats.latestSessions.map((session) => (
+          <ListItem key={session._id} disableGutters>
+            <ListItemText
+              primary={`Session ID: ${session._id}`}
+              primaryTypographyProps={{
+                fontSize: '0.9rem',
+                sx: { color: '#000000' } // Darker text color for better visibility
+              }}
+            />
+          </ListItem>
+        ))}
+      </List>
+    ) : (
+      <Typography variant="body2" sx={{ textAlign: 'center', color: '#800' }}>
+        No recent sessions.
+      </Typography>
+    )}
+  </Paper>
+</Grid>
       </Grid>
 
       {/* Additional Links */}
@@ -109,7 +112,7 @@ const PsychologistDashboard = () => {
               component={Link}
               to="/psychologist/users"
               fullWidth
-              sx={{ borderRadius: '30px', py: 2 }}
+              sx={{ borderRadius: '30px', py: 2, '&:hover': { backgroundColor: '#003366' } }}
             >
               View Users
             </Button>
@@ -123,7 +126,7 @@ const PsychologistDashboard = () => {
               component={Link}
               to="/psychologist/alerts"
               fullWidth
-              sx={{ borderRadius: '30px', py: 2 }}
+              sx={{ borderRadius: '30px', py: 2, '&:hover': { backgroundColor: '#ab003c' } }}
             >
               Generate Alerts
             </Button>

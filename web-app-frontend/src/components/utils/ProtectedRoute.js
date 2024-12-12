@@ -29,29 +29,13 @@ const ProtectedRoute = ({ children, roles }) => {
             if (roles && !roles.includes(decoded.userType)) {
               toast.error('You do not have permission to access this page.');
               setIsAuthorized(false);
-            } else {
-              // Additional checks for PsychologistProfile
-              if (decoded.userType === 'PsychologistProfile') {
-                if (decoded.status === 'pending') {
-                  toast.info('Your application is pending approval.');
-                  setIsAuthorized(false); // Redirect to application pending page
-                } else if (decoded.status === 'rejected') {
-                  toast.error('Your application has been rejected.');
-                  setIsAuthorized(false); // Redirect to profile rejected page
-                } else if (decoded.status === 'approved') {
-                  setIsAuthorized(true);
-                } else {
-                  // Handle other statuses if any
-                  toast.error('Unknown profile status.');
-                  setIsAuthorized(false);
-                }
-              } else {
+            }  else {
                 // For AdminProfile or other roles
                 setIsAuthorized(true);
               }
             }
           }
-        } catch (error) {
+           catch (error) {
           console.error('Error decoding token:', error);
           toast.error('Invalid authentication token.');
           setIsAuthorized(false);

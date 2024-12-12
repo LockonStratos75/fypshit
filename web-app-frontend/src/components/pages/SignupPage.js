@@ -74,7 +74,7 @@ export default function SignupPage() {
         localStorage.setItem('token', response.data.token);
         toast.success(response.data.message || 'Signup successful');
         // Redirect to application status page
-        navigate('/psychologist/application-status');
+        navigate('/psychologist/dashboard/');
       }
     } catch (error) {
       console.error('Signup error:', error);

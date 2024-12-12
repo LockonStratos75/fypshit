@@ -1,5 +1,3 @@
-// backend/middlewares/logMiddleware.js
-
 const fs = require('fs');
 const path = require('path');
 
@@ -12,13 +10,24 @@ const logAction = (req, res, next) => {
     fs.mkdirSync(path.join(__dirname, '../logs'));
   }
 
-  const logEntry = `${new Date().toISOString()} - ${req.user.email} - ${req.method} ${req.originalUrl}\n`;
+  // Get user identifier safely
+  const userIdentifier = req.user 
+    ? req.user.email || req.user.id || 'unknown-user'
+    : 'unauthenticated';
 
-  fs.appendFile(logFilePath, logEntry, (err) => {
-    if (err) {
-      console.error('Logging Error:', err);
-    }
-  });
+  // Create log entry with more robust error handling
+  const logEntry = `${new Date().toISOString()} - ${userIdentifier} - ${req.method} ${req.originalUrl}\n`;
+
+  // Use try-catch for additional error handling
+  try {
+    fs.appendFile(logFilePath, logEntry, (err) => {
+      if (err) {
+        console.error('Logging Error:', err);
+      }
+    });
+  } catch (error) {
+    console.error('Failed to write log entry:', error);
+  }
 
   next();
 };

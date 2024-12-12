@@ -97,43 +97,6 @@ router.put(
 );
 
 /**
- * @route   GET /admin/psychologists/pending
- * @desc    Review pending psychologist applications
- * @access  Private (Admin)
- */
-router.get('/psychologists/pending', adminController.reviewPsychologistRegistrations);
-
-/**
- * @route   POST /admin/psychologists/approve
- * @desc    Approve a psychologist application
- * @access  Private (Admin)
- */
-router.post(
-  '/psychologists/approve',
-  [
-    body('psychologistId').notEmpty().withMessage('Psychologist ID is required.').isMongoId().withMessage('Invalid Psychologist ID format.'),
-  ],
-  validateRequest,
-  adminController.approvePsychologist
-);
-
-/**
- * @route   POST /admin/psychologists/reject
- * @desc    Reject a psychologist application
- * @access  Private (Admin)
- */
-router.post(
-  '/psychologists/reject',
-  [
-    body('psychologistId').notEmpty().withMessage('Psychologist ID is required.').isMongoId().withMessage('Invalid Psychologist ID format.'),
-    // Optionally add a rejection reason
-    // body('rejectionReason').optional().isString().withMessage('Rejection reason must be a string.'),
-  ],
-  validateRequest,
-  adminController.rejectPsychologist
-);
-
-/**
  * @route   GET /admin/logs
  * @desc    Fetch all logs
  * @access  Private (Admin)

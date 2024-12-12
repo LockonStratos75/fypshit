@@ -25,8 +25,9 @@ const UsersList = () => {
     const fetchUsers = async () => {
       setIsLoading(true);
       try {
-        const response = await api.get('/admin/users'); // Ensure this endpoint exists and is accessible by Psychologists
+        const response = await api.get('/admin/users');
         setUsers(response.data.users || []);
+
       } catch (error) {
         console.error('Error fetching users:', error);
         toast.error('Failed to fetch users');
@@ -57,7 +58,6 @@ const UsersList = () => {
                 <TableCell>Email</TableCell>
                 <TableCell>Age</TableCell>
                 <TableCell>Location</TableCell>
-                <TableCell>Sanity Level</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -68,7 +68,6 @@ const UsersList = () => {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.age || 'N/A'}</TableCell>
                   <TableCell>{user.location || 'N/A'}</TableCell>
-                  <TableCell>{user.sanityPercentage || 'N/A'}%</TableCell>
                   <TableCell>
                     <Button
                       variant="contained"

@@ -17,7 +17,7 @@ exports.getSystemMetrics = async (req, res, next) => {
     const totalUsers = await User.countDocuments({});
 
     // Total approved psychologists
-    const totalPsychologists = await PsychologistProfile.countDocuments({ status: 'approved' });
+    const totalPsychologists = await PsychologistProfile.countDocuments();
 
     // Average sanity level
     const sanityLevels = await SanityLevel.find({});
