@@ -11,4 +11,9 @@ const monitoringAlertSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+// Indexes for optimization
+monitoringAlertSchema.index({ userId: 1, alertType: 1 });
+monitoringAlertSchema.index({ status: 1 });
+monitoringAlertSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('MonitoringAlert', monitoringAlertSchema);

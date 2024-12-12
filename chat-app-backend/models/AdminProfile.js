@@ -33,4 +33,7 @@
     },
   });
 
+  adminProfileSchema.index({ email: 1 });
+adminProfileSchema.index({ username: 1 });
+
   module.exports = mongoose.model('AdminProfile', adminProfileSchema);

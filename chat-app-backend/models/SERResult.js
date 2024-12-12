@@ -8,4 +8,8 @@ const serResultSchema = new mongoose.Schema({
     emotions: [{ label: String, score: Number, percentage: String }],
 });
 
+// Indexes for optimization
+serResultSchema.index({ userId: 1 });
+serResultSchema.index({ date: -1 });
+
 module.exports = mongoose.model('SERResult', serResultSchema);

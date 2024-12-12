@@ -30,5 +30,7 @@ const logSchema = new mongoose.Schema({
 
 // Index for faster queries on userId and userType
 logSchema.index({ userId: 1, userType: 1 });
+logSchema.index({ timestamp: -1 });
+logSchema.index({ action: 1 });
 
 module.exports = mongoose.model('Log', logSchema);

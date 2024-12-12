@@ -71,6 +71,13 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+userSchema.index({ email: 1 });
+userSchema.index({ username: 1 });
+userSchema.index({ phoneNumber: 1 });
+userSchema.index({ location: 1 });
+userSchema.index({ age: 1 });
+
+
 // Password encryption before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {

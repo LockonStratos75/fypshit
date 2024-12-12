@@ -55,6 +55,10 @@ const psychologistProfileSchema = new mongoose.Schema({
   },
 });
 
+psychologistProfileSchema.index({ email: 1 });
+psychologistProfileSchema.index({ username: 1 });
+psychologistProfileSchema.index({ specialization: 1 });
+
 // Password encryption before saving
 psychologistProfileSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {

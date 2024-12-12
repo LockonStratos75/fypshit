@@ -1,8 +1,6 @@
-// backend/controllers/crisisController.js
-
 const User = require('../models/User');
 const SanityLevel = require('../models/SanityLevel');
-const Log = require('../models/Log'); // Ensure Log model is imported
+const Log = require('../models/Log');
 const twilio = require('twilio');
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -11,20 +9,11 @@ const fromNumber = process.env.TWILIO_PHONE_NUMBER;
 
 const client = twilio(accountSid, authToken);
 
-const DANGEROUS_SANITY_THRESHOLD = 20;
+const DANGEROUS_SANITY_THRESHOLD = 40;
 
-/**
- * Send Crisis Alerts via Twilio
- * This function can be called when a user's sanity level crosses a dangerous threshold
- * and an alert needs to be sent to them and their guardian.
- * 
- * @param {Object} req - Express request object.
- * @param {Object} res - Express response object.
- * @param {Function} next - Express next middleware function.
- */
 exports.checkAndHandleCrisis = async (req, res, next) => {
   try {
-    const { userId } = req.body; // Extract userId from request body
+    const { userId } = req.body;
 
     if (!userId) {
       return res.status(400).json({ message: 'userId is required.' });
@@ -41,26 +30,40 @@ exports.checkAndHandleCrisis = async (req, res, next) => {
     }
 
     if (sanityLevel.sanityPercentage < DANGEROUS_SANITY_THRESHOLD) {
-      // Prepare the message
-      const messageToUser = `Dear ${user.username}, your sanity level is currently ${sanityLevel.sanityPercentage}%, which is critical. Please seek help immediately.`;
-      const messageToGuardian = `Alert: ${user.username}'s sanity level is at ${sanityLevel.sanityPercentage}%. Please consider immediate intervention.`;
+      const messageToUser = `Dear ${user.username}, your sanity level is critically low at ${sanityLevel.sanityPercentage}%. Please seek immediate help.`;
+      const messageToGuardian = `Alert: ${user.username}'s sanity level is at ${sanityLevel.sanityPercentage}%. Immediate intervention is advised.`;
 
-      // Send SMS to user
+      const sendMessage = async (to, body) => {
+        try {
+          await client.messages.create({
+            body,
+            from: fromNumber,
+            to,
+          });
+        } catch (error) {
+          console.error(`Failed to send SMS to ${to}:`, error.message);
+
+          if (error.code === 21608) {
+            // Specific handling for Twilio trial account errors
+            return `Cannot send SMS to ${to}: ${error.message}`;
+          }
+
+          throw error;
+        }
+      };
+
+      const results = [];
+
+      // Send SMS to the user
       if (user.phoneNumber) {
-        await client.messages.create({
-          body: messageToUser,
-          from: fromNumber,
-          to: user.phoneNumber,
-        });
+        const userResult = await sendMessage(user.phoneNumber, messageToUser);
+        results.push(userResult || `SMS sent to ${user.phoneNumber}`);
       }
 
-      // Send SMS to guardian if available
+      // Send SMS to the guardian
       if (user.guardianPhoneNumber) {
-        await client.messages.create({
-          body: messageToGuardian,
-          from: fromNumber,
-          to: user.guardianPhoneNumber,
-        });
+        const guardianResult = await sendMessage(user.guardianPhoneNumber, messageToGuardian);
+        results.push(guardianResult || `SMS sent to ${user.guardianPhoneNumber}`);
       }
 
       // Log the action
@@ -68,15 +71,16 @@ exports.checkAndHandleCrisis = async (req, res, next) => {
         userId: user._id,
         userType: 'User',
         action: 'Crisis Alert Sent',
-        details: `Sanity at ${sanityLevel.sanityPercentage}%. SMS sent to user and guardian.`,
+        details: `Sanity at ${sanityLevel.sanityPercentage}%. Alerts sent.`,
       });
 
       return res.status(200).json({
-        message: 'Crisis detected. Alerts sent successfully.',
+        message: 'Crisis detected. Alerts handled successfully.',
+        results,
       });
     } else {
       return res.status(200).json({
-        message: 'No crisis. Sanity level is above the dangerous threshold.',
+        message: 'No crisis detected. Sanity level is above the dangerous threshold.',
       });
     }
   } catch (error) {

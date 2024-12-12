@@ -455,30 +455,6 @@ const AdminDashboard = () => {
           </Grid>
         </Grid>
       </Box>
-
-      {/* Applications Management Button */}
-      <Box mt={8} textAlign="right">
-        <Button
-          variant="contained"
-          color="secondary"
-          component={Link}
-          to="/admin/applications"
-          sx={{
-            borderRadius: '30px',
-            px: 5,
-            py: 1.5,
-            fontSize: '1rem',
-            fontWeight: 600,
-            transition: 'background-color 0.3s, transform 0.3s',
-            '&:hover': {
-              backgroundColor: theme.palette.secondary.dark,
-              transform: 'scale(1.05)',
-            },
-          }}
-        >
-          Manage Applications
-        </Button>
-      </Box>
     </Container>
   );
 };

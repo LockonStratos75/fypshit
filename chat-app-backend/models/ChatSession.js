@@ -8,4 +8,7 @@ const chatSessionSchema = new mongoose.Schema({
     messages: { type: Array, required: true },
 });
 
+chatSessionSchema.index({ userId: 1 });
+chatSessionSchema.index({ date: 1 });
+
 module.exports = mongoose.model('ChatSession', chatSessionSchema);

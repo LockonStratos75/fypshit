@@ -8,4 +8,8 @@ const reportSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+// Indexes for optimization
+reportSchema.index({ user: 1 });
+reportSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('Report', reportSchema);

@@ -9,4 +9,8 @@ const sentimentScoreSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now }
 });
 
+
+sentimentScoreSchema.index({ userId: 1 });
+sentimentScoreSchema.index({ sessionId: 1 });
+sentimentScoreSchema.index({ averageSentiment: -1 });
 module.exports = mongoose.model('SentimentScore', sentimentScoreSchema);

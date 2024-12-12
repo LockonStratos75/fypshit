@@ -9,4 +9,7 @@ const mentalHealthAssessmentSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+mentalHealthAssessmentSchema.index({ userId: 1, assessmentType: 1 });
+mentalHealthAssessmentSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('MentalHealthAssessment', mentalHealthAssessmentSchema);

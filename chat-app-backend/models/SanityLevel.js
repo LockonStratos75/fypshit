@@ -22,4 +22,8 @@ const sanityLevelSchema = new mongoose.Schema(
     }
 );
 
+// Indexes for optimization
+sanityLevelSchema.index({ user: 1 });
+sanityLevelSchema.index({ sanityPercentage: -1 });
+
 module.exports = mongoose.model('SanityLevel', sanityLevelSchema);
