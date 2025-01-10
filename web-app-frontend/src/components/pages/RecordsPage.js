@@ -21,24 +21,41 @@ import {
   CircularProgress,
   Box,
   Tooltip,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  InputAdornment,
 } from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
+import { Edit, Delete, Search, Clear } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import ApiService from '../../components/services/ApiService'; // Adjust the import path as necessary
 
 const RecordsPage = () => {
-  // State variables
-  const [users, setUsers] = useState([]); // Stores the list of users
-  const [loading, setLoading] = useState(true); // Indicates if data is being loaded
-  const [editDialogOpen, setEditDialogOpen] = useState(false); // Controls the visibility of the edit dialog
-  const [currentUser, setCurrentUser] = useState(null); // Stores the user being edited
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // Controls the visibility of the delete confirmation dialog
+  // Core Data States
+  const [users, setUsers] = useState([]); // Stores the full list of users
+  const [filteredUsers, setFilteredUsers] = useState([]); // Stores filtered subset
+  const [loading, setLoading] = useState(true); 
 
-  // Fetch all users from the backend
+  // Dialog & Form States
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Search & Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterAge, setFilterAge] = useState('');
+  const [filterLocation, setFilterLocation] = useState('');
+
+  // ===========================
+  // 1. Fetch All Users
+  // ===========================
   const fetchUsers = async () => {
     try {
       const response = await ApiService.get('/admin/users'); // Adjust the endpoint as necessary
-      setUsers(response.data.users);
+      setUsers(response.data.users || []);
+      setFilteredUsers(response.data.users || []); // Initialize filtered list
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to fetch users');
@@ -52,65 +69,129 @@ const RecordsPage = () => {
     fetchUsers();
   }, []);
 
-  // Handle opening the edit dialog
+  // ===========================
+  // 2. Filter & Search Handlers
+  // ===========================
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    applyFilters(query, filterAge, filterLocation);
+  };
+
+  const handleFilterAgeChange = (e) => {
+    const age = e.target.value;
+    setFilterAge(age);
+    applyFilters(searchQuery, age, filterLocation);
+  };
+
+  const handleFilterLocationChange = (e) => {
+    const location = e.target.value;
+    setFilterLocation(location);
+    applyFilters(searchQuery, filterAge, location);
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setFilterAge('');
+    setFilterLocation('');
+    setFilteredUsers(users); // Reset to the full list
+  };
+
+  // The main function that filters users based on search and selected filters
+  const applyFilters = (query, age, location) => {
+    let updatedList = [...users];
+
+    // Search filter (by username or email)
+    if (query) {
+      updatedList = updatedList.filter(
+        (user) =>
+          user.username.toLowerCase().includes(query.toLowerCase()) ||
+          user.email.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    // Age filter
+    if (age) {
+      updatedList = updatedList.filter((user) => user.age === parseInt(age));
+    }
+
+    // Location filter
+    if (location) {
+      updatedList = updatedList.filter(
+        (user) => user.location && user.location.toLowerCase() === location.toLowerCase()
+      );
+    }
+
+    setFilteredUsers(updatedList);
+  };
+
+  // Extract unique locations for the filter dropdown
+  const uniqueLocations = [...new Set(users.map((user) => user.location).filter(Boolean))];
+
+  // ===========================
+  // 3. Edit Dialog Handlers
+  // ===========================
   const handleEditClick = (user) => {
     setCurrentUser(user);
     setEditDialogOpen(true);
   };
 
-  // Handle closing the edit dialog
   const handleEditClose = () => {
     setCurrentUser(null);
     setEditDialogOpen(false);
   };
 
-  // Handle submitting the edited user details
   const handleEditSubmit = async () => {
+    if (!currentUser) return;
     try {
-      await ApiService.put(`/admin/users/${currentUser._id}`, currentUser); // Update user details
+      await ApiService.put(`/admin/users/${currentUser._id}`, currentUser);
       toast.success('User updated successfully');
-      fetchUsers(); // Refresh the user list
-      handleEditClose(); // Close the dialog
+      fetchUsers(); // Refresh user list
+      handleEditClose();
     } catch (error) {
       console.error('Error updating user:', error);
       toast.error(error.response?.data?.message || 'Failed to update user');
     }
   };
 
-  // Handle opening the delete confirmation dialog
+  // Handle Input Changes in the Edit Form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentUser((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // ===========================
+  // 4. Delete Dialog Handlers
+  // ===========================
   const handleDeleteClick = (user) => {
     setCurrentUser(user);
     setDeleteDialogOpen(true);
   };
 
-  // Handle closing the delete confirmation dialog
   const handleDeleteClose = () => {
     setCurrentUser(null);
     setDeleteDialogOpen(false);
   };
 
-  // Handle confirming the deletion of a user
   const handleDeleteConfirm = async () => {
+    if (!currentUser) return;
     try {
-      await ApiService.delete(`/admin/users/${currentUser._id}`); // Delete user
+      await ApiService.delete(`/admin/users/${currentUser._id}`);
       toast.success('User deleted successfully');
-      fetchUsers(); // Refresh the user list
-      handleDeleteClose(); // Close the dialog
+      fetchUsers(); // Refresh user list
+      handleDeleteClose();
     } catch (error) {
       console.error('Error deleting user:', error);
       toast.error(error.response?.data?.message || 'Failed to delete user');
     }
   };
 
-  // Handle input changes in the edit form
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentUser((prevUser) => ({
-      ...prevUser,
-      [name]: value,
-    }));
-  };
-
+  // ===========================
+  // Render
+  // ===========================
   return (
     <Container maxWidth="lg" sx={{ mt: 5, mb: 5 }}>
       {/* Page Title */}
@@ -118,13 +199,103 @@ const RecordsPage = () => {
         User Records
       </Typography>
 
+      {/* Search & Filter Section */}
+      <Box sx={{ mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          {/* Search Field */}
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search by username or email"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {searchQuery && (
+                      <IconButton onClick={() => setSearchQuery('')}>
+                        <Clear />
+                      </IconButton>
+                    )}
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+
+          {/* Age Filter */}
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="filter-age-label">Filter by Age</InputLabel>
+              <Select
+                labelId="filter-age-label"
+                label="Filter by Age"
+                value={filterAge}
+                onChange={handleFilterAgeChange}
+              >
+                <MenuItem value="">
+                  <em>All Ages</em>
+                </MenuItem>
+                {[...new Set(users.map((u) => u.age).filter(Boolean))]
+                  .sort((a, b) => a - b)
+                  .map((age) => (
+                    <MenuItem key={age} value={age}>
+                      {age}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {/* Location Filter */}
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="filter-location-label">Filter by Location</InputLabel>
+              <Select
+                labelId="filter-location-label"
+                label="Filter by Location"
+                value={filterLocation}
+                onChange={handleFilterLocationChange}
+              >
+                <MenuItem value="">
+                  <em>All Locations</em>
+                </MenuItem>
+                {uniqueLocations.sort().map((loc) => (
+                  <MenuItem key={loc} value={loc}>
+                    {loc}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {/* Clear Filters Button */}
+          <Grid item xs={12} md={2}>
+            <Button
+              fullWidth
+              variant="contained"
+              color="secondary"
+              onClick={handleClearFilters}
+              disabled={!searchQuery && !filterAge && !filterLocation}
+            >
+              Clear Filters
+            </Button>
+          </Grid>
+        </Grid>
+      </Box>
+
       {/* Loading Indicator */}
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
           <CircularProgress color="primary" />
         </Box>
       ) : (
-        /* Users Table */
         <TableContainer component={Paper}>
           <Table aria-label="user records table">
             <TableHead>
@@ -139,15 +310,14 @@ const RecordsPage = () => {
             </TableHead>
             <TableBody>
               {/* Display a message if no users are found */}
-              {users.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center">
-                    No users found.
+                    No users match your search/filter criteria.
                   </TableCell>
                 </TableRow>
               ) : (
-                /* Map through the users and display each in a table row */
-                users.map((user) => (
+                filteredUsers.map((user) => (
                   <TableRow key={user._id}>
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.email}</TableCell>

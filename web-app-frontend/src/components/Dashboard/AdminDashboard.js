@@ -16,13 +16,18 @@ import AuthService from '../../components/services/AuthService';
 import { Link } from 'react-router-dom';
 import { Pie, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
+import WelcomeCard from '../WelcomeCard';
+import { getUserInfo } from '../utils/authUtils';
 
 const AdminDashboard = () => {
   const [metrics, setMetrics] = useState(null);
   const [behaviorAnalytics, setBehaviorAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const theme = useTheme(); // Utilize MUI's theme for consistent styling
+  const userInfo = getUserInfo();
+  const userName = userInfo?.username || 'Admin';
 
+  
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
@@ -99,9 +104,6 @@ const AdminDashboard = () => {
       }
     : null;
 
-  // Prepare data for Sentiment Trend Line Chart
-  // Assuming behaviorAnalytics.sentimentTrend is an object with dates as keys
-  // e.g., { "2024-12-05": 0.2, "2024-12-06": -0.1, ... }
   const sentimentTrendLabels = behaviorAnalytics.sentimentTrend
     ? Object.keys(behaviorAnalytics.sentimentTrend).sort(
         (a, b) => new Date(a) - new Date(b)
@@ -129,7 +131,8 @@ const AdminDashboard = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 5, mb: 5 }}>
+    <Container maxWidth="lg" sx={{ mt: 10, mb: 10 }}>
+      <WelcomeCard userName={userName} />
       <Typography
         variant="h4"
         gutterBottom
@@ -253,33 +256,6 @@ const AdminDashboard = () => {
           </Paper>
         </Grid>
 
-        {/* Average Sentiment */}
-        <Grid item xs={12} sm={6} md={4}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 3,
-              borderRadius: '12px',
-              textAlign: 'center',
-              backgroundColor: theme.palette.background.paper,
-              transition: 'transform 0.3s',
-              '&:hover': { transform: 'scale(1.05)' },
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{ color: theme.palette.secondary.main, fontWeight: 600 }}
-            >
-              Avg. Sentiment
-            </Typography>
-            <Typography
-              variant="h3"
-              sx={{ color: theme.palette.primary.main, fontWeight: 700 }}
-            >
-              {metrics.averageSentiment}
-            </Typography>
-          </Paper>
-        </Grid>
 
         {/* SER Results */}
         <Grid item xs={12} sm={6} md={4}>

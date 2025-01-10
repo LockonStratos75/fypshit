@@ -203,10 +203,31 @@ exports.getAllPsychologists = async (req, res) => {
  */
 exports.getLogs = async (req, res) => {
   try {
-    const logs = await Log.find()
+    // Extract query parameters with default values
+    const page = parseInt(req.query.page, 10) || 1; // Current page number
+    const limit = parseInt(req.query.limit, 10) || 10; // Logs per page
+    const skip = (page - 1) * limit; // Number of logs to skip
+
+    // Fetch logs with pagination
+    const logsPromise = Log.find()
       .populate('userId', 'username email') // Populate user/admin details
-      .sort({ timestamp: -1 }); // Latest logs first
-    res.status(200).json({ logs });
+      .sort({ timestamp: -1 }) // Latest logs first
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    // Count total number of logs
+    const countPromise = Log.countDocuments().exec();
+
+    // Await both promises simultaneously
+    const [logs, totalLogs] = await Promise.all([logsPromise, countPromise]);
+
+    res.status(200).json({
+      logs,
+      totalLogs,
+      totalPages: Math.ceil(totalLogs / limit),
+      currentPage: page,
+    });
   } catch (err) {
     console.error('Error fetching logs:', err.message);
     res.status(500).json({ message: 'Server Error' });

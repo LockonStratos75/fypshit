@@ -1,39 +1,49 @@
-  // backend/models/AdminProfile.js
+// backend/models/AdminProfile.js
 
-  const mongoose = require('mongoose');
-  const { v4: uuidv4 } = require('uuid');
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
-  const adminProfileSchema = new mongoose.Schema({
-    adminId: {
-      type: String,
-      default: uuidv4,
-      unique: true,
-    },
-    username: {
-      type: String,
-      required: [true, 'Username is required.'],
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: [true, 'Email is required.'],
-      unique: true,
-      lowercase: true,
-      trim: true,
-      match: [/.+@.+\..+/, 'Please enter a valid email address.'],
-    },
-    password: {
-      type: String,
-      required: [true, 'Password is required.'],
-      select: false, // Exclude password field by default
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-  });
+const adminProfileSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    //unique: true, // Unique index
+    trim: true,
+    minlength: 3,
+    maxlength: 50,
+  },
+  email: {
+    type: String,
+    required: true,
+    //unique: true, // Unique index
+    trim: true,
+    lowercase: true,
+  },
+  password: {
+    type: String,
+    required: true,
+    select: false, // Exclude from queries by default
+  },
+}, { timestamps: true });
 
-  adminProfileSchema.index({ email: 1 });
+// Indexes for performance
+adminProfileSchema.index({ email: 1 });
 adminProfileSchema.index({ username: 1 });
 
-  module.exports = mongoose.model('AdminProfile', adminProfileSchema);
+// Pre-save middleware to hash password
+adminProfileSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// Method to compare entered password with hashed password
+adminProfileSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+module.exports = mongoose.model('AdminProfile', adminProfileSchema);

@@ -10,7 +10,7 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
-  useTheme,
+  useTheme
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import {jwtDecode} from 'jwt-decode'; // Correct default import
@@ -20,12 +20,15 @@ import {
   Logout as LogoutIcon,
   Emergency as EmergencyIcon,
   BarChart as BarChartIcon,
-  History as HistoryIcon // More appropriate icon for Logs
+  History as HistoryIcon, // For Logs
+  Assessment as AssessmentIcon, // For Assessments
+  Notifications as NotificationsIcon, // For Alerts
+  Psychology as PsychologyIcon, // For Psychologists
 } from '@mui/icons-material';
 import logo from '../../assets/Eunoia.png';
 import { toast } from 'react-toastify';
 
-const drawerWidthExpanded = 240;
+const drawerWidthExpanded = 260;
 const drawerWidthCollapsed = 80;
 
 const Navbar = () => {
@@ -102,16 +105,21 @@ const Navbar = () => {
 
   // Define navigation items based on role
   const adminNavItems = [
-    { label: 'Home', icon: <HomeIcon />, path: '/admin/dashboard' },
+    { label: 'Dashboard', icon: <HomeIcon />, path: '/admin/dashboard' },
+    { label: 'Psychologist Records',icon: <PsychologyIcon />, path: '/admin/psychologists' },
     { label: 'Records', icon: <ReportIcon />, path: '/admin/records' },
-    { label: 'Reports', icon: <BarChartIcon />, path: '/admin/report' },
-    { label: 'Alerts', icon: <EmergencyIcon />, path: '/admin/emergency' },
+    { label: 'Report Generator', icon: <AssessmentIcon />, path: '/admin/report' },
+    { label: 'Emergency', icon: <EmergencyIcon />, path: '/admin/emergency' },
     { label: 'Logs', icon: <HistoryIcon />, path: '/admin/logs' },
   ];
 
   const psychologistNavItems = [
-    { label: 'Home', icon: <HomeIcon />, path: '/psychologist/dashboard' },
+    { label: 'Dashboard', icon: <HomeIcon />, path: '/psychologist/dashboard' },
     { label: 'Users', icon: <ReportIcon />, path: '/psychologist/users' },
+    { label: 'Assessments', icon: <AssessmentIcon />, path: '/psychologist/assessments' },
+    { label: 'Reports', icon: <BarChartIcon />, path: '/psychologist/reports' },
+    { label: 'Alerts', icon: <NotificationsIcon />, path: '/psychologist/alerts' },
+    { label: 'Logs', icon: <HistoryIcon />, path: '/psychologist/logs' },
   ];
 
   let navItems = [];
@@ -180,15 +188,15 @@ const Navbar = () => {
 
       <List sx={{ paddingTop: 0 }}>
         {navItems.map((item, index) => (
-          <Tooltip key={index} title={item.label} placement="right" arrow disableHoverListener={!collapsed}>
-            <ListItemButton
-              component={Link}
-              to={item.path}
-              sx={navItemStyle}
-            >
-              <ListItemIcon sx={iconStyle}>
-                {item.icon}
-              </ListItemIcon>
+          <Tooltip
+            key={index}
+            title={item.label}
+            placement="right"
+            arrow
+            disableHoverListener={!collapsed}
+          >
+            <ListItemButton component={Link} to={item.path} sx={navItemStyle}>
+              <ListItemIcon sx={iconStyle}>{item.icon}</ListItemIcon>
               {!collapsed && <ListItemText primary={item.label} sx={textStyle} />}
             </ListItemButton>
           </Tooltip>

@@ -16,10 +16,15 @@ import UsersList from './components/pages/UsersList';
 import PsychologistUserDetails from './components/pages/PsychologistUserDetails';
 import RecordsPage from './components/pages/RecordsPage'; // Existing Page
 import EmergencyPage from './components/pages/EmergencyPage'; // New Page
-import PsychologistEmergencyPage from './components/pages/psychologistEmergencyPage'; // New Psychologist Page
-import LogsPage from './components/pages/LogsPage'; // Existing Page
-import ForgotPasswordPage from './components/pages/forgotPassword';
+import LogsPage from './components/pages/LogsPage'; // Existing Admin Page
+import ForgotPasswordPage from './components/pages/forgotPassword'; // Corrected Capitalization
 import AssessmentsPage from './components/pages/AssessmentsPage';
+import PsychologistRecords from './components/pages/PsychologistRecords'; 
+import PsychologistReportsPage from './components/pages/PsychologistReportsPage';
+
+// Import New Psychologist Pages
+import AlertsPage from './components/pages/PsychologistAlertsPage'; // New Psychologist Alerts Page
+import PsychologistLogsPage from './components/pages/PsychologistLogsPage'; // New Psychologist Logs Page
 
 // Import Components
 import AdminDashboard from './components/Dashboard/AdminDashboard';
@@ -48,7 +53,7 @@ function AppContent() {
   const location = useLocation();
 
   // Define routes where Navbar should be hidden
-  const hideNavbarRoutes = ['/', '/login', '/signup'];
+  const hideNavbarRoutes = ['/', '/login', '/signup', '/forgot-password'];
 
   // Check if the current route is in the hideNavbarRoutes array
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
@@ -81,12 +86,23 @@ function AppContent() {
           }
         />
         <Route 
-        path="/psychologist/assessments" 
-        element={ <ProtectedRoute roles={['PsychologistProfile']}>
-          <AssessmentsPage />
-          </ProtectedRoute>
+          path="/psychologist/assessments" 
+          element={
+            <ProtectedRoute roles={['PsychologistProfile']}>
+              <AssessmentsPage />
+            </ProtectedRoute>
           } 
         />
+
+        <Route 
+          path="/psychologist/reports" 
+          element={
+            <ProtectedRoute roles={['PsychologistProfile']}>
+                  <PsychologistReportsPage />
+            </ProtectedRoute>
+          } 
+        />
+
         <Route
           path="/psychologist/users"
           element={
@@ -103,11 +119,20 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/psychologist/emergency"
+          path="/psychologist/alerts"
           element={
             <ProtectedRoute roles={['PsychologistProfile']}>
-              <PsychologistEmergencyPage />
+              <AlertsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/psychologist/logs"
+          element={
+            <ProtectedRoute roles={['PsychologistProfile']}>
+              <PsychologistLogsPage />
             </ProtectedRoute>
           }
         />
@@ -153,6 +178,16 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        
+        <Route
+          path="/admin/psychologists"
+          element={
+            <ProtectedRoute roles={['AdminProfile']}>
+              <PsychologistRecords />
+            </ProtectedRoute>
+          }
+        />
+
 
         {/* Catch-All Route */}
         <Route path="*" element={<NotFound />} />

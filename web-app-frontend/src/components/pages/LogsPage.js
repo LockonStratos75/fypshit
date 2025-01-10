@@ -13,6 +13,7 @@ import {
   Paper,
   CircularProgress,
   Box,
+  TablePagination,
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import ApiService from '../../components/services/ApiService'; // Adjust the import path as necessary
@@ -22,12 +23,22 @@ const LogsPage = () => {
   // State variables
   const [logs, setLogs] = useState([]); // Stores the list of logs
   const [loading, setLoading] = useState(true); // Indicates if data is being loaded
+  const [page, setPage] = useState(0); // Current page number (0-based index)
+  const [rowsPerPage, setRowsPerPage] = useState(10); // Logs per page
+  const [totalLogs, setTotalLogs] = useState(0); // Total number of logs
 
-  // Fetch all logs from the backend
-  const fetchLogs = async () => {
+  // Fetch logs from the backend with pagination
+  const fetchLogs = async (currentPage, limit) => {
+    setLoading(true);
     try {
-      const response = await ApiService.get('/admin/logs'); // Adjust the endpoint as necessary
-      setLogs(response.data.logs);
+      const response = await ApiService.get('/admin/logs', {
+        params: {
+          page: currentPage + 1, // Backend expects 1-based page index
+          limit: limit,
+        },
+      });
+      setLogs(response.data.logs || []);
+      setTotalLogs(response.data.totalLogs || 0);
     } catch (error) {
       console.error('Error fetching logs:', error);
       toast.error('Failed to fetch logs');
@@ -36,10 +47,21 @@ const LogsPage = () => {
     }
   };
 
-  // Fetch logs on component mount
+  // Fetch logs on component mount and when page or rowsPerPage changes
   useEffect(() => {
-    fetchLogs();
-  }, []);
+    fetchLogs(page, rowsPerPage);
+  }, [page, rowsPerPage]);
+
+  // Handle page change
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Handle rows per page change
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to first page
+  };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 5, mb: 5 }}>
@@ -50,11 +72,11 @@ const LogsPage = () => {
 
       {/* Loading Indicator */}
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+        <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
           <CircularProgress color="primary" />
         </Box>
       ) : (
-        /* Logs Table */
+        /* Logs Table with Pagination */
         <TableContainer component={Paper}>
           <Table aria-label="action logs table">
             <TableHead>
@@ -92,6 +114,24 @@ const LogsPage = () => {
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination Controls */}
+          <TablePagination
+            component="div"
+            count={totalLogs}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25]}
+            labelRowsPerPage="Logs per page"
+            sx={{
+              '& .MuiTablePagination-toolbar': {
+                display: 'flex',
+                justifyContent: 'flex-end',
+              },
+            }}
+          />
         </TableContainer>
       )}
     </Container>

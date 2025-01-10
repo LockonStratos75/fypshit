@@ -1,4 +1,4 @@
-// sr/components/themeGlobalStyles.js
+// sr/components/theme/themeGlobalStyles.js
 import { createGlobalStyle } from 'styled-components';
 
 const GlobalStyles = createGlobalStyle`

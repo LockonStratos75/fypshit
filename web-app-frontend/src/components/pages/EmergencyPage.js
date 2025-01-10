@@ -20,17 +20,29 @@ import {
   CircularProgress,
   Box,
   Tooltip,
+  TextField,
+  InputAdornment,
+  Grid,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
-import { Send } from '@mui/icons-material';
+import { Send, Search, Clear } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-import ApiService from '../../components/services/ApiService'; // Ensure the path is correct
+import ApiService from '../../components/services/ApiService';
 
 const EmergencyPage = () => {
   // State variables
   const [sanityLevels, setSanityLevels] = useState([]); // Stores the list of sanity levels
+  const [filteredSanityLevels, setFilteredSanityLevels] = useState([]); // For filtered results
   const [loading, setLoading] = useState(true); // Indicates if data is being loaded
   const [alertDialogOpen, setAlertDialogOpen] = useState(false); // Controls the visibility of the alert confirmation dialog
   const [selectedSanityLevel, setSelectedSanityLevel] = useState(null); // Stores the sanity level selected for alerting
+
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   // Fetch all sanity levels from the backend
   const fetchSanityLevels = async () => {
@@ -38,6 +50,7 @@ const EmergencyPage = () => {
       const response = await ApiService.get('/admin/sanity-levels');
       console.log('Fetched sanity levels:', response.data.sanityLevels); // For debugging
       setSanityLevels(response.data.sanityLevels);
+      setFilteredSanityLevels(response.data.sanityLevels);
     } catch (error) {
       console.error('Error fetching sanity levels:', error);
       toast.error('Failed to fetch sanity levels');
@@ -50,6 +63,48 @@ const EmergencyPage = () => {
   useEffect(() => {
     fetchSanityLevels();
   }, []);
+
+  // Handle Search Input Change
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    applyFilters(query, filterStatus);
+  };
+
+  // Handle Filter Status Change
+  const handleFilterStatusChange = (e) => {
+    const status = e.target.value;
+    setFilterStatus(status);
+    applyFilters(searchQuery, status);
+  };
+
+  // Apply Search and Filter
+  const applyFilters = (query, status) => {
+    let updatedSanityLevels = [...sanityLevels];
+
+    // Search Filter
+    if (query) {
+      updatedSanityLevels = updatedSanityLevels.filter(
+        (sanityLevel) =>
+          sanityLevel.user.username.toLowerCase().includes(query.toLowerCase()) ||
+          sanityLevel.user.email.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    // Status Filter (e.g., Active, Inactive)
+    if (status) {
+      updatedSanityLevels = updatedSanityLevels.filter((sanityLevel) => sanityLevel.status === status);
+    }
+
+    setFilteredSanityLevels(updatedSanityLevels);
+  };
+
+  // Handle Clearing Filters
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setFilterStatus('');
+    setFilteredSanityLevels(sanityLevels);
+  };
 
   // Determine the color based on sanity percentage
   const getSanityColor = (sanityPercentage) => {
@@ -102,6 +157,9 @@ const EmergencyPage = () => {
     }
   };
 
+  // Sort the sanity levels by lowest sanity percentage first
+  const sortedSanityLevels = [...filteredSanityLevels].sort((a, b) => a.sanityPercentage - b.sanityPercentage);
+
   return (
     <Container maxWidth="lg" sx={{ mt: 5, mb: 5 }}>
       {/* Page Title */}
@@ -109,10 +167,75 @@ const EmergencyPage = () => {
         Emergency Alerts
       </Typography>
 
+      {/* Search and Filter Section */}
+      <Box sx={{ mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          {/* Search Field */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search by username or email"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {searchQuery && (
+                      <IconButton onClick={() => setSearchQuery('')}>
+                        <Clear />
+                      </IconButton>
+                    )}
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+
+          {/* Status Filter */}
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="filter-status-label">Filter by Status</InputLabel>
+              <Select
+                labelId="filter-status-label"
+                label="Filter by Status"
+                value={filterStatus}
+                onChange={handleFilterStatusChange}
+              >
+                <MenuItem value="">
+                  <em>All Statuses</em>
+                </MenuItem>
+                <MenuItem value="active">Active</MenuItem>
+                <MenuItem value="inactive">Inactive</MenuItem>
+                {/* Add more status options if applicable */}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {/* Clear Filters Button */}
+          <Grid item xs={12} md={3}>
+            <Button
+              fullWidth
+              variant="contained"
+              color="secondary"
+              onClick={handleClearFilters}
+              disabled={!searchQuery && !filterStatus}
+            >
+              Clear Filters
+            </Button>
+          </Grid>
+        </Grid>
+      </Box>
+
       {/* Loading Indicator */}
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
-          <CircularProgress color="primary" />
+        <Box display="flex" justifyContent="center" mt={5}>
+          <CircularProgress />
         </Box>
       ) : (
         /* Sanity Levels Table */
@@ -123,25 +246,26 @@ const EmergencyPage = () => {
                 <TableCell>Username</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Sanity Level (%)</TableCell>
+                <TableCell>Status</TableCell>
                 <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {/* Display a message if no sanity levels are found */}
-              {sanityLevels.length === 0 ? (
+              {sortedSanityLevels.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} align="center">
+                  <TableCell colSpan={5} align="center">
                     No sanity levels found.
                   </TableCell>
                 </TableRow>
               ) : (
                 /* Map through the sanity levels and display each in a table row */
-                sanityLevels.map((sanityLevel) => (
+                sortedSanityLevels.map((sanityLevel) => (
                   <TableRow key={sanityLevel._id}>
                     <TableCell>{sanityLevel.user ? sanityLevel.user.username : 'Unknown'}</TableCell>
                     <TableCell>{sanityLevel.user ? sanityLevel.user.email : 'Unknown'}</TableCell>
                     <TableCell>
-                      {/* Sanity Level with color coding */}
+                      {/* Round to 1 decimal place */}
                       <Typography
                         sx={{
                           color: getSanityColor(sanityLevel.sanityPercentage),
@@ -149,10 +273,11 @@ const EmergencyPage = () => {
                         }}
                       >
                         {sanityLevel.sanityPercentage !== undefined && sanityLevel.sanityPercentage !== null
-                          ? `${sanityLevel.sanityPercentage}%`
+                          ? `${sanityLevel.sanityPercentage.toFixed(1)}%`
                           : 'Unknown'}
                       </Typography>
                     </TableCell>
+                    <TableCell>{sanityLevel.status}</TableCell>
                     <TableCell align="center">
                       {/* Alert Button */}
                       <Tooltip title="Send Alert" arrow>

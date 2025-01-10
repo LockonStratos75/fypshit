@@ -2,7 +2,9 @@
 
 const express = require('express');
 const psychologistController = require('../controllers/psychologistController');
+const monitoringController = require('../controllers/monitoringController');
 const crisisController = require('../controllers/crisisController');
+const reportController = require('../controllers/reportController'); // <-- Import
 const { authenticateToken: authenticate } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -17,7 +19,7 @@ const router = express.Router();
  * @access  Private (Authenticated Psychologist)
  */
 router.get(
-  '/me',
+  '/profile/me',
   authenticate,
   psychologistController.getPsychologistProfile
 );
@@ -36,7 +38,31 @@ router.get('/users', authenticate, psychologistController.getAllUsers);
  */
 router.post('/crisis/check', authenticate, crisisController.checkAndHandleCrisis);
 
+/**
+ * @route   GET /psychologist/assessments
+ * @desc    Get all assessments for psychologists' patients
+ * @access  Private (Authenticated Psychologist)
+ */
 router.get('/assessments', authenticate, psychologistController.getAllAssessments);
 
+// ========================
+// New Routes
+// ========================
+
+/**
+ * @route   GET /psychologist/alerts
+ * @desc    Get alerts specific to the psychologist
+ * @access  Private (Authenticated Psychologist)
+ */
+router.get('/alerts', authenticate, monitoringController.getAllAlertsForPsychologist);
+
+router.get('/logs', authenticate, psychologistController.getLogs);
+
+router.get('/users/:id/complete', authenticate, psychologistController.getUserCompleteData);
+
+router.get('/reports', authenticate, reportController.getAllReportsForPsychologist);
+
+// ========================
 // Export the router
+// ========================
 module.exports = router;

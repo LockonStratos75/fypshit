@@ -2,6 +2,11 @@
 
 const PsychologistProfile = require('../models/PsychologistProfile');
 const MentalHealthAssessment = require('../models/MentalHealthAssessment'); 
+const SanityLevel = require('../models/SanityLevel');
+const SentimentScore = require('../models/SentimentScore');
+const SERResult = require('../models/SERResult');
+const ChatSession = require('../models/ChatSession');
+const Report = require('../models/Report');
 const User = require('../models/User');
 const Log = require('../models/Log');
 const bcrypt = require('bcrypt');
@@ -145,5 +150,71 @@ exports.getAllAssessments = async (req, res) => {
   } catch (error) {
     console.error('Error fetching assessments:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getUserCompleteData = async (req, res) => {
+  try {
+    // 1) Validate user param
+    const userId = req.params.id;
+    if (!userId) {
+      return res.status(400).json({ message: 'Missing user ID in params.' });
+    }
+
+    // 2) Basic user info
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // 3) Current sanity level
+    const sanityLevel = await SanityLevel.findOne({ user: userId }).lean();
+
+    // 4) All mental health assessments for that user
+    const assessments = await MentalHealthAssessment.find({ userId }).sort({ createdAt: -1 }).lean();
+
+    // 5) SER results
+    //    In your existing code, SER results are typically found by userId
+    const serResults = await SERResult.find({ userId }).sort({ date: -1 }).lean();
+
+    // 6) Sentiment scores
+    const sentimentScores = await SentimentScore.find({ userId }).sort({ date: -1 }).lean();
+
+    // 7) Chat sessions 
+    //    If you only want "recent" or "all", up to you; here we fetch them all
+    const chatSessions = await ChatSession.find({ userId }).sort({ date: -1 }).lean();
+
+    // 8) Reports
+    //    This uses the /report logic referencing user = userId
+    const reports = await Report.find({ user: userId }).sort({ createdAt: -1 }).lean();
+
+    return res.status(200).json({
+      user,
+      sanityLevel,
+      assessments,
+      serResults,
+      sentimentScores,
+      chatSessions,
+      reports,
+    });
+  } catch (error) {
+    console.error('Error in getUserCompleteData:', error);
+    return res.status(500).json({ message: 'Server Error fetching user complete data.' });
+  }
+};
+
+
+exports.getLogs = async (req, res) => {
+  try {
+    const logs = await Log.find({
+      userId: req.user._id,
+      userType: 'PsychologistProfile',
+    })
+      .populate('userId', 'username email') // Populate user details
+      .sort({ timestamp: -1 }); // Latest logs first
+    res.status(200).json({ logs });
+  } catch (err) {
+    console.error('Error fetching logs:', err.message);
+    res.status(500).json({ message: 'Server Error' });
   }
 };

@@ -70,6 +70,42 @@ exports.getAllAlertsForAdmin = async (req, res) => {
   }
 };
 
+exports.getAllAlertsForPsychologist = async (req, res) => {
+  try {
+    const psychologistId = req.user._id; // Assuming `req.user` contains the authenticated psychologist's data
+
+    // Fetch users (patients) assigned to this psychologist
+    const assignedUsers = await User.find({ psychologistId }).select('_id');
+
+    const userIds = assignedUsers.map(user => user._id);
+
+    // Build query based on optional filters
+    let query = { userId: { $in: userIds } };
+
+    if (req.query.status) {
+      query.status = req.query.status;
+    }
+
+    if (req.query.userId) {
+      // Ensure the userId is among the psychologist's assigned users
+      if (userIds.includes(req.query.userId)) {
+        query.userId = req.query.userId;
+      } else {
+        return res.status(403).json({ message: 'Access denied to specified user alerts.' });
+      }
+    }
+
+    const alerts = await MonitoringAlert.find(query)
+      .sort({ createdAt: -1 })
+      .populate('userId', 'username email'); // Populate user details
+
+    res.status(200).json({ alerts });
+  } catch (err) {
+    console.error('Error fetching alerts for psychologist:', err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 /**
  * Admin: update alert (e.g., mark as resolved, add response)
  */

@@ -8,7 +8,7 @@ const sanityLevelSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             required: true,
-            unique: true, // Ensures one entry per user
+            //unique: true, // Ensures one entry per user
         },
         sanityPercentage: {
             type: Number,

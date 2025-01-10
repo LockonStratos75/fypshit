@@ -4,69 +4,63 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const psychologistProfileSchema = new mongoose.Schema({
-  psychologistId: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: () => new mongoose.Types.ObjectId(), // Correct instantiation
-    unique: true,
-  },
   username: {
     type: String,
-    required: [true, 'Username is required.'],
+    required: true,
+    //unique: true, // Unique index
     trim: true,
-    maxlength: [50, 'Username cannot exceed 50 characters'],
+    minlength: 3,
+    maxlength: 50,
   },
   email: {
     type: String,
-    required: [true, 'Email is required.'],
-    unique: true,
-    lowercase: true,
+    required: true,
+    //unique: true, // Unique index
     trim: true,
-    match: [/.+@.+\..+/, 'Please enter a valid email address.'],
+    lowercase: true,
   },
   password: {
     type: String,
-    required: [true, 'Password is required.'],
-    select: false, // Exclude password field by default
-    minlength: [6, 'Password must be at least 6 characters'],
+    required: true,
+    select: false, // Exclude from queries by default
   },
   specialization: {
     type: String,
+    required: true,
     trim: true,
-    maxlength: [100, 'Specialization cannot exceed 100 characters'],
-    // Removed required: true to make it optional during registration
+    maxlength: 100,
   },
   yearsOfExperience: {
     type: Number,
-    min: [0, 'Years of experience cannot be negative.'],
-    max: [100, 'Years of experience seems unrealistic.'],
+    min: 0,
+    max: 100,
   },
   phoneNumber: {
     type: String,
-    trim: true,
-    match: [
-      /^\+?[1-9]\d{1,14}$/,
-      'Please enter a valid phone number in E.164 format.',
-    ],
-    // Removed required: true to make it optional during registration
+    match: /^\+?[1-9]\d{1,14}$/, // E.164 format
+    required: true,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
   },
-});
+}, { timestamps: true });
 
+// Indexes for performance
 psychologistProfileSchema.index({ email: 1 });
 psychologistProfileSchema.index({ username: 1 });
 psychologistProfileSchema.index({ specialization: 1 });
 
-// Password encryption before saving
+// Pre-save middleware to hash password
 psychologistProfileSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    next();
+    return next();
   }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // Method to compare entered password with hashed password

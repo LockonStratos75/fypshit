@@ -22,8 +22,7 @@ const path = require('path'); // Path module for handling file paths
 // 3. Import Routes
 // ========================
 const authRoutes = require('./routes/authRoutes');
-const psychologistAuthRoutes = require('./routes/psychologistAuthRoutes'); // Combined Psychologist Routes
-const psychologistRoutes = require('./routes/psychologistRoutes'); // Protected Psychologist Routes
+const psychologistAuthRoutes = require('./routes/psychologistAuthRoutes'); // Combined Psychologist Routes // Protected Psychologist Routes
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const adminAuthRoutes = require('./routes/adminAuthRoutes'); // Public Admin Auth Routes
 const adminRoutes = require('./routes/adminRoutes'); // Protected Admin Routes
@@ -36,6 +35,7 @@ const sanityLevelRoutes = require('./routes/sanityLevelRoutes');
 const chatRoutes = require('./routes/chatSessionRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const crisisRoutes = require('./routes/crisisRoutes');
+const psychologistRoutes = require('./routes/psychologistRoutes');
 
 // ========================
 // 4. Import Middlewares
@@ -72,7 +72,7 @@ app.use(morgan('combined'));
 // Define allowed origins based on environment variables for flexibility
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : ['http://192.168.115.142:3000', 'http://localhost:3000', 'http://192.168.100.92:3000'];
+  : ['http://192.168.1.9:3000', 'http://localhost:3000'];
 
 // Configure CORS options
 const corsOptions = {

@@ -5,6 +5,8 @@ import { Container, Typography, Grid, Box, Paper, List, ListItem, ListItemText, 
 import { toast } from 'react-toastify';
 import api from '../../components/services/ApiService';
 import { Link } from 'react-router-dom';
+import WelcomeCard from '../WelcomeCard';
+import { getUserInfo } from '../utils/authUtils';
 
 const PsychologistDashboard = () => {
   const [stats, setStats] = useState({
@@ -12,6 +14,8 @@ const PsychologistDashboard = () => {
     averageSanityLevel: 0,
     latestSessions: [],
   });
+    const userInfo = getUserInfo();
+    const userName = userInfo?.username || 'Psychologist';
 
   useEffect(() => {
     const fetchPsychologistData = async () => {
@@ -36,7 +40,9 @@ const PsychologistDashboard = () => {
   }, []);
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 5 }}>
+    <Container maxWidth="lg" sx={{ mt: 5, mb: 5 }}>
+      <WelcomeCard userName={userName} />
+
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#004080' }}>
         Psychologist Dashboard
       </Typography>
@@ -82,12 +88,8 @@ const PsychologistDashboard = () => {
       <List dense>
         {stats.latestSessions.map((session) => (
           <ListItem key={session._id} disableGutters>
-            <ListItemText
+            <ListItemText  
               primary={`Session ID: ${session._id}`}
-              primaryTypographyProps={{
-                fontSize: '0.9rem',
-                sx: { color: '#000000' } // Darker text color for better visibility
-              }}
             />
           </ListItem>
         ))}
@@ -115,20 +117,6 @@ const PsychologistDashboard = () => {
               sx={{ borderRadius: '30px', py: 2, '&:hover': { backgroundColor: '#003366' } }}
             >
               View Users
-            </Button>
-          </Grid>
-
-          {/* Generate Alerts */}
-          <Grid item xs={12} md={6}>
-            <Button
-              variant="contained"
-              color="secondary"
-              component={Link}
-              to="/psychologist/alerts"
-              fullWidth
-              sx={{ borderRadius: '30px', py: 2, '&:hover': { backgroundColor: '#ab003c' } }}
-            >
-              Generate Alerts
             </Button>
           </Grid>
         </Grid>
