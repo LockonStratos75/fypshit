@@ -1,6 +1,6 @@
 // backend/routes/monitoringRoutes.js
 const express = require('express');
-const { createAlert, getAlerts, getAllAlertsForAdmin, updateAlertByAdmin } = require('../controllers/monitoringController');
+const { createAlert, getAlerts, getAllAlertsForAdmin, updateAlertByAdmin, addPsychologistInsight } = require('../controllers/monitoringController');
 const { authenticateToken, authorizeAdmin, authorizePsychologist } = require('../middlewares/authMiddleware');
 const { body, query, param } = require('express-validator');
 const { validateRequest } = require('../middlewares/validateRequest');
@@ -49,6 +49,17 @@ router.get(
   ],
   validateRequest,
   getAlerts
+);
+
+router.post(
+  '/psychologist/alerts/:id/insight',
+  authorizePsychologist,
+  [
+    param('id').isMongoId().withMessage('Invalid alert ID.'),
+    body('insight').notEmpty().withMessage('Insight text is required.')
+  ],
+  validateRequest,
+  addPsychologistInsight
 );
 
 // ========================

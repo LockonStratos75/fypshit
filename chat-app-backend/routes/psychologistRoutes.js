@@ -4,7 +4,7 @@ const express = require('express');
 const psychologistController = require('../controllers/psychologistController');
 const monitoringController = require('../controllers/monitoringController');
 const crisisController = require('../controllers/crisisController');
-const reportController = require('../controllers/reportController'); // <-- Import
+const reportController = require('../controllers/reportController'); 
 const { authenticateToken: authenticate } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -61,6 +61,8 @@ router.get('/logs', authenticate, psychologistController.getLogs);
 router.get('/users/:id/complete', authenticate, psychologistController.getUserCompleteData);
 
 router.get('/reports', authenticate, reportController.getAllReportsForPsychologist);
+
+router.get('/all-sanity-levels', authenticate, psychologistController.getAllUserSanityLevels);
 
 // ========================
 // Export the router

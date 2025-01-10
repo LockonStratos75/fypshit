@@ -8,6 +8,11 @@ const monitoringAlertSchema = new mongoose.Schema({
     triggeredBy: { type: String, enum: ['psychologist', 'system'], default: 'psychologist' },
     status: { type: String, enum: ['new', 'viewed', 'resolved'], default: 'new' },
     adminResponse: { type: String, trim: true },
+    psychologistInsight: { 
+        type: String, 
+        trim: true,
+        default: '' 
+      },
     createdAt: { type: Date, default: Date.now }
 });
 

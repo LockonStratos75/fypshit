@@ -1,5 +1,3 @@
-// src/components/pages/PsychologistReportsPage.jsx
-
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -26,23 +24,23 @@ import api from '../../components/services/ApiService';
 
 const PsychologistReportsPage = () => {
   const [reports, setReports] = useState([]);
-  
+
   // For search/filter
   const [search, setSearch] = useState('');
   const [template, setTemplate] = useState('');
-  
+
   // Loading state
   const [loading, setLoading] = useState(false);
-  
+
   // Pagination
   const [page, setPage] = useState(1);
-  const [limit] = useState(10); 
+  const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
 
   // --------------------------------------------------
   // 1) Fetch Reports with Pagination, Search, Filter
   // --------------------------------------------------
-  const fetchReports = async (pageParam = 1) => {
+  const fetchReports = async (pageParam = 1, newSearch = '', newTemplate = '') => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({
@@ -50,9 +48,8 @@ const PsychologistReportsPage = () => {
         limit: limit.toString(),
       });
 
-      // Append search/template if they exist
-      if (search) queryParams.set('search', search);
-      if (template) queryParams.set('template', template);
+      if (newSearch) queryParams.set('search', newSearch);
+      if (newTemplate) queryParams.set('template', newTemplate);
 
       const res = await api.get(`/psychologist/reports?${queryParams.toString()}`);
       const { reports, totalCount, currentPage, totalPages } = res.data;
@@ -70,49 +67,51 @@ const PsychologistReportsPage = () => {
 
   // Initially load page 1 of reports
   useEffect(() => {
-    fetchReports(1);
+    fetchReports(1, search, template);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // --------------------------------------------------
-  // 2) Search & Filter Handlers
+  // 2) Search & Template Handlers (auto-apply)
   // --------------------------------------------------
   const handleSearchChange = (e) => {
-    setSearch(e.target.value);
+    const newValue = e.target.value;
+    setSearch(newValue);
+    fetchReports(1, newValue, template);
   };
 
   const handleTemplateChange = (e) => {
-    setTemplate(e.target.value);
+    const newValue = e.target.value;
+    setTemplate(newValue);
+    fetchReports(1, search, newValue);
   };
 
-  const handleSearchSubmit = () => {
-    // reset to page 1
-    fetchReports(1);
-  };
-
+  // --------------------------------------------------
+  // 3) Clear Filters
+  // --------------------------------------------------
   const handleClearFilters = () => {
     setSearch('');
     setTemplate('');
-    fetchReports(1);
+    fetchReports(1, '', '');
   };
 
   // --------------------------------------------------
-  // 3) Pagination Handlers
+  // 4) Pagination Handlers
   // --------------------------------------------------
   const handleNextPage = () => {
     if (page < totalPages) {
-      fetchReports(page + 1);
+      fetchReports(page + 1, search, template);
     }
   };
 
   const handlePrevPage = () => {
     if (page > 1) {
-      fetchReports(page - 1);
+      fetchReports(page - 1, search, template);
     }
   };
 
   // --------------------------------------------------
-  // 4) Handle Download PDF
+  // 5) Handle Download PDF
   // --------------------------------------------------
   const handleDownload = async (reportId) => {
     try {
@@ -121,7 +120,7 @@ const PsychologistReportsPage = () => {
       });
       // Create a blob from the response
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      // Create a temporary link element
+      // Create a temporary <a> element
       const link = document.createElement('a');
       link.href = window.URL.createObjectURL(blob);
       link.download = `report_${reportId}.pdf`;
@@ -138,6 +137,9 @@ const PsychologistReportsPage = () => {
     }
   };
 
+  // --------------------------------------------------
+  // Render
+  // --------------------------------------------------
   return (
     <Container maxWidth="lg" sx={{ mt: 5, mb: 5 }}>
       <Typography variant="h4" sx={{ fontWeight: 700, color: '#004080', mb: 3 }}>
@@ -158,7 +160,7 @@ const PsychologistReportsPage = () => {
               InputProps={{
                 startAdornment: <Search sx={{ mr: 1 }} />,
                 endAdornment: search && (
-                  <IconButton onClick={() => setSearch('')}>
+                  <IconButton onClick={() => handleSearchChange({ target: { value: '' } })}>
                     <Clear />
                   </IconButton>
                 ),
@@ -182,27 +184,17 @@ const PsychologistReportsPage = () => {
             </FormControl>
           </Grid>
 
-          {/* Buttons */}
+          {/* Clear Filters Button */}
           <Grid item xs={12} md={4}>
-            <Box display="flex" gap={2}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleSearchSubmit}
-                sx={{ minWidth: '100px' }}
-              >
-                Apply
-              </Button>
-              <Button
-                variant="outlined"
-                color="secondary"
-                onClick={handleClearFilters}
-                disabled={!search && !template}
-                sx={{ minWidth: '100px' }}
-              >
-                Clear
-              </Button>
-            </Box>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={handleClearFilters}
+              disabled={!search && !template}
+              sx={{ minWidth: '120px' }}
+            >
+              Clear Filters
+            </Button>
           </Grid>
         </Grid>
       </Box>
@@ -258,13 +250,21 @@ const PsychologistReportsPage = () => {
 
           {/* Pagination Controls */}
           <Box mt={3} display="flex" justifyContent="center" gap={2}>
-            <Button variant="outlined" disabled={page <= 1} onClick={handlePrevPage}>
+            <Button
+              variant="outlined"
+              disabled={page <= 1}
+              onClick={handlePrevPage}
+            >
               Previous
             </Button>
             <Typography variant="body1" align="center" sx={{ lineHeight: '2.5rem' }}>
               Page {page} of {totalPages}
             </Typography>
-            <Button variant="outlined" disabled={page >= totalPages} onClick={handleNextPage}>
+            <Button
+              variant="outlined"
+              disabled={page >= totalPages}
+              onClick={handleNextPage}
+            >
               Next
             </Button>
           </Box>

@@ -62,11 +62,12 @@ exports.getAllAlertsForAdmin = async (req, res) => {
 
     const alerts = await MonitoringAlert.find(query)
       .sort({ createdAt: -1 })
-      .populate('userId', 'username email'); // Populate user details
-    res.status(200).json({ alerts });
+      .populate('userId', 'username email');
+
+    return res.status(200).json({ alerts });
   } catch (err) {
     console.error('Error fetching alerts for admin:', err);
-    res.status(500).json({ message: 'Server Error' });
+    return res.status(500).json({ message: 'Server Error' });
   }
 };
 
@@ -106,6 +107,7 @@ exports.getAllAlertsForPsychologist = async (req, res) => {
   }
 };
 
+
 /**
  * Admin: update alert (e.g., mark as resolved, add response)
  */
@@ -123,10 +125,48 @@ exports.updateAlertByAdmin = async (req, res) => {
     if (!updatedAlert) {
       return res.status(404).json({ message: 'Alert not found.' });
     }
-
     res.status(200).json({ message: 'Alert updated successfully.', updatedAlert });
   } catch (err) {
     console.error('Error updating alert:', err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+exports.getAllAlertsForAdmin = async (req, res) => {
+  try {
+    let query = {};
+    if (req.query.status) query.status = req.query.status;
+    if (req.query.userId) query.userId = req.query.userId;
+
+    // This fetches all relevant alerts
+    const alerts = await MonitoringAlert.find(query)
+      .sort({ createdAt: -1 })
+      .populate('userId', 'username email'); 
+
+    // 'alert.psychologistInsight' is just a string field, so it's included automatically
+    // if you want to add .select(...) do it, but by default it returns all fields
+
+    res.status(200).json({ alerts });
+  } catch (err) {
+    console.error('Error fetching alerts for admin:', err);
+    return res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+exports.addPsychologistInsight = async (req, res) => {
+  try {
+    const alertId = req.params.id;
+    const { insight } = req.body;
+
+    const alert = await MonitoringAlert.findById(alertId);
+    if (!alert) return res.status(404).json({ message: 'Alert not found.' });
+
+    alert.psychologistInsight = insight;
+    await alert.save();
+
+    res.status(200).json({ message: 'Insight added successfully.', alert });
+  } catch (err) {
+    console.error('Error saving psychologist insight:', err);
     res.status(500).json({ message: 'Server Error' });
   }
 };

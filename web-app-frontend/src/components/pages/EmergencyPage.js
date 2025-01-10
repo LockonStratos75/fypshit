@@ -1,177 +1,180 @@
-// src/components/pages/EmergencyPage.js
+// file: src/components/pages/EmergencyPage.js
 
 import React, { useEffect, useState } from 'react';
 import {
   Container,
   Typography,
+  Box,
+  Grid,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Button,
+  CircularProgress,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
   TableHead,
   TableRow,
+  TableCell,
+  TableBody,
   Paper,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  CircularProgress,
-  Box,
-  Tooltip,
-  TextField,
-  InputAdornment,
-  Grid,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  List,
+  ListItem,
+  ListItemText,
+  TableContainer
 } from '@mui/material';
-import { Send, Search, Clear } from '@mui/icons-material';
+import { Search, Clear, Visibility, Send } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import ApiService from '../../components/services/ApiService';
 
 const EmergencyPage = () => {
-  // State variables
-  const [sanityLevels, setSanityLevels] = useState([]); // Stores the list of sanity levels
-  const [filteredSanityLevels, setFilteredSanityLevels] = useState([]); // For filtered results
-  const [loading, setLoading] = useState(true); // Indicates if data is being loaded
-  const [alertDialogOpen, setAlertDialogOpen] = useState(false); // Controls the visibility of the alert confirmation dialog
-  const [selectedSanityLevel, setSelectedSanityLevel] = useState(null); // Stores the sanity level selected for alerting
+  const [sanityLevels, setSanityLevels] = useState([]);
+  const [filteredLevels, setFilteredLevels] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Search and Filter States
+  // For “Send Alert” (Twilio) 
+  const [alertDialogOpen, setAlertDialogOpen] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState(null);
+
+  // For “View Insights”
+  const [insightDialogOpen, setInsightDialogOpen] = useState(false);
+  const [currentInsights, setCurrentInsights] = useState([]);
+
+  // Searching
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
 
-  // Fetch all sanity levels from the backend
-  const fetchSanityLevels = async () => {
+  // ===============================
+  // 1) Fetch from /admin/sanity-levels
+  // ===============================
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const response = await ApiService.get('/admin/sanity-levels');
-      console.log('Fetched sanity levels:', response.data.sanityLevels); // For debugging
-      setSanityLevels(response.data.sanityLevels);
-      setFilteredSanityLevels(response.data.sanityLevels);
-    } catch (error) {
-      console.error('Error fetching sanity levels:', error);
+      const res = await ApiService.get('/admin/sanity-levels');
+      if (res.data && res.data.sanityLevels) {
+        // Load the localStorage insights
+        const localStore = localStorage.getItem('psychologistInsights') || '{}';
+        const insightsObj = JSON.parse(localStore);
+
+        // Attach them to each doc
+        const updated = res.data.sanityLevels.map((sl) => {
+          const userId = sl.user?._id;
+          const storedInsights = insightsObj[userId] || [];
+          return {
+            ...sl,
+            psyInsights: storedInsights, // attach an array of { text, date, ... }
+          };
+        });
+
+        setSanityLevels(updated);
+        setFilteredLevels(updated);
+      } else {
+        setSanityLevels([]);
+        setFilteredLevels([]);
+      }
+    } catch (err) {
+      console.error('Error fetching admin sanity levels:', err);
       toast.error('Failed to fetch sanity levels');
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch sanity levels on component mount
   useEffect(() => {
-    fetchSanityLevels();
+    fetchData();
   }, []);
 
-  // Handle Search Input Change
+  // ===============================
+  // 2) Searching (by user’s name/email)
+  // ===============================
   const handleSearchChange = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    applyFilters(query, filterStatus);
-  };
+    const val = e.target.value;
+    setSearchQuery(val);
 
-  // Handle Filter Status Change
-  const handleFilterStatusChange = (e) => {
-    const status = e.target.value;
-    setFilterStatus(status);
-    applyFilters(searchQuery, status);
-  };
-
-  // Apply Search and Filter
-  const applyFilters = (query, status) => {
-    let updatedSanityLevels = [...sanityLevels];
-
-    // Search Filter
-    if (query) {
-      updatedSanityLevels = updatedSanityLevels.filter(
-        (sanityLevel) =>
-          sanityLevel.user.username.toLowerCase().includes(query.toLowerCase()) ||
-          sanityLevel.user.email.toLowerCase().includes(query.toLowerCase())
-      );
+    let updated = [...sanityLevels];
+    if (val) {
+      updated = updated.filter((item) => {
+        const userName = item.user?.username?.toLowerCase() || '';
+        const userEmail = item.user?.email?.toLowerCase() || '';
+        return (
+          userName.includes(val.toLowerCase()) || userEmail.includes(val.toLowerCase())
+        );
+      });
     }
-
-    // Status Filter (e.g., Active, Inactive)
-    if (status) {
-      updatedSanityLevels = updatedSanityLevels.filter((sanityLevel) => sanityLevel.status === status);
-    }
-
-    setFilteredSanityLevels(updatedSanityLevels);
+    setFilteredLevels(updated);
   };
 
-  // Handle Clearing Filters
-  const handleClearFilters = () => {
+  const clearSearch = () => {
     setSearchQuery('');
-    setFilterStatus('');
-    setFilteredSanityLevels(sanityLevels);
+    setFilteredLevels(sanityLevels);
   };
 
-  // Determine the color based on sanity percentage
-  const getSanityColor = (sanityPercentage) => {
-    if (sanityPercentage === undefined || sanityPercentage === null) {
-      console.warn('sanityPercentage is undefined for a sanityLevel:', sanityPercentage);
-      return 'grey.500'; // Default color for undefined sanityPercentage
-    }
-
-    if (sanityPercentage < 20) {
-      return 'error.main'; // Red
-    } else if (sanityPercentage >= 20 && sanityPercentage < 50) {
-      return 'warning.main'; // Yellow
-    } else {
-      return 'success.main'; // Green
-    }
-  };
-
-  // Handle clicking the Alert button
-  const handleAlertClick = (sanityLevel) => {
-    setSelectedSanityLevel(sanityLevel);
+  // ===============================
+  // 3) “Send Alert” logic
+  // ===============================
+  const handleAlertClick = (level) => {
+    setSelectedLevel(level);
     setAlertDialogOpen(true);
   };
-
-  // Handle closing the alert confirmation dialog
   const handleAlertClose = () => {
-    setSelectedSanityLevel(null);
+    setSelectedLevel(null);
     setAlertDialogOpen(false);
   };
-
-  // Handle confirming the alert action
-  const handleAlertConfirm = async () => {
+  const handleConfirmAlert = async () => {
+    if (!selectedLevel || !selectedLevel.user) return;
     try {
-      if (!selectedSanityLevel || !selectedSanityLevel.user) {
-        toast.error('Invalid user data.');
-        handleAlertClose();
-        return;
-      }
-
-      const userId = selectedSanityLevel.user._id;
-
-      // Send POST request to /crisis/check with userId
-      const response = await ApiService.post('/crisis/check', { userId });
-
-      toast.success(response.data.message);
+      const userId = selectedLevel.user._id;
+      const resp = await ApiService.post('/crisis/check', { userId });
+      toast.success(resp.data.message);
       handleAlertClose();
-      fetchSanityLevels(); // Refresh the sanity levels in case they have changed
-    } catch (error) {
-      console.error('Error sending alert:', error);
-      toast.error(error.response?.data?.message || 'Failed to send alert');
+      fetchData();
+    } catch (err) {
+      console.error('Error sending alert:', err);
+      toast.error('Failed to send alert');
     }
   };
 
-  // Sort the sanity levels by lowest sanity percentage first
-  const sortedSanityLevels = [...filteredSanityLevels].sort((a, b) => a.sanityPercentage - b.sanityPercentage);
+  // ===============================
+  // 4) “View Insights”
+  // ===============================
+  const handleViewInsights = (level) => {
+    if (level.psyInsights && level.psyInsights.length > 0) {
+      setCurrentInsights(level.psyInsights);
+    } else {
+      setCurrentInsights([]);
+    }
+    setInsightDialogOpen(true);
+  };
+  const handleCloseInsights = () => {
+    setInsightDialogOpen(false);
+    setCurrentInsights([]);
+  };
+
+  // Color for sanity level
+  const getColor = (pct) => {
+    if (pct == null) return 'grey.500';
+    if (pct < 20) return 'error.main';
+    if (pct < 50) return 'warning.main';
+    return 'success.main';
+  };
+
+  // Sort ascending
+  const sorted = [...filteredLevels].sort(
+    (a, b) => (a.sanityPercentage || 0) - (b.sanityPercentage || 0)
+  );
 
   return (
     <Container maxWidth="lg" sx={{ mt: 5, mb: 5 }}>
-      {/* Page Title */}
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: 'primary.main' }}>
-        Emergency Alerts
+      <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 3 }}>
+        Admin Alerts
       </Typography>
 
-      {/* Search and Filter Section */}
+      {/* Search */}
       <Box sx={{ mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          {/* Search Field */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={8}>
             <TextField
               fullWidth
               variant="outlined"
@@ -184,144 +187,152 @@ const EmergencyPage = () => {
                     <Search />
                   </InputAdornment>
                 ),
-                endAdornment: (
+                endAdornment: searchQuery && (
                   <InputAdornment position="end">
-                    {searchQuery && (
-                      <IconButton onClick={() => setSearchQuery('')}>
-                        <Clear />
-                      </IconButton>
-                    )}
+                    <IconButton onClick={clearSearch}>
+                      <Clear />
+                    </IconButton>
                   </InputAdornment>
                 ),
               }}
             />
           </Grid>
-
-          {/* Status Filter */}
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel id="filter-status-label">Filter by Status</InputLabel>
-              <Select
-                labelId="filter-status-label"
-                label="Filter by Status"
-                value={filterStatus}
-                onChange={handleFilterStatusChange}
-              >
-                <MenuItem value="">
-                  <em>All Statuses</em>
-                </MenuItem>
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="inactive">Inactive</MenuItem>
-                {/* Add more status options if applicable */}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Clear Filters Button */}
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={4}>
             <Button
-              fullWidth
               variant="contained"
               color="secondary"
-              onClick={handleClearFilters}
-              disabled={!searchQuery && !filterStatus}
+              fullWidth
+              onClick={clearSearch}
+              disabled={!searchQuery}
             >
-              Clear Filters
+              Clear Search
             </Button>
           </Grid>
         </Grid>
       </Box>
 
-      {/* Loading Indicator */}
       {loading ? (
-        <Box display="flex" justifyContent="center" mt={5}>
+        <Box textAlign="center" mt={5}>
           <CircularProgress />
         </Box>
       ) : (
-        /* Sanity Levels Table */
         <TableContainer component={Paper}>
-          <Table aria-label="emergency sanity levels table">
+          <Table aria-label="admin-emergency-page-table">
             <TableHead>
               <TableRow>
-                <TableCell>Username</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Sanity Level (%)</TableCell>
-                <TableCell>Status</TableCell>
+                <TableCell>User</TableCell>
+                <TableCell>Sanity %</TableCell>
+                <TableCell>Insights</TableCell>
                 <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {/* Display a message if no sanity levels are found */}
-              {sortedSanityLevels.length === 0 ? (
+              {sorted.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    No sanity levels found.
+                  <TableCell colSpan={4} align="center">
+                    No records found.
                   </TableCell>
                 </TableRow>
               ) : (
-                /* Map through the sanity levels and display each in a table row */
-                sortedSanityLevels.map((sanityLevel) => (
-                  <TableRow key={sanityLevel._id}>
-                    <TableCell>{sanityLevel.user ? sanityLevel.user.username : 'Unknown'}</TableCell>
-                    <TableCell>{sanityLevel.user ? sanityLevel.user.email : 'Unknown'}</TableCell>
-                    <TableCell>
-                      {/* Round to 1 decimal place */}
-                      <Typography
-                        sx={{
-                          color: getSanityColor(sanityLevel.sanityPercentage),
-                          fontWeight: 600,
-                        }}
-                      >
-                        {sanityLevel.sanityPercentage !== undefined && sanityLevel.sanityPercentage !== null
-                          ? `${sanityLevel.sanityPercentage.toFixed(1)}%`
-                          : 'Unknown'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{sanityLevel.status}</TableCell>
-                    <TableCell align="center">
-                      {/* Alert Button */}
-                      <Tooltip title="Send Alert" arrow>
-                        <span>
-                          <IconButton
-                            color="secondary"
-                            onClick={() => handleAlertClick(sanityLevel)}
-                            disabled={
-                              sanityLevel.sanityPercentage === undefined ||
-                              sanityLevel.sanityPercentage === null ||
-                              sanityLevel.sanityPercentage >= 50 ||
-                              !sanityLevel.user
-                            }
-                          >
-                            <Send />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))
+                sorted.map((level) => {
+                  const user = level.user || {};
+                  const color = getColor(level.sanityPercentage);
+                  const hasInsights = level.psyInsights && level.psyInsights.length > 0;
+                  return (
+                    <TableRow key={level._id}>
+                      <TableCell>
+                        {user.username
+                          ? `${user.username} (${user.email})`
+                          : 'Unknown User'}
+                      </TableCell>
+                      <TableCell sx={{ color, fontWeight: 600 }}>
+                        {level.sanityPercentage != null
+                          ? `${level.sanityPercentage.toFixed(1)}%`
+                          : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        {hasInsights
+                          ? `(${level.psyInsights.length} insight${
+                              level.psyInsights.length === 1 ? '' : 's'
+                            })`
+                          : 'No insights'}
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton
+                          color="secondary"
+                          onClick={() => handleAlertClick(level)}
+                          disabled={
+                            level.sanityPercentage == null || level.sanityPercentage >= 50
+                          }
+                        >
+                          <Send />
+                        </IconButton>
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleViewInsights(level)}
+                          disabled={!hasInsights}
+                        >
+                          <Visibility />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
         </TableContainer>
       )}
 
-      {/* Alert Confirmation Dialog */}
-      <Dialog open={alertDialogOpen} onClose={handleAlertClose} fullWidth maxWidth="xs">
-        <DialogTitle>Send Alert</DialogTitle>
+      {/* Alert Dialog */}
+      <Dialog open={alertDialogOpen} onClose={handleAlertClose} fullWidth maxWidth="sm">
+        <DialogTitle>Send Crisis Alert</DialogTitle>
         <DialogContent>
-          <Typography>
-            Are you sure you want to send an alert to{' '}
-            <strong>{selectedSanityLevel?.user?.username || 'this user'}</strong>?
-          </Typography>
+          {selectedLevel && selectedLevel.user && (
+            <Typography>
+              Send Twilio crisis alert to{' '}
+              <strong>{selectedLevel.user.username || 'this user'}</strong>?
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions>
-          {/* Cancel Button */}
           <Button onClick={handleAlertClose} color="secondary">
             Cancel
           </Button>
-          {/* Send Alert Button */}
-          <Button onClick={handleAlertConfirm} variant="contained" color="primary">
+          <Button onClick={handleConfirmAlert} variant="contained" color="primary">
             Send Alert
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Insights Dialog */}
+      <Dialog open={insightDialogOpen} onClose={handleCloseInsights} fullWidth maxWidth="sm">
+        <DialogTitle>Psychologist Insights</DialogTitle>
+        <DialogContent dividers>
+          {currentInsights.length === 0 ? (
+            <Typography>No insights for this user.</Typography>
+          ) : (
+            <List>
+              {currentInsights.map((ins, idx) => (
+                <ListItem key={idx} divider>
+                  <ListItemText
+                    primary={
+                      <>
+                        <Typography variant="body2" fontWeight="bold" sx={{ color: '#333' }}>
+                          {new Date(ins.date).toLocaleString()}
+                        </Typography>
+                      </>
+                    }
+                    secondary={ins.text}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseInsights} color="secondary">
+            Close
           </Button>
         </DialogActions>
       </Dialog>

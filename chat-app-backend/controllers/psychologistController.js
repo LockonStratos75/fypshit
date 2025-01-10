@@ -206,15 +206,59 @@ exports.getUserCompleteData = async (req, res) => {
 
 exports.getLogs = async (req, res) => {
   try {
-    const logs = await Log.find({
+    // 1) Read page & limit from query; fallback to page=1, limit=10
+    let { page = 1, limit = 10 } = req.query;
+    page = parseInt(page, 10);
+    limit = parseInt(limit, 10);
+
+    // 2) Build query: only logs of the current Psychologist
+    const query = {
       userId: req.user._id,
-      userType: 'PsychologistProfile',
-    })
-      .populate('userId', 'username email') // Populate user details
-      .sort({ timestamp: -1 }); // Latest logs first
-    res.status(200).json({ logs });
+      userType: 'PsychologistProfile'
+    };
+
+    // 3) Count total logs
+    const totalCount = await Log.countDocuments(query);
+
+    // 4) Retrieve logs with pagination
+    const logs = await Log.find(query)
+      .populate('userId', 'username email') // If needed
+      .sort({ timestamp: -1 })
+      .skip((page - 1) * limit)  // skip docs for previous pages
+      .limit(limit);             // limit to 'limit' docs
+
+    // 5) Calculate total pages
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // 6) Return pagination info + docs
+    return res.status(200).json({
+      logs,
+      totalCount,
+      currentPage: page,
+      totalPages
+    });
   } catch (err) {
-    console.error('Error fetching logs:', err.message);
+    console.error('Error fetching psychologist logs with pagination:', err);
+    return res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+exports.getAllUserSanityLevels = async (req, res) => {
+  try {
+    // If a psychologist can see *all* users, remove the filter by assignedUsers, 
+    // or if you only want them to see assigned patients, filter accordingly.
+
+    const allSanityLevels = await SanityLevel.find({}).populate('user', 'username email');
+    // Or if you want them only to see assigned users, 
+    // you'd do some logic to gather psychologistId => assigned users => filter.
+
+    if (!allSanityLevels) {
+      return res.status(404).json({ message: 'No sanity levels found.' });
+    }
+
+    res.status(200).json({ sanityLevels: allSanityLevels });
+  } catch (error) {
+    console.error('Error fetching sanity levels:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
