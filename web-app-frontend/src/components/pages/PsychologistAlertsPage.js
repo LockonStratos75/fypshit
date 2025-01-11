@@ -119,11 +119,11 @@ const PsychologistAlertsPage = () => {
       // 3c) Save back to localStorage
       localStorage.setItem('psychologistInsights', JSON.stringify(insightObj));
 
-      toast.success('Insight saved (in localStorage).');
+      toast.success('Insight saved.');
       handleCloseDialog();
     } catch (err) {
       console.error('Error saving local insight:', err);
-      toast.error('Failed to save insight locally');
+      toast.error('Failed to save insight');
     }
   };
 

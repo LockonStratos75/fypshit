@@ -72,7 +72,7 @@ app.use(morgan('combined'));
 // Define allowed origins based on environment variables for flexibility
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : ['http://192.168.1.9:3000', 'http://localhost:3000'];
+  : ['http://10.113.67.68:3000', 'http://localhost:3000'];
 
 // Configure CORS options
 const corsOptions = {
